@@ -177,7 +177,7 @@ MathJax = {
         width: 90%;
         max-width: 900px;
         background: white;
-        border-radius: 10px;
+        border-radius: 0;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         color: #555;
         text-align: left;
@@ -194,7 +194,7 @@ MathJax = {
         width: 100%;
         min-height: 200px;
         font-size: 14pt;
-        border-radius: 5px;
+        border-radius: 0;
         box-sizing: border-box;
         contain: content;
         overflow: hidden;
@@ -593,6 +593,8 @@ MathJax = {
   }
 
   .calculation-steps {
+    border-radius: 0 !important;
+    box-shadow: none !important;
     display: block !important;
     width: 100%;
     max-width: none;
@@ -603,6 +605,8 @@ MathJax = {
   }
 
   .calculation-entry {
+    border-radius: 0 !important;
+    box-shadow: none !important;
     display: block !important;
     width: 285mm;
     height: 200mm;
@@ -615,8 +619,7 @@ MathJax = {
     position: relative;
     background: #fff;
     overflow: hidden;
-    border-radius: 0; /* Set sharp borders */
-}
+  }
 
   .calculation-entry::before {
     content: "Assay Based Calculation";
@@ -825,7 +828,7 @@ MathJax = {
     <div class="input-row">
         <div class="input-group">
             <label for="water">Water Content (W):</label>
-           <input type="number" id="water" step="0.01" min="0.01" max="100.01" required oninput="validateWaterContent()" aria-label="Water content input">
+            <input type="number" id="water" step="0.01" min="0.01" max="99.99" required oninput="validateDecimalPlaces(this)" aria-label="Water content input">
         </div>
         <div class="input-group">
             <label for="assay">Assay Content (A):</label>
@@ -931,29 +934,6 @@ MathJax = {
 </footer>
 
 <script>
-
-function validateWaterContent() {
-    const waterInput = document.getElementById('water');
-    const assayInput = document.getElementById('assay'); // Assay Content (A)
-
-    const waterValue = parseFloat(waterInput.value);
-
-    if (!isNaN(waterValue)) {
-        if (waterValue > 100.01) {
-            // Clear the field and refocus if value is greater than 100.01
-            waterInput.value = '';
-            waterInput.focus();
-            alert('Value cannot exceed 100.01. Please re-enter.');
-        } else if (waterValue > 20 && waterValue <= 100.01) {
-            // Allow swapping within this range but keep focus on W
-            waterInput.focus();
-        } else if (waterValue > 0 && waterValue <= 20) {
-            // Proceed to Assay Content (A) field
-            assayInput.focus();
-        }
-    }
-}
-
     // Named constants
     const CONSTANTS = {
         MAX_CALCULATIONS: 15,
@@ -1302,77 +1282,85 @@ function validateWaterContent() {
 
     // Input handling
     function handleInput(event) {
-        const input = event.target;
-        const value = input.value.trim();
-        let numericValue;
+    const input = event.target;
+    const value = input.value.trim();
+    let numericValue;
 
-        try {
-            numericValue = parseFloat(value);
-        } catch {
-            input.setCustomValidity("Invalid number.");
-            input.reportValidity();
+    try {
+        numericValue = parseFloat(value);
+    } catch {
+        input.setCustomValidity("Invalid number.");
+        input.reportValidity();
+        return;
+    }
+
+    if (event.type === "input") {
+        updateProgress();
+        if (value === "") {
+            input.setCustomValidity("");
             return;
         }
-
-        if (event.type === "input") {
-            updateProgress();
-            if (value === "") {
-                input.setCustomValidity("");
+        if (input.id === "water" || input.id === "assay") {
+            validateDecimalPlaces(input);
+            if (isNaN(numericValue) || numericValue <= 0 || 
+                (input.id === "water" && numericValue > CONSTANTS.W_MAX) || 
+                (input.id === "assay" && numericValue > CONSTANTS.A_MAX)) {
+                input.setCustomValidity(`${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} must be between 0.01 and ${input.id === "water" ? "99.99" : "100.00"}.`);
+                input.reportValidity();
                 return;
             }
-            if (input.id === "water" || input.id === "assay") {
-                validateDecimalPlaces(input);
-                if (isNaN(numericValue) || numericValue <= 0 || 
-                    (input.id === "water" && numericValue > CONSTANTS.W_MAX) || 
-                    (input.id === "assay" && numericValue > CONSTANTS.A_MAX)) {
-                    input.setCustomValidity(`${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} must be between 0.01 and ${input.id === "water" ? "99.99" : "100.00"}.`);
-                    input.reportValidity();
-                    return;
-                }
-                input.setCustomValidity("");
-            }
-        }
-
-        if (event.type === "change" && input.id === "water") {
-            if (!isNaN(numericValue) && numericValue > 0) {
-                input.value = numericValue.toFixed(2);
-                if (numericValue > 80) {
-                    if (confirm("Water content seems high (>80). Swap with assay content?")) {
-                        domCache.assayInput.value = input.value;
-                        input.value = "";
-                        domCache.assayInput.focus();
-                    }
-                }
-            }
-        }
-
-        if (event.key === "Enter" && value !== "") {
-            event.preventDefault();
-            const nextInput = input.id === "Q" ? domCache.waterInput : input.id === "water" ? domCache.assayInput : null;
-            if (nextInput) {
-                nextInput.parentElement.style.display = "block";
-                nextInput.focus();
-            } else {
-                input.blur();
-            }
-        }
-
-        if (hasCalculated && (input.id === "water" || input.id === "assay")) {
-            clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(() => {
-                if (input.id === "assay" && numericValue < 10 && numericValue > 0) {
-                    input.setCustomValidity("Assay Content (A) should be greater than 80.");
-                    input.reportValidity();
-                } else if (input.id === "water" && numericValue > 80 && numericValue < 100) {
-                    input.setCustomValidity("Water Content (W) should be less than 10.");
-                    input.reportValidity();
-                } else {
-                    input.setCustomValidity("");
-                }
-            }, 300);
+            input.setCustomValidity("");
         }
     }
 
+    if (event.type === "change" && input.id === "water") {
+        if (!isNaN(numericValue) && numericValue > 0) {
+            if (numericValue > 100.01) {
+                input.value = "";
+                input.focus();
+                alert("Water content cannot exceed 100.01");
+                return;
+            } else if (numericValue > 20 && numericValue <= 100.01) {
+                if (confirm("Water content seems high (>20). Swap with assay content?")) {
+                    domCache.assayInput.value = input.value;
+                    input.value = "";
+                }
+                input.focus();
+                return;
+            } else {
+                // For valid values (0 < W <= 20), format to 2 decimals and proceed to assay
+                input.value = numericValue.toFixed(2);
+                domCache.assayInput.focus();
+            }
+        }
+    }
+
+    if (event.key === "Enter" && value !== "") {
+        event.preventDefault();
+        const nextInput = input.id === "Q" ? domCache.waterInput : input.id === "water" ? domCache.assayInput : null;
+        if (nextInput) {
+            nextInput.parentElement.style.display = "block";
+            nextInput.focus();
+        } else {
+            input.blur();
+        }
+    }
+
+    if (hasCalculated && (input.id === "water" || input.id === "assay")) {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {
+            if (input.id === "assay" && numericValue < 10 && numericValue > 0) {
+                input.setCustomValidity("Assay Content (A) should be greater than 80.");
+                input.reportValidity();
+            } else if (input.id === "water" && numericValue > 80 && numericValue < 100) {
+                input.setCustomValidity("Water Content (W) should be less than 10.");
+                input.reportValidity();
+            } else {
+                input.setCustomValidity("");
+            }
+        }, 300);
+    }
+}
     let debounceTimeout;
     function updateProgress() {
         let filledFields = 0;
