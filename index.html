@@ -931,6 +931,29 @@ MathJax = {
 </footer>
 
 <script>
+
+function validateWaterContent() {
+    const waterInput = document.getElementById('water');
+    const assayInput = document.getElementById('assay'); // Assay Content (A)
+
+    const waterValue = parseFloat(waterInput.value);
+
+    if (!isNaN(waterValue)) {
+        if (waterValue > 100.01) {
+            // Clear the field and refocus if value is greater than 100.01
+            waterInput.value = '';
+            waterInput.focus();
+            alert('Value cannot exceed 100.01. Please re-enter.');
+        } else if (waterValue > 20 && waterValue <= 100.01) {
+            // Allow swapping within this range but keep focus on W
+            waterInput.focus();
+        } else if (waterValue > 0 && waterValue <= 20) {
+            // Proceed to Assay Content (A) field
+            assayInput.focus();
+        }
+    }
+}
+
     // Named constants
     const CONSTANTS = {
         MAX_CALCULATIONS: 15,
