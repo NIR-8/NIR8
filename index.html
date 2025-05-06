@@ -1281,7 +1281,7 @@ MathJax = {
     }
 
     // Input handling
-    function handleInput(event) {
+   function handleInput(event) {
     const input = event.target;
     const value = input.value.trim();
     let numericValue;
@@ -1302,11 +1302,17 @@ MathJax = {
         }
         if (input.id === "water" || input.id === "assay") {
             validateDecimalPlaces(input);
-            if (isNaN(numericValue) || numericValue <= 0 || 
-                (input.id === "water" && numericValue > CONSTANTS.W_MAX) || 
-                (input.id === "assay" && numericValue > CONSTANTS.A_MAX)) {
-                input.setCustomValidity(`${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} must be between 0.01 and ${input.id === "water" ? "99.99" : "100.00"}.`);
+            if (isNaN(numericValue) || numericValue <= 0) {
+                input.setCustomValidity(`${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} must be greater than 0.`);
                 input.reportValidity();
+                return;
+            }
+            // Clear, show alert, and refocus if value exceeds 100.00
+            if (numericValue > 100.00) {
+                input.value = "";
+                alert(`${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} cannot exceed 100.00. Please enter a valid value.`);
+                input.focus();
+                input.setCustomValidity("");
                 return;
             }
             input.setCustomValidity("");
@@ -1315,12 +1321,12 @@ MathJax = {
 
     if (event.type === "change" && input.id === "water") {
         if (!isNaN(numericValue) && numericValue > 0) {
-            if (numericValue > 100.01) {
+            if (numericValue > 100.00) {
                 input.value = "";
+                alert("Water content cannot exceed 100.00. Please enter a valid value.");
                 input.focus();
-                alert("Water content cannot exceed 100.01");
                 return;
-            } else if (numericValue > 20 && numericValue <= 100.01) {
+            } else if (numericValue > 20 && numericValue <= 100.00) {
                 if (confirm("Water content seems high (>20). Swap with assay content?")) {
                     domCache.assayInput.value = input.value;
                     input.value = "";
@@ -1352,7 +1358,7 @@ MathJax = {
             if (input.id === "assay" && numericValue < 10 && numericValue > 0) {
                 input.setCustomValidity("Assay Content (A) should be greater than 80.");
                 input.reportValidity();
-            } else if (input.id === "water" && numericValue > 80 && numericValue < 100) {
+            } else if (input.id === "water" && numericValue > 80 && numericValue <= 100.00) {
                 input.setCustomValidity("Water Content (W) should be less than 10.");
                 input.reportValidity();
             } else {
