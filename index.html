@@ -57,13 +57,16 @@ MathJax = {
         top: 0;
         left: 0;
         z-index: 100;
+        padding: 10px 0;
     }
     
     .menu-container {
         display: flex;
-        max-width: 800px;
+        max-width: 1000px;
         width: 100%;
-        padding: 10px 20px;
+        padding: 0 20px;
+        align-items: center;
+        gap: 20px;
     }
     
     .menu-item {
@@ -74,6 +77,7 @@ MathJax = {
         border-radius: 5px;
         transition: background 0.3s ease;
         cursor: pointer;
+        white-space: nowrap;
     }
     
     .menu-item:hover {
@@ -82,6 +86,58 @@ MathJax = {
     
     .menu-item.active {
         background: #28a745;
+    }
+    
+    /* Quantity Tracker in Menu Bar */
+    .menu-qty-tracker {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-left: auto;
+    }
+    
+    .menu-qty-tracker.hidden {
+    display: none;
+}
+    
+    .menu-qty-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .menu-qty-input {
+        width: 100px;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    .menu-qty-input:focus {
+        outline: none;
+        border-color: #28a745;
+    }
+    
+    .menu-qty-label {
+        font-size: 12px;
+        color: #ccc;
+        margin-bottom: 3px;
+    }
+    
+    .menu-qty-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .menu-qty-warning {
+        color: #ff6b6b;
+        font-size: 11px;
+        margin-top: 3px;
+        display: none;
     }
     
     body {
@@ -97,7 +153,7 @@ MathJax = {
         margin: 0;
         position: relative;
         padding-bottom: 60px;
-        padding-top: 60px;
+        padding-top: 80px;
     }
 
     .calculator-container {
@@ -484,6 +540,19 @@ MathJax = {
             font-size: 12px;
             padding: 4px;
         }
+
+        .menu-container {
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+        }
+        
+        .menu-qty-tracker {
+            order: 3;
+            width: 100%;
+            justify-content: center;
+            margin-left: 0;
+        }
     }
 
     @media (max-width: 480px) {
@@ -565,6 +634,15 @@ MathJax = {
         .modal-content {
             width: 90%;
             margin: 20% auto;
+        }
+        
+        .menu-item {
+            padding: 6px 10px;
+            font-size: 14px;
+        }
+        
+        .menu-qty-input {
+            width: 80px;
         }
     }
 @media print {
@@ -817,10 +895,29 @@ MathJax = {
         <div class="menu-container">
             <div class="menu-item active" id="menuFormula" onclick="showCalculator('formula')">Formula Calculator</div>
             <div class="menu-item" id="menuAcb" onclick="showCalculator('acb')">(A+C)-B Calculator</div>
+            
+            <!-- Quantity Tracker in Menu Bar -->
+            <div class="menu-qty-tracker">
+                <div class="menu-qty-group">
+                    <label class="menu-qty-label">Std Qty (kg)</label>
+                    <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" value="417.000" onchange="updateQuantityTracker()">
+                </div>
+                <div class="menu-qty-group">
+                    <label class="menu-qty-label">Dispensed</label>
+                    <div id="dispensedQty" class="menu-qty-value">0.000</div>
+                </div>
+                <div class="menu-qty-group">
+                    <label class="menu-qty-label">Remaining</label>
+                    <div id="remainingQty" class="menu-qty-value">417.000</div>
+                    <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
+                </div>
+            </div>
         </div>
     </div>
+
 <div id="formulaCalculator" class="calculator-container active">
     <h2>Formula Calculator</h2>
+    
     <div class="input-group">
         <label for="Q">Quantity (Q):</label>
         <input type="number" id="Q" max="9999999" min="0.001" required aria-label="Quantity input">
@@ -944,7 +1041,8 @@ MathJax = {
         Q_MAX: 9999999,
         W_MAX: 99.99,
         A_MAX: 100.00,
-        MATHJAX_TIMEOUT: 10000
+        MATHJAX_TIMEOUT: 10000,
+        DEFAULT_STD_QTY: 417.000
     };
 
     // Configure Decimal.js
@@ -972,6 +1070,10 @@ MathJax = {
         toggleEditBtn: document.getElementById("toggleEditBtn"),
         acbNotice: document.getElementById("acb-notice"),
         mathJaxLoading: document.getElementById("mathjax-loading"),
+        stdQtyInput: document.getElementById("stdQty"),
+        dispensedQty: document.getElementById("dispensedQty"),
+        remainingQty: document.getElementById("remainingQty"),
+        quantityWarning: document.getElementById("quantityWarning"),
         acbInputs: {
             a: ['lot1-a', 'lot2-a', 'lot3-a', 'lot4-a'].map(id => document.getElementById(id)),
             b: ['lot1-b', 'lot2-b', 'lot3-b', 'lot4-b'].map(id => document.getElementById(id)),
@@ -993,6 +1095,7 @@ MathJax = {
     let isACBEditingEnabled = false;
     let acbNoticeTimeout;
     let lastFocusedElement = null;
+    let calculations = []; // Track all calculations for quantity tracking
 
     // MathJax queue for batched rendering
     let mathJaxQueue = [];
@@ -1040,14 +1143,6 @@ MathJax = {
         };
         document.head.appendChild(script);
     }
-
-    // Initial MathJax timeout
-    setTimeout(() => {
-        if (!isMathJaxReady) {
-            console.warn('MathJax not ready, initiating retry at', new Date());
-            retryMathJaxLoad();
-        }
-    }, CONSTANTS.MATHJAX_TIMEOUT);
 
     // Truncate to 12 digits
     function truncateTo12Digits(num) {
@@ -1136,20 +1231,29 @@ MathJax = {
                 const result = numerator.div(denominator);
                 const roundedResult = result.toFixed(3);
 
-                return useMathJax ? `
-                    $$ F_${formulaType === "F1" ? "1" : "3"} = \\frac{${formattedQ} \\times 100 \\times 100}{${formattedA} \\times (100 - ${formattedW})} $$ <br><br>
-                    $$ = \\frac{${formattedQ} \\times 100 \\times 100}{${formattedA} \\times ${formatNumber(step3)}} $$ <br><br>
-                    $$ = \\frac{${formatNumber(numerator)}}{${formatNumber(denominator)}} $$ <br><br>
-                    $$ = ${truncateTo12Digits(roundedResult)} \\text{ (original: } ${formatNumber(result)} \\text{)} $$
-                ` : `
-                    F${formulaType === "F1" ? "1" : "3"} = (${formattedQ} × 100 × 100) / (${formattedA} × (100 - ${formattedW}))
-                    <br><br>
-                    = (${formattedQ} × 100 × 100) / (${formattedA} × ${formatNumber(step3)})
-                    <br><br>
-                    = ${formatNumber(numerator)} / ${formatNumber(denominator)}
-                    <br><br>
-                    = ${truncateTo12Digits(roundedResult)} <br> (original: ${formatNumber(result)})
-                `;
+                return {
+                    mathJax: `
+                        $$ F_${formulaType === "F1" ? "1" : "3"} = \\frac{${formattedQ} \\times 100 \\times 100}{${formattedA} \\times (100 - ${formattedW})} $$ <br><br>
+                        $$ = \\frac{${formattedQ} \\times 100 \\times 100}{${formattedA} \\times ${formatNumber(step3)}} $$ <br><br>
+                        $$ = \\frac{${formatNumber(numerator)}}{${formatNumber(denominator)}} $$ <br><br>
+                        $$ = ${truncateTo12Digits(roundedResult)} \\text{ (original: } ${formatNumber(result)} \\text{)} $$
+                    `,
+                    plainText: `
+                        F${formulaType === "F1" ? "1" : "3"} = (${formattedQ} × 100 × 100) / (${formattedA} × (100 - ${formattedW}))
+                        <br><br>
+                        = (${formattedQ} × 100 × 100) / (${formattedA} × ${formatNumber(step3)})
+                        <br><br>
+                        = ${formatNumber(numerator)} / ${formatNumber(denominator)}
+                        <br><br>
+                        = ${truncateTo12Digits(roundedResult)} <br> (original: ${formatNumber(result)})
+                    `,
+                    formulaType,
+                    Q: Q.toString(),
+                    W: W.toString(),
+                    A: A.toString(),
+                    result: roundedResult,
+                    isFinal: formulaType === "F1" || formulaType === "F3"
+                };
             } else if (formulaType === "F2") {
                 const step1 = hundred.sub(W);
                 const step2 = A.mul(step1);
@@ -1159,27 +1263,78 @@ MathJax = {
                 const result = numerator.div(denominator);
                 const roundedResult = result.toFixed(3);
 
-                return useMathJax ? `
-                    $$ F_2 = \\frac{${formattedQ} \\times ${formattedA} \\times (100 - ${formattedW})}{100 \\times 100} $$ <br><br>
-                    $$ = \\frac{${formattedQ} \\times ${formattedA} \\times ${formatNumber(step1)}}{${formatNumber(denominator)}} $$ <br><br>
-                    $$ = \\frac{${formatNumber(numerator)}}{${formatNumber(denominator)}} $$ <br><br>
-                    $$ = ${truncateTo12Digits(roundedResult)} \\text{ (original: } ${formatNumber(result)} \\text{)} $$
-                ` : `
-                    F2 = (${formattedQ} × ${formattedA} × (100 - ${formattedW})) / (100 × 100)
-                    <br><br>
-                    = (${formattedQ} × ${formattedA} × ${formatNumber(step1)}) / ${formatNumber(denominator)}
-                    <br><br>
-                    = ${formatNumber(numerator)} / ${formatNumber(denominator)}
-                    <br><br>
-                    = ${truncateTo12Digits(roundedResult)} <br> (original: ${formatNumber(result)})
-                `;
+                return {
+                    mathJax: `
+                        $$ F_2 = \\frac{${formattedQ} \\times ${formattedA} \\times (100 - ${formattedW})}{100 \\times 100} $$ <br><br>
+                        $$ = \\frac{${formattedQ} \\times ${formattedA} \\times ${formatNumber(step1)}}{${formatNumber(denominator)}} $$ <br><br>
+                        $$ = \\frac{${formatNumber(numerator)}}{${formatNumber(denominator)}} $$ <br><br>
+                        $$ = ${truncateTo12Digits(roundedResult)} \\text{ (original: } ${formatNumber(result)} \\text{)} $$
+                    `,
+                    plainText: `
+                        F2 = (${formattedQ} × ${formattedA} × (100 - ${formattedW})) / (100 × 100)
+                        <br><br>
+                        = (${formattedQ} × ${formattedA} × ${formatNumber(step1)}) / ${formatNumber(denominator)}
+                        <br><br>
+                        = ${formatNumber(numerator)} / ${formatNumber(denominator)}
+                        <br><br>
+                        = ${truncateTo12Digits(roundedResult)} <br> (original: ${formatNumber(result)})
+                    `,
+                    formulaType,
+                    Q: Q.toString(),
+                    W: W.toString(),
+                    A: A.toString(),
+                    result: roundedResult,
+                    isFinal: false
+                };
             }
-            return "";
+            return null;
         } catch (err) {
             console.error("Calculation error:", err);
             throw err;
         }
     }
+
+    // Update quantity tracker
+   function updateQuantityTracker() {
+    const stdQty = new Decimal(domCache.stdQtyInput.value || CONSTANTS.DEFAULT_STD_QTY);
+    let dispensed = new Decimal(0);
+    let remainingCalc = new Decimal(0);
+    let hasFinalCalculations = false;
+
+    // Calculate dispensed and quantities for remaining
+    calculations.forEach(calc => {
+        if (calc.formulaType === "F2") {
+            // For F2: Q is dispensed, result is used for remaining
+            dispensed = dispensed.plus(calc.Q);
+            remainingCalc = remainingCalc.plus(calc.result);
+        } else if (calc.formulaType === "F1" || calc.formulaType === "F3") {
+            // For F1/F3: result is dispensed, Q is used for remaining
+            dispensed = dispensed.plus(calc.result);
+            remainingCalc = remainingCalc.plus(calc.Q);
+            hasFinalCalculations = true;
+        }
+    });
+
+    // Remaining = stdQty - (F2 results + F1/F3 Q values)
+    const remaining = stdQty.minus(remainingCalc);
+
+    // Update display
+    domCache.dispensedQty.textContent = formatNumber(dispensed);
+    domCache.remainingQty.textContent = formatNumber(remaining);
+
+    // Show warning only if there are final calculations and remaining is not zero
+    if (hasFinalCalculations && !remaining.eq(0)) {
+        domCache.quantityWarning.style.display = 'block';
+        // Only show alert if this is a new calculation being added
+        if (calculations.length > 0 && calculations[calculations.length - 1].isFinal) {
+            setTimeout(() => {
+                alert(`Warning: Remaining quantity is ${formatNumber(remaining)} kg. Please verify your calculations.`);
+            }, 100);
+        }
+    } else {
+        domCache.quantityWarning.style.display = 'none';
+    }
+}
 
     // Calculate
     function calculate(formulaType) {
@@ -1216,13 +1371,17 @@ MathJax = {
 
         hasCalculated = true;
 
-        let plainTextResult;
+        let calculationResult;
         try {
-            plainTextResult = createCalculation(formulaType, Q, W, A, false);
+            calculationResult = createCalculation(formulaType, Q, W, A, false);
+            if (!calculationResult) throw new Error("Failed to create calculation");
         } catch (err) {
             alert("Calculation failed. Please check inputs.");
             return;
         }
+        
+        // Store the calculation
+        calculations.push(calculationResult);
         
         const fragment = document.createDocumentFragment();
         const newEntry = document.createElement("div");
@@ -1235,7 +1394,7 @@ MathJax = {
             <div class="lot-label"></div>
             <div class="reference-values">W="${formatNumber(W, true)}" A="${formatNumber(A, true)}"</div>
             <div class="calculation-content">
-                ${plainTextResult}
+                ${calculationResult.plainText}
             </div>
             <div class="page-number">${calculationCount + 1}/${calculationCount + 1}</div>
             <span class="loading-indicator">Rendering...</span>
@@ -1247,18 +1406,18 @@ MathJax = {
         calculationSteps.classList.remove("hidden");
         
         updatePageNumbers();
+        updateQuantityTracker();
         
         if (isMathJaxReady) {
             setTimeout(() => {
                 try {
-                    const mathJaxContent = createCalculation(formulaType, Q, W, A, true);
                     newEntry.innerHTML = `
                         <div class="print-header">Assay Based Calculation</div>
                         <button class="delete-button" onclick="deleteCalculation(this)" title="Delete" aria-label="Delete calculation">❌</button>
                         <div class="lot-label"></div>
                         <div class="reference-values">W="${formatNumber(W, true)}" A="${formatNumber(A, true)}"</div>
                         <div class="calculation-content">
-                            ${mathJaxContent}
+                            ${calculationResult.mathJax}
                         </div>
                         <div class="print-footer">Remarks: ______________________________________________________________</div>
                         <div class="page-number">${calculationCount}/${calculationCount}</div>
@@ -1389,25 +1548,28 @@ MathJax = {
 
     // Show calculator
     function showCalculator(calculator) {
-        const { formulaCalculator, acbCalculator, calculationSteps, menuFormula, menuAcb } = domCache;
-        
-        formulaCalculator.classList.toggle('active', calculator === 'formula');
-        acbCalculator.classList.toggle('active', calculator === 'acb');
-        menuFormula.classList.toggle('active', calculator === 'formula');
-        menuAcb.classList.toggle('active', calculator === 'acb');
-        
-        if (calculator === 'formula' && calculationCount > 0) {
-            calculationSteps.classList.remove('hidden');
-        } else {
-            calculationSteps.classList.add('hidden');
-        }
-        
-        requestAnimationFrame(() => {
-            lastFocusedElement = calculator === 'formula' ? domCache.QInput : domCache.acbInputs.b[0];
-            lastFocusedElement.focus();
-        });
+    const { formulaCalculator, acbCalculator, calculationSteps, menuFormula, menuAcb } = domCache;
+    
+    formulaCalculator.classList.toggle('active', calculator === 'formula');
+    acbCalculator.classList.toggle('active', calculator === 'acb');
+    menuFormula.classList.toggle('active', calculator === 'formula');
+    menuAcb.classList.toggle('active', calculator === 'acb');
+    
+    // Show/hide quantity tracker
+    domCache.menuQtyTracker = document.querySelector('.menu-qty-tracker');
+    domCache.menuQtyTracker.classList.toggle('hidden', calculator === 'acb');
+    
+    if (calculator === 'formula' && calculationCount > 0) {
+        calculationSteps.classList.remove('hidden');
+    } else {
+        calculationSteps.classList.add('hidden');
     }
-
+    
+    requestAnimationFrame(() => {
+        lastFocusedElement = calculator === 'formula' ? domCache.QInput : domCache.acbInputs.b[0];
+        lastFocusedElement.focus();
+    });
+}
     // Info modal
     function showInfo() {
         lastFocusedElement = document.activeElement;
@@ -1448,6 +1610,8 @@ MathJax = {
 
         calculationCount = 0;
         hasCalculated = false;
+        calculations = [];
+        updateQuantityTracker();
         QInput.focus();
     }
 
@@ -1469,17 +1633,30 @@ MathJax = {
 
     // Delete calculation
     function deleteCalculation(button) {
-        if (!confirm("Are you sure you want to delete this calculation?")) return;
-        const entry = button.parentElement;
-        lastFocusedElement = domCache.QInput;
-        entry.remove();
-        calculationCount--;
-        if (calculationCount === 0) {
-            domCache.calculationSteps.classList.add("hidden");
-        }
-        updatePageNumbers();
-        lastFocusedElement.focus();
+    if (!confirm("Are you sure you want to delete this calculation?")) return;
+    const entry = button.parentElement;
+    const entries = Array.from(domCache.stepsContainer.children);
+    const entryIndex = entries.indexOf(entry);
+    
+    // Calculate the correct index in the calculations array (reverse order)
+    const arrayIndex = calculations.length - 1 - entryIndex;
+    
+    if (arrayIndex >= 0 && arrayIndex < calculations.length) {
+        calculations.splice(arrayIndex, 1);
+    } else {
+        console.error("Invalid array index for deletion:", arrayIndex);
     }
+    
+    lastFocusedElement = domCache.QInput;
+    entry.remove();
+    calculationCount--;
+    if (calculationCount === 0) {
+        domCache.calculationSteps.classList.add("hidden");
+    }
+    updatePageNumbers();
+    updateQuantityTracker();
+    lastFocusedElement.focus();
+}
 
     // Update page numbers
     function updatePageNumbers() {
@@ -1603,7 +1780,7 @@ MathJax = {
 
     // Initialize
     document.addEventListener("DOMContentLoaded", () => {
-        const { QInput, waterGroup, assayGroup, buttons, calculationSteps } = domCache;
+        const { QInput, waterGroup, assayGroup, buttons, calculationSteps, stdQtyInput } = domCache;
         
         assayGroup.style.display = "none";
         waterGroup.style.display = "none";
@@ -1694,6 +1871,9 @@ MathJax = {
                 }
             });
         });
+        
+        // Standard quantity input listener
+        domCache.stdQtyInput.addEventListener('change', updateQuantityTracker);
     });
 </script>
 
