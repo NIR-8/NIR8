@@ -909,6 +909,15 @@
                 max-height: none;
             }
         }
+        
+        .menu-qty-warning.active {
+    display: block;
+    background: #ff6b6b;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+}
     </style>
 </head>
 <body>
@@ -924,21 +933,21 @@
             <div class="menu-item" id="menuAcb" onclick="showCalculator('acb')">(A+C)-B Calculator</div>
             
             <!-- Quantity Tracker in Menu Bar -->
-            <div class="menu-qty-tracker">
-                <div class="menu-qty-group">
-                    <label class="menu-qty-label">Std Qty (kg)</label>
-                    <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" value="417.000" onchange="updateQuantityTracker()">
-                </div>
-                <div class="menu-qty-group">
-                    <label class="menu-qty-label">Dispensed</label>
-                    <div id="dispensedQty" class="menu-qty-value">0.000</div>
-                </div>
-                <div class="menu-qty-group">
-                    <label class="menu-qty-label">Remaining</label>
-                    <div id="remainingQty" class="menu-qty-value">417.000</div>
-                    <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
-                </div>
-            </div>
+<div class="menu-qty-tracker">
+    <div class="menu-qty-group">
+        <label class="menu-qty-label">Std Qty (kg)</label>
+        <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" onchange="updateQuantityTracker()">
+    </div>
+    <div class="menu-qty-group">
+        <label class="menu-qty-label">Dispensed</label>
+        <div id="dispensedQty" class="menu-qty-value">0.000</div>
+    </div>
+    <div class="menu-qty-group">
+        <label class="menu-qty-label">Remaining</label>
+        <div id="remainingQty" class="menu-qty-value">0.000</div>
+        <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
+    </div>
+</div>
         </div>
     </div>
 
@@ -1070,19 +1079,19 @@
     </footer>
 
     <script>
-        // Named constants
-        const CONSTANTS = {
-            MAX_CALCULATIONS: 15,
-            ACB_DEFAULT_A: 417.000,
-            ACB_DEFAULT_C: 84.375,
-            ACB_TOTAL_A: 1668.000,
-            ACB_TOTAL_C: 337.500,
-            Q_MAX: 9999999,
-            W_MAX: 99.99,
-            A_MAX: 100.00,
-            MATHJAX_TIMEOUT: 10000,
-            DEFAULT_STD_QTY: 417.000
-        };
+// Named constants
+const CONSTANTS = {
+    MAX_CALCULATIONS: 15,
+    ACB_DEFAULT_A: 417.000,
+    ACB_DEFAULT_C: 84.375,
+    ACB_TOTAL_A: 1668.000,
+    ACB_TOTAL_C: 337.500,
+    Q_MAX: 9999999,
+    W_MAX: 99.99,
+    A_MAX: 100.00,
+    MATHJAX_TIMEOUT: 10000,
+    DEFAULT_STD_QTY: 0
+};
 
         // Configure Decimal.js
         Decimal.set({ 
@@ -1335,48 +1344,57 @@
             }
         }
 
-        // Update quantity tracker
-        function updateQuantityTracker() {
-            const stdQty = new Decimal(domCache.stdQtyInput.value || CONSTANTS.DEFAULT_STD_QTY);
-            let dispensed = new Decimal(0);
-            let remainingCalc = new Decimal(0);
-            let hasFinalCalculations = false;
+// Update quantity tracker
+function updateQuantityTracker() {
+    const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
+    let dispensed = new Decimal(0);
+    let remainingCalc = new Decimal(0);
+    let hasFinalCalculations = false;
+    let hasF2Calculations = false;
 
-            // Calculate dispensed and quantities for remaining
-            calculations.forEach(calc => {
-                if (calc.formulaType === "F2") {
-                    // For F2: Q is dispensed, result is used for remaining
-                    dispensed = dispensed.plus(calc.Q);
-                    remainingCalc = remainingCalc.plus(calc.result);
-                } else if (calc.formulaType === "F1" || calc.formulaType === "F3") {
-                    // For F1/F3: result is dispensed, Q is used for remaining
-                    dispensed = dispensed.plus(calc.result);
-                    remainingCalc = remainingCalc.plus(calc.Q);
-                    hasFinalCalculations = true;
-                }
-            });
-
-            // Remaining = stdQty - (F2 results + F1/F3 Q values)
-            const remaining = stdQty.minus(remainingCalc);
-
-            // Update display
-            domCache.dispensedQty.textContent = formatNumber(dispensed);
-            domCache.remainingQty.textContent = formatNumber(remaining);
-
-            // Show warning only if there are final calculations and remaining is not zero
-            if (hasFinalCalculations && !remaining.eq(0)) {
-                domCache.quantityWarning.style.display = 'block';
-                // Only show alert if this is a new calculation being added
-                if (calculations.length > 0 && calculations[calculations.length - 1].isFinal) {
-                    setTimeout(() => {
-                        alert(`Warning: Remaining quantity is ${formatNumber(remaining)} kg. Please verify your calculations.`);
-                    }, 100);
-                }
-            } else {
-                domCache.quantityWarning.style.display = 'none';
-            }
+    // Calculate dispensed and quantities for remaining
+    calculations.forEach(calc => {
+        if (calc.formulaType === "F2") {
+            // For F2: Q is dispensed, result is used for remaining
+            dispensed = dispensed.plus(calc.Q);
+            remainingCalc = remainingCalc.plus(calc.result);
+            hasF2Calculations = true;
+        } else if (calc.formulaType === "F1" || calc.formulaType === "F3") {
+            // For F1/F3: result is dispensed, Q is used for remaining
+            dispensed = dispensed.plus(calc.result);
+            remainingCalc = remainingCalc.plus(calc.Q);
+            hasFinalCalculations = true;
         }
+    });
 
+    // Update dispensed display
+    domCache.dispensedQty.textContent = formatNumber(dispensed);
+
+    // Handle remaining quantity and warning
+    if (stdQty.isZero() || domCache.stdQtyInput.value.trim() === '') {
+        // If stdQty is blank or zero, hide remaining and warning
+        domCache.remainingQty.textContent = '-';
+        domCache.quantityWarning.classList.remove('active');
+    } else {
+        // Calculate and display remaining quantity
+        const remaining = stdQty.minus(remainingCalc);
+        domCache.remainingQty.textContent = formatNumber(remaining);
+
+        // Determine if the last calculation is F1 or F3
+        const lastCalculation = calculations.length > 0 ? calculations[calculations.length - 1].formulaType : null;
+        const isLastF1orF3 = lastCalculation === "F1" || lastCalculation === "F3";
+
+        // Show warning for:
+        // - F1/F3 when remaining is non-zero (exclude zero)
+        // - F2 when remaining is zero or negative, but only if the last calculation is not F1/F3 with remaining zero
+        if ((hasFinalCalculations && !remaining.eq(0) && !remaining.isZero()) || 
+            (hasF2Calculations && remaining.lte(0) && !(isLastF1orF3 && remaining.eq(0)))) {
+            domCache.quantityWarning.classList.add('active');
+        } else {
+            domCache.quantityWarning.classList.remove('active');
+        }
+    }
+}
         // Calculate
         function calculate(formulaType) {
             if (calculationCount >= CONSTANTS.MAX_CALCULATIONS) {
@@ -1755,12 +1773,15 @@
         }
 
         // Validate decimal places
-        function validateDecimalPlaces(input) {
-            let value = input.value;
-            if (!/^\d*\.?\d{0,2}$/.test(value)) {
-                input.value = value.slice(0, -1);
-            }
-        }
+function validateDecimalPlaces(input) {
+    let value = input.value;
+    // Allow 3 decimal places for stdQty, 2 for others
+    const maxDecimals = input.id === "stdQty" ? 3 : 2;
+    const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
+    if (!regex.test(value)) {
+        input.value = value.slice(0, -1);
+    }
+}
 
         // ACB Calculator
         function toggleEdit() {
@@ -1845,27 +1866,12 @@
         }
 
         function validateACBInput(input) {
-            let value = input.value;
-            const errorElement = input.nextElementSibling?.classList.contains('error-message') ? input.nextElementSibling : null;
-            
-            // Allow empty input, numbers, and decimal point
-            if (!/^\d*\.?\d{0,3}$/.test(value) && value !== '') {
-                input.value = value.slice(0, -1);
-                if (!errorElement) {
-                    const error = document.createElement('div');
-                    error.className = 'error-message';
-                    error.style.color = '#ff6b6b';
-                    error.style.fontSize = '12px';
-                    error.textContent = 'Enter a number with up to 3 decimal places.';
-                    input.parentElement.appendChild(error);
-                }
-                return;
-            }
-            
-            // Remove error message if input is valid
-            if (errorElement && (value === '' || /^\d*\.?\d{0,3}$/.test(value))) {
-                errorElement.remove();
-            }
+    let value = input.value;
+    
+    // Allow empty input, numbers, and decimal point with up to 3 decimal places
+    if (!/^\d*\.?\d{0,3}$/.test(value) && value !== '') {
+        input.value = value.slice(0, -1);
+    }
         }
 
         // Print with screen size check
