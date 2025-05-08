@@ -265,7 +265,6 @@
             box-sizing: border-box;
             contain: content;
             overflow: hidden;
-            background: #fff;
         }
 
         .calculation-entry::before {
@@ -515,7 +514,7 @@
 
         @media (max-width: 768px) {
             .calculation-entry {
-                min-height: 180px;
+                min-height: 180px;
                 font-size: 12pt;
             }
 
@@ -812,12 +811,12 @@
 
         .close {
             color: #aaa;
-            float -webkit-user-select: none;
-            user-select: none;
             float: right;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .close:hover,
@@ -911,13 +910,13 @@
         }
         
         .menu-qty-warning.active {
-    display: block;
-    background: #ff6b6b;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-weight: 600;
-}
+            display: block;
+            background: #ff6b6b;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -933,21 +932,21 @@
             <div class="menu-item" id="menuAcb" onclick="showCalculator('acb')">(A+C)-B Calculator</div>
             
             <!-- Quantity Tracker in Menu Bar -->
-<div class="menu-qty-tracker">
-    <div class="menu-qty-group">
-        <label class="menu-qty-label">Std Qty (kg)</label>
-        <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" onchange="updateQuantityTracker()">
-    </div>
-    <div class="menu-qty-group">
-        <label class="menu-qty-label">Dispensed</label>
-        <div id="dispensedQty" class="menu-qty-value">0.000</div>
-    </div>
-    <div class="menu-qty-group">
-        <label class="menu-qty-label">Remaining</label>
-        <div id="remainingQty" class="menu-qty-value">0.000</div>
-        <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
-    </div>
-</div>
+            <div class="menu-qty-tracker">
+                <div class="menu-qty-group">
+                    <label class="menu-qty-label">Std Qty (kg)</label>
+                    <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" onchange="updateQuantityTracker()">
+                </div>
+                <div class="menu-qty-group">
+                    <label class="menu-qty-label">Dispensed</label>
+                    <div id="dispensedQty" class="menu-qty-value">0.000</div>
+                </div>
+                <div class="menu-qty-group">
+                    <label class="menu-qty-label">Remaining</label>
+                    <div id="remainingQty" class="menu-qty-value">0.000</div>
+                    <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1051,7 +1050,7 @@
 
     <div id="infoModal" class="info-modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()" aria-label="Close modal">×</span>
+            <span class="close" onclick="closeModal()" aria-label="Close information modal">×</span>
             <div id="formulaInfo" class="info-section">
                 <h3>Formula Calculator-Shortcuts</h3>
                 <div class="info-item"><span class="info-key">F1/F2/F3:</span> Calculate respective formulas</div>
