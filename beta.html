@@ -5,99 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light only">
     <title>NIR8 Calculators</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-   <!-- MathJax configuration -->
-<script>
-    MathJax = {
-        loader: { load: ['input/tex', 'output/chtml'] },
-        tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            packages: {'[+]': ['base', 'ams']},
-            processEscapes: true
-        },
-        chtml: { scale: 0.9, mtextInheritFont: true },
-        startup: {
-            typeset: false,
-            pageReady() {
-                MathJax.startup.defaultPageReady();
-                document.dispatchEvent(new Event('MathJaxReady'));
-            }
-        }
-    };
-</script>
 
-<!-- Load local MathJax with fallback -->
-<script src="assets/mathjax/es5/tex-mml-chtml.js" onerror="loadMathJaxFallback()" async></script>
-<script>
-    function loadMathJaxFallback(attempt = 1, maxAttempts = 2) {
-        console.warn(`Local MathJax failed to load. Attempting to load from CDN (Attempt ${attempt}/${maxAttempts})...`);
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
-        script.async = true;
-        script.onerror = () => {
-            if (attempt < maxAttempts) {
-                console.warn(`MathJax CDN attempt ${attempt} failed. Retrying...`);
-                loadMathJaxFallback(attempt + 1, maxAttempts);
-            } else {
-                console.error('Failed to load MathJax from CDN after multiple attempts.');
-                alert('Unable to load MathJax. Equations will be displayed as plain text.');
-                document.getElementById('mathjax-loading').textContent = 'Failed to load equations.';
-                document.getElementById('mathjax-loading').style.display = 'block';
-                document.dispatchEvent(new Event('MathJaxReady')); // Proceed with plain text
+    <!-- MathJax configuration -->
+    <script>
+        MathJax = {
+            loader: { load: ['input/tex', 'output/chtml'] },
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                packages: {'[+]': ['base', 'ams']},
+                processEscapes: true
+            },
+            chtml: { scale: 0.9, mtextInheritFont: true },
+            startup: {
+                typeset: false,
+                pageReady() {
+                    MathJax.startup.defaultPageReady();
+                    document.dispatchEvent(new Event('MathJaxReady'));
+                }
             }
         };
-        script.onload = () => {
-            console.log('MathJax loaded successfully from CDN.');
-            document.getElementById('mathjax-loading').style.display = 'none';
-            MathJax.startup.getComponents();
-        };
-        document.head.appendChild(script);
-    }
+    </script>
 
-    // Handle MathJax readiness
-    document.addEventListener('MathJaxReady', () => {
-        const mathJaxLoading = document.getElementById('mathjax-loading');
-        if (mathJaxLoading) mathJaxLoading.style.display = 'none';
-        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-            MathJax.typesetPromise().catch(() => {
-                console.warn('MathJax typesetting failed. Retrying...');
-                loadMathJaxFallback();
-            });
+    <!-- Load local Decimal.js with fallback -->
+    <script src="assets/decimal.min.js" onerror="loadDecimalFallback()"></script>
+    <script>
+        function loadDecimalFallback() {
+            console.warn('Local Decimal.js failed to load. Attempting to load from CDN...');
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js';
+            script.async = true;
+            script.onerror = () => {
+                console.error('Failed to load Decimal.js from CDN. Some calculations may not work correctly.');
+                alert('Unable to load Decimal.js. Please check your network connection or ensure the local file is available.');
+            };
+            script.onload = () => {
+                console.log('Decimal.js loaded successfully from CDN.');
+                initializeDecimal();
+            };
+            document.head.appendChild(script);
         }
-    });
 
-<!-- Load local Decimal.js with fallback -->
-<script src="decimal.min.js" onerror="loadDecimalFallback()"></script>
-<script>
-    function loadDecimalFallback() {
-        console.warn('Local Decimal.js failed to load. Attempting to load from CDN...');
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js';
-        script.async = true;
-        script.onerror = () => {
-            console.error('Failed to load Decimal.js from CDN. Some calculations may not work correctly.');
-            alert('Unable to load Decimal.js. Please check your network connection or ensure the local file is available.');
-        };
-        script.onload = () => {
-            console.log('Decimal.js loaded successfully from CDN.');
-            initializeDecimal();
-        };
-        document.head.appendChild(script);
-    }
+        function initializeDecimal() {
+            if (typeof Decimal !== 'undefined') {
+                Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
+            }
+        }
 
-    // Initialize Decimal.js configuration
-    function initializeDecimal() {
         if (typeof Decimal !== 'undefined') {
-            Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
+            initializeDecimal();
         }
-    }
+    </script>
 
-    // Run initialization if Decimal.js is already loaded
-    if (typeof Decimal !== 'undefined') {
-        initializeDecimal();
-    }
-</script>
+    <!-- Load local MathJax with fallback -->
+    <script src="assets/mathjax/es5/tex-mml-chtml.js" onerror="loadMathJaxFallback()" async></script>
+    <script>
+        function loadMathJaxFallback(attempt = 1, maxAttempts = 2) {
+            console.warn(`Local MathJax failed to load. Attempting to load from CDN (Attempt ${attempt}/${maxAttempts})...`);
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+            script.async = true;
+            script.onerror = () => {
+                if (attempt < maxAttempts) {
+                    console.warn(`MathJax CDN attempt ${attempt} failed. Retrying...`);
+                    loadMathJaxFallback(attempt + 1, maxAttempts);
+                } else {
+                    console.error('Failed to load MathJax from CDN after multiple attempts.');
+                    alert('Unable to load MathJax. Equations will be displayed as plain text.');
+                    document.getElementById('mathjax-loading').textContent = 'Failed to load equations.';
+                    document.getElementById('mathjax-loading').style.display = 'block';
+                    document.dispatchEvent(new Event('MathJaxReady'));
+                }
+            };
+            script.onload = () => {
+                console.log('MathJax loaded successfully from CDN.');
+                document.getElementById('mathjax-loading').style.display = 'none';
+                MathJax.startup.getComponents();
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+
+   
     <style>
+        
         /* Override MathJax .CtxtMenu_Info to fix border-radius and box-shadow order */
         .CtxtMenu_Info {
             -webkit-border-radius: 15px;
