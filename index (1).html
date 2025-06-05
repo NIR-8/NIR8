@@ -1,0 +1,289 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .calculator, .acb-calculator { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .input-group { margin: 5px 0; }
+        .error { color: red; display: none; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 15% auto; padding: 20px; width: 70%; max-width: 500px; }
+    </style>
+</head>
+<body>
+    <div id="js-warning">
+        JavaScript is required to use this calculator. Please enable JavaScript in your browser settings.
+    </div>
+
+    <div class="calculator">
+        <h2>Formula Calculator</h2>
+        <div class="input-group">
+            <label>Quantity (Q): <input type="number" id="quantity" step="0.001"></label>
+        </div>
+        <div class="input-group">
+            <label>Water Content (W): <input type="number" id="waterContent" step="0.001"></label>
+        </div>
+        <div class="input-group">
+            <label>Assay Content (A): <input type="number" id="assayContent" step="0.001"></label>
+        </div>
+        <button onclick="showVerification('F1')">Calculate F1</button>
+        <button onclick="showVerification('F2')">Calculate F2</button>
+        <button onclick="showVerification('F3')">Calculate F3</button>
+    </div>
+
+    <div class="acb-calculator">
+        <h2>(A+C)-B Calculator</h2>
+        <button onclick="toggleEdit()">Enable Editing Std qty</button>
+        <table>
+            <tr>
+                <th></th><th>Lot-I</th><th>Lot-II</th><th>Lot-III</th><th>Lot-IV</th><th>TOTAL (kg)</th>
+            </tr>
+            <tr>
+                <td>Std. Qty (A) kg</td>
+                <td><input type="number" id="stdQtyA1" step="0.001" disabled></td>
+                <td><input type="number" id="stdQtyA2" step="0.001" disabled></td>
+                <td><input type="number" id="stdQtyA3" step="0.001" disabled></td>
+                <td><input type="number" id="stdQtyA4" step="0.001" disabled></td>
+                <td id="totalStdQtyA">1668.000</td>
+            </tr>
+            <tr>
+                <td>Issued Qty (B) kg</td>
+                <td><input type="number" id="issuedQtyB1" step="0.001" disabled></td>
+                <td><input type="number" id="issuedQtyB2" step="0.001" disabled></td>
+                <td><input type="number" id="issuedQtyB3" step="0.001" disabled></td>
+                <td><input type="number" id="issuedQtyB4" step="0.001" disabled></td>
+                <td id="totalIssuedQtyB">0.000</td>
+            </tr>
+            <tr>
+                <td>Std. Qty (C) kg</td>
+                <td><input type="number" id="stdQtyC1" step="0.001" disabled></td>
+                <td><input type="number" id="stdQtyC2" step="0.001" disabled></td>
+                <td><input type="number" id="stdQtyC3" step="0.001" disabled></td>
+                <td><input type="number" id="stdQtyC4" step="0.001" disabled></td>
+                <td id="totalStdQtyC">337.500</td>
+            </tr>
+            <tr>
+                <td>(A+C)-(B) kg</td>
+                <td>-</td><td>-</td><td>-</td><td>-</td><td id="totalACB">0.000</td>
+            </tr>
+        </table>
+        <p id="editStatus" style="display: none;">You are editing standard values.</p>
+        <button onclick="resetACBCalculator()">↻</button>
+        <div class="input-group">
+            <label>Std Qty (kg): <input type="number" id="stdQty" step="0.001"></label>
+            <label>Dispensed: <span id="dispensed">0.000</span></label>
+            <label>Remaining: <span id="remaining">0.000</span> <span id="mismatch" class="error">Qty mismatch!</span></label>
+            <label>Select Lot:
+                <select id="lotSelect">
+                    <option value="">Select Lot</option>
+                    <option value="I">I</option>
+                    <option value="II">II</option>
+                    <option value="III">III</option>
+                    <option value="IV">IV</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <button onclick="printCalculations()">Print Calculations</button>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h3>Verify Entries</h3>
+            <p id="verifyText"></p>
+            <button onclick="confirmCalculation()">Confirm</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div>
+        <h3>Formula Calculator-Shortcuts</h3>
+        <p>F1/F2/F3: Calculate respective formulas</p>
+        <p>F4: Print calculations</p>
+        <p>Enter: Navigate between fields</p>
+        <p>Click Remaining Qty: Copy to Q field</p>
+        <h3>(A+C)-B Calculator Features</h3>
+        <p>Edit Button: Toggle editing of standard quantities</p>
+        <p>Enter: Navigate between editable fields</p>
+        <p>Auto-update: Changes automatically update totals</p>
+        <p>Reset Button (↻): Reset all values in this calculator</p>
+        <p>Lot Select: Assign dispensed qty to selected lot</p>
+        <p>This tool is continuously improving to serve you better.</p>
+    </div>
+
+    <p>This tool is continuously improving to serve you better. Results are reliable but always double-check.</p>
+    <p>ℹ️ Click for Help & Shortcuts</p>
+
+    <script>
+        let isEditing = false;
+        let currentFormula = '';
+        let results = [];
+
+        function toggleEdit() {
+            isEditing = !isEditing;
+            const inputs = document.querySelectorAll('.acb-calculator input:not(#stdQty)');
+            inputs.forEach(input => input.disabled = !isEditing);
+            document.getElementById('editStatus').style.display = isEditing ? 'block' : 'none';
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let totalA = 0, totalB = 0, totalC = 0;
+            for (let i = 1; i <= 4; i++) {
+                totalA += parseFloat(document.getElementById(`stdQtyA${i}`).value) || 0;
+                totalB += parseFloat(document.getElementById(`issuedQtyB${i}`).value) || 0;
+                totalC += parseFloat(document.getElementById(`stdQtyC${i}`).value) || 0;
+            }
+            document.getElementById('totalStdQtyA').textContent = totalA.toFixed(3);
+            document.getElementById('totalIssuedQtyB').textContent = totalB.toFixed(3);
+            document.getElementById('totalStdQtyC').textContent = totalC.toFixed(3);
+            document.getElementById('totalACB').textContent = (totalA + totalC - totalB).toFixed(3);
+            updateDispensedRemaining();
+        }
+
+        function updateDispensedRemaining() {
+            const stdQty = parseFloat(document.getElementById('stdQty').value) || 0;
+            const totalB = parseFloat(document.getElementById('totalIssuedQtyB').textContent) || 0;
+            document.getElementById('dispensed').textContent = totalB.toFixed(3);
+            document.getElementById('remaining').textContent = (stdQty - totalB).toFixed(3);
+            document.getElementById('mismatch').style.display = (stdQty < totalB) ? 'inline' : 'none';
+        }
+
+        function resetACBCalculator() {
+            const inputs = document.querySelectorAll('.acb-calculator input');
+            inputs.forEach(input => input.value = '');
+            document.getElementById('totalStdQtyA').textContent = '1668.000';
+            document.getElementById('totalIssuedQtyB').textContent = '0.000';
+            document.getElementById('totalStdQtyC').textContent = '337.500';
+            document.getElementById('totalACB').textContent = '0.000';
+            document.getElementById('dispensed').textContent = '0.000';
+            document.getElementById('remaining').textContent = '0.000';
+            document.getElementById('mismatch').style.display = 'none';
+            document.getElementById('lotSelect').value = '';
+        }
+
+        function showVerification(formula) {
+            currentFormula = formula;
+            const q = parseFloat(document.getElementById('quantity').value) || 0;
+            const w = parseFloat(document.getElementById('waterContent').value) || 0;
+            const a = parseFloat(document.getElementById('assayContent').value) || 0;
+            document.getElementById('verifyText').textContent = 
+                `Please verify:\nQuantity (Q): ${q.toFixed(3)}\nWater Content (W): ${w.toFixed(3)}\nAssay Content (A): ${a.toFixed(3)}`;
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function confirmCalculation() {
+            const q = parseFloat(document.getElementById('quantity').value) || 0;
+            const w = parseFloat(document.getElementById('waterContent').value) || 0;
+            const a = parseFloat(document.getElementById('assayContent').value) || 0;
+            let result;
+            if (currentFormula === 'F1') {
+                result = q * (1 - w / 100);
+            } else if (currentFormula === 'F2') {
+                result = q * (a / 100);
+            } else if (currentFormula === 'F3') {
+                result = q * (1 - w / 100) * (a / 100);
+            }
+            results.push(`${currentFormula}: ${result.toFixed(3)}`);
+            closeModal();
+            clearInputs();
+        }
+
+        function clearInputs() {
+            document.getElementById('quantity').value = '';
+            document.getElementById('waterContent').value = '';
+            document.getElementById('assayContent').value = '';
+        }
+
+        function printCalculations() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write('<html><body><h1>Calculation Results</h1><ul>' + 
+                results.map(r => `<li>${r}</li>`).join('') + 
+                '</ul></body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        document.getElementById('remaining').addEventListener('click', () => {
+            document.getElementById('quantity').value = document.getElementById('remaining').textContent;
+        });
+
+        document.getElementById('lotSelect').addEventListener('change', () => {
+            const lot = document.getElementById('lotSelect').value;
+            const stdQty = parseFloat(document.getElementById('stdQty').value) || 0;
+            if (lot) {
+                document.getElementById(`issuedQtyB${lot}`).value = stdQty.toFixed(3);
+                updateTotals();
+            }
+        });
+
+        document.querySelectorAll('.acb-calculator input').forEach(input => {
+            input.addEventListener('input', updateTotals);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F4') {
+                e.preventDefault();
+                printCalculations();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const inputs = Array.from(document.querySelectorAll('input:not(:disabled)'));
+                const current = inputs.indexOf(document.activeElement);
+                if (current >= 0 && current < inputs.length - 1) {
+                    inputs[current + 1].focus();
+                }
+            }
+        });
+
+        document.getElementById('js-warning').style.display = 'none';
+    </script>
+</body>
+</html>
