@@ -1044,10 +1044,10 @@
                 <div class="info-item"><span class="info-key">F1/F2/F3:</span>Calculate respective formulas</div>
                 <div class="info-item"><span class="info-key">F4:</span>Print calculations</div>
                 <div class="info-item"><span class="info-key">❌:</span>Remove individual calculations</div>
-                <div class="info-item"><span class="info-key">F5:</span>Clear All (formula calculations)</div>
-                <div class="info-item"><span class="info-key">F8:</span>Clear inputs only</div>
+                <div class="info-item"><span class="info-key">F5:</span>Refresh page</div>
                 <div class="info-item"><span class="info-key">Enter:</span>Navigate between fields</div>
                 <div class="info-item"><span class="info-key">Click Remaining Qty:</span>Copy to Q field</div>
+                  <div class="info-item"><span class="info-key">Lot Select:</span>Assign dispensed qty to selected lot</div>
             </div>
             <div id="acbInfo" class="info-section" style="display:none">
                 <h3>(A+C)-B Calculator Features</h3>
@@ -1055,7 +1055,7 @@
                 <div class="info-item"><span class="info-key">Enter:</span>Navigate between editable fields</div>
                 <div class="info-item"><span class="info-key">Auto-update:</span>Changes automatically update totals</div>
                 <div class="info-item"><span class="info-key">Reset Button (↻):</span>Reset all values in this calculator</div>
-                <div class="info-item"><span class="info-key">Lot Select:</span>Assign dispensed qty to selected lot</div>
+              
             </div>
             <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
@@ -1315,6 +1315,37 @@
             }
         }
 
+        // Verify calculation before proceeding
+        function verifyCalculation(calculation, Q, W, A) {
+            // Format values for display
+            const formattedQ = formatNumber(Q);
+            const formattedW = formatNumber(W, true);
+            const formattedA = formatNumber(A, true);
+            
+            // Create verification message
+            let verificationMessage = `Please verify the following:\n\n`;
+            verificationMessage += `Quantity (Q): ${formattedQ}\n`;
+            verificationMessage += `Water Content (W): ${formattedW}%\n`;
+            verificationMessage += `Assay Content (A): ${formattedA}%\n\n`;
+            verificationMessage += `Formula: F${calculation.formulaType === "F2" ? "2" : calculation.formulaType === "F1" ? "1" : "3"}\n`;
+            verificationMessage += `Result: ${calculation.result}\n\n`;
+            verificationMessage += `Is this correct?`;
+
+            // Show confirmation dialog
+            if (!confirm(verificationMessage)) {
+                // If user cancels, allow them to edit the inputs
+                domCache.QInput.value = formattedQ;
+                domCache.waterInput.value = formattedW;
+                domCache.assayInput.value = formattedA;
+                domCache.progressBar.style.width = "100%";
+                domCache.buttons.style.display = "flex";
+                domCache.assayGroup.style.display = "block";
+                domCache.waterGroup.style.display = "block";
+                return false;
+            }
+            return true;
+        }
+
         // Update quantity tracker with lot selection visibility
         function updateQuantityTracker() {
             const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
@@ -1351,10 +1382,8 @@
                 const lastCalculation = calculations.length > 0 ? calculations[calculations.length - 1].formulaType : null;
                 const isLastF1orF3 = lastCalculation === "F1" || lastCalculation === "F3";
                 if ((hasFinalCalculations && !remaining.eq(0)) || 
-                    (hasF2Calculations && remaining.lte(0) && !(isLastF1orF3 && remaining.eq(0)))) {
-                    domCache.quantityWarning.classList.add('active');
-                } else {
-                    domCache.quantityWarning.classList.remove('active');
+    (hasF2Calculations && remaining.lte(0) && !(isLastF1orF3 && remaining.eq(0)))) {
+    domCache.quantityWarning.classList.add('active');
                 }
             }
         }
@@ -1380,19 +1409,31 @@
         }
 
         // Copy remaining quantity to Q input when clicked
-        function copyRemainingToQ() {
-            if (domCache.remainingQty.textContent !== '-' && domCache.remainingQty.textContent !== '0.000') {
-                if (confirm(`Copy ${domCache.remainingQty.textContent} to Quantity (Q) field? This will clear current inputs.`)) {
-                    domCache.QInput.value = domCache.remainingQty.textContent;
-                    domCache.waterInput.value = '';
-                    domCache.assayInput.value = '';
-                    domCache.progressBar.style.width = "33%";
-                    domCache.buttons.style.display = "none";
+        
+function copyRemainingToQ() {
+    if (domCache.remainingQty.textContent !== '-' && domCache.remainingQty.textContent !== '0.000') {
+        if (confirm("Copy " + domCache.remainingQty.textContent + " to Quantity (Q) field?")) {
+            domCache.QInput.value = domCache.remainingQty.textContent;
+            domCache.waterInput.value = '';
+            domCache.assayInput.value = '';
+
+            domCache.progressBar.style.width = "33%";
+            domCache.waterGroup.style.display = "block";
+            domCache.assayGroup.style.display = "none";
+            domCache.buttons.style.display = "none";
+
+            domCache.waterInput.focus();
+
+            // Show A only after pressing Enter in W field
+            domCache.waterInput.addEventListener("keydown", function handleWEnter(e) {
+                if (e.key === "Enter" && domCache.waterInput.value.trim() !== "") {
                     domCache.assayGroup.style.display = "block";
-                    domCache.QInput.focus();
+                    domCache.waterInput.removeEventListener("keydown", handleWEnter);
                 }
-            }
+            });
         }
+    }
+}
 
         // Reset ACB calculator
         function resetACBCalculator() {
@@ -1479,6 +1520,11 @@
                 return;
             }
 
+            // Add verification step
+            if (!verifyCalculation(calculationResult, Q, W, A)) {
+                return;
+            }
+
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry";
@@ -1519,6 +1565,19 @@
                 }, CONSTANTS.MATHJAX_TIMEOUT);
             }
 
+            // Clear inputs after successful calculation
+            setTimeout(() => {
+                domCache.QInput.value = "";
+                domCache.waterInput.value = "";
+                domCache.assayInput.value = "";
+                domCache.progressBar.style.width = "0%";
+                domCache.buttons.style.display = "none";
+                domCache.assayGroup.style.display = "none";
+                domCache.waterGroup.style.display = "none";
+                updateQuantityTracker();
+                domCache.QInput.focus();
+            }, 100);
+
             newEntry.focus();
         }
 
@@ -1543,23 +1602,14 @@
             }
 
             if (input.id === "water" || input.id === "assay") {
-                if (!/^\d*\.?\d{0,2}$/.test(value)) {
-                    input.value = value.slice(0, -1);
-                    return;
-                }
-                if (isNaN(numericValue) || numericValue <= 0) {
-                    showError(input, `${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} must be greater than 0.`);
-                    return;
-                }
-                if (numericValue > 100.00) {
-                    input.value = "";
-                    showError(input, `${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} cannot exceed 100.00.`);
-                    alert(`${input.id === "water" ? "Water Content (W)" : "Assay Content (A)"} cannot exceed 100.00.`);
-                    input.focus();
-                    return;
-                }
-                clearError(input);
-            }
+    if (input.id === "assay" && numericValue < 10 && numericValue > 0) {
+        showError(input, "Assay Content (A) should be greater than 80.");
+    } else if (input.id === "water" && numericValue > 80 && numericValue <= 100.00) {
+        showError(input, "Water Content (W) should be less than 10.");
+    } else {
+        clearError(input);
+    }
+}
 
             if (event.key === "Enter" && value !== "") {
                 event.preventDefault();
@@ -1572,20 +1622,17 @@
                 }
             }
 
-            if (event.type === "change" && input.id === "water") {
-                if (numericValue > 20 && numericValue <= 100.00) {
-                    if (confirm("Water content seems high (>20). Swap with assay content?")) {
-                        domCache.assayInput.value = input.value;
-                        input.value = "";
-                    }
-                    input.focus();
-                    return;
-                } else {
-                    input.value = numericValue.toFixed(2);
-                    domCache.assayInput.focus();
-                }
-            }
-
+          if (event.type === "change" && input.id === "water") {
+    if (numericValue > 0 && numericValue <= 100.00) {
+        domCache.assayInput.focus();
+    }
+}
+if (input.id === "water" || input.id === "assay") {
+    if (!/^\d*\.?\d{0,2}$/.test(value)) {
+        input.value = value.slice(0, -1); // Strip extra decimals
+        return;
+    }
+}
             if (hasCalculated && (input.id === "water" || input.id === "assay")) {
                 if (input.id === "assay" && numericValue < 10 && numericValue > 0) {
                     showError(input, "Assay Content (A) should be greater than 80.");
@@ -1640,21 +1687,26 @@
             (calculator === 'formula' ? domCache.QInput : domCache.acbInputs.b[0]).focus();
         }
 
-        // Info modal
-        function showInfo() {
-            const modal = document.getElementById('infoModal');
-            const formulaInfo = document.getElementById('formulaInfo');
-            const acbInfo = document.getElementById('acbInfo');
-            formulaInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'block' : 'none';
-            acbInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'none' : 'block';
-            modal.style.display = 'block';
-            document.querySelector('.close').focus();
-        }
+      // Modify the showInfo function to prevent reopening if auto-closed
+let isAutoClosed = false;
+function showInfo() {
+    if (isAutoClosed) return;
+    
+    const modal = document.getElementById('infoModal');
+    const formulaInfo = document.getElementById('formulaInfo');
+    const acbInfo = document.getElementById('acbInfo');
+    formulaInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'block' : 'none';
+    acbInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'none' : 'block';
+    modal.style.display = 'block';
+    document.querySelector('.close').focus();
+}
 
-        function closeModal() {
-            document.getElementById('infoModal').style.display = 'none';
-            (domCache.formulaCalculator.classList.contains('active') ? domCache.QInput : domCache.acbInputs.b[0]).focus();
-        }
+function closeModal() {
+    isAutoClosed = true;
+    document.getElementById('infoModal').style.display = 'none';
+    (domCache.formulaCalculator.classList.contains('active') ? domCache.QInput : domCache.acbInputs.b[0]).focus();
+}
+
 
         // Clear fields
         function clearAllFields() {
@@ -1671,19 +1723,6 @@
             calculationCount = 0;
             hasCalculated = false;
             calculations = [];
-            updateQuantityTracker();
-            domCache.QInput.focus();
-        }
-
-        function clearInputsOnly() {
-            if (!confirm("Are you sure you want to clear all input fields in the formula calculator?")) return;
-            domCache.QInput.value = "";
-            domCache.waterInput.value = "";
-            domCache.assayInput.value = "";
-            domCache.progressBar.style.width = "0%";
-            domCache.buttons.style.display = "none";
-            domCache.assayGroup.style.display = "none";
-            domCache.waterGroup.style.display = "none";
             updateQuantityTracker();
             domCache.QInput.focus();
         }
@@ -1819,6 +1858,13 @@
             domCache.calculationSteps.classList.add("hidden");
             domCache.QInput.focus();
 
+  // Show help popup on first load
+    setTimeout(() => {
+        showInfo();
+        setTimeout(closeModal, 4000); // Auto-close after 4 seconds
+    }, 500); // Small delay to let page load first
+    
+    
             // Input listeners
             [domCache.QInput, domCache.waterInput, domCache.assayInput].forEach(input => {
                 input.addEventListener("input", e => {
@@ -1878,9 +1924,8 @@
                     case "F1": e.preventDefault(); calculate("F1"); break;
                     case "F2": e.preventDefault(); calculate("F2"); break;
                     case "F3": e.preventDefault(); calculate("F3"); break;
-                    case "F4": e.preventDefault(); if (calculationCount > 0) printWithCheck(); break;
-                    case "F5": e.preventDefault(); clearAllFields(); break;
-                    case "F8": e.preventDefault(); clearInputsOnly(); break;
+                    case 'F8': e.preventDefault(); if (calculationCount > 0) printWithCheck(); break;
+                    
                 }
             });
 
@@ -1919,5 +1964,241 @@
         // Handle window resize
         window.addEventListener('resize', updatePageNumbers);
     </script> 
+
+<!-- Improved Verification Modal -->
+<div id="verifyModal" class="info-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+    <div class="modal-content">
+        <span class="close" onclick="closeVerifyModal()" aria-label="Close verification modal">&times;</span>
+        <div id="verifyDetails">
+            <!-- Populated dynamically -->
+        </div>
+        <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+            <button onclick="confirmVerification(false)" class="cancel-btn">Cancel</button>
+            <button onclick="confirmVerification(true)" id="confirmBtn" class="confirm-btn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Enhancements for modal */
+.info-modal {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+}
+.modal-content {
+    background: #fff;
+    max-height: 90vh;
+    overflow-y: auto;
+    width: 90%;
+    max-width: 500px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, .1);
+    position: relative;
+}
+.verify-label {
+    font-weight: bold;
+    color: #000;
+    display: inline-block;
+    width: 140px;
+    text-align: right;
+    margin-right: 10px;
+}
+.verify-value {
+    font-weight: bold;
+    background-color: #d4edda;
+    color: #155724;
+    padding: 3px 6px;
+    border-radius: 5px;
+}
+.verify-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+.cancel-btn {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding:8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.cancel-btn:hover {
+    background-color: #cc0000;
+}
+.confirm-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.confirm-btn:hover {
+    background-color: #218838;
+}
+</style>
+
+<script>
+// Overwrite verifyCalculation with improved modal
+function verifyCalculation(calculation, Q, W, A) {
+    const verifyModal = document.getElementById("verifyModal");
+    const verifyDetails = document.getElementById("verifyDetails");
+
+    verifyDetails.innerHTML = `
+        <h3 id="verifyTitle" style="text-align:center;">Please verify the following:</h3>
+        <div class="verify-row"><span class="verify-label">Quantity (Q):</span> <span class="verify-value">${Q}</span></div>
+        <div class="verify-row"><span class="verify-label">Water Content (W):</span> <span class="verify-value">${W}%</span></div>
+        <div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>
+        <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value">F${calculation.formulaType.replace("F", "")}</span></div>
+        <div class="verify-row"><span class="verify-label">Result:</span> <span class="verify-value">${calculation.result}</span></div>
+    `;
+
+    verifyModal.style.display = "flex";
+    document.getElementById("confirmBtn").focus();
+
+    return new Promise(resolve => {
+        window.confirmVerification = function (confirmed) {
+            verifyModal.style.display = "none";
+            if (!confirmed) {
+                // Restore input values if user cancels
+                domCache.QInput.value = Q;
+                domCache.waterInput.value = W;
+                domCache.assayInput.value = A;
+                domCache.progressBar.style.width = "100%";
+                domCache.buttons.style.display = "flex";
+                domCache.assayGroup.style.display = "block";
+                domCache.waterGroup.style.display = "block";
+                domCache.QInput.focus();
+            }
+            resolve(confirmed);
+        };
+    });
+}
+
+function closeVerifyModal() {
+    document.getElementById("verifyModal").style.display = "none";
+    if (typeof window.confirmVerification === 'function') {
+        window.confirmVerification(false);
+    }
+}
+
+// Modify the calculate function to handle the promise
+async function calculate(formulaType) {
+    if (calculationCount >= CONSTANTS.MAX_CALCULATIONS) {
+        alert(`Maximum of ${CONSTANTS.MAX_CALCULATIONS} calculations reached. Press F5 to reset or delete a calculation.`);
+        return;
+    }
+
+    let Q, W, A;
+    try {
+        Q = new Decimal(domCache.QInput.value || 0);
+        W = new Decimal(domCache.waterInput.value || 0);
+        A = new Decimal(domCache.assayInput.value || 0);
+    } catch {
+        alert("Invalid input values.");
+        return;
+    }
+
+    if (Q.isNaN() || W.isNaN() || A.isNaN() || Q.lte(0) || W.lte(0) || A.lte(0)) {
+        alert("Please enter valid values for Q, W, and A (all must be greater than 0).");
+        return;
+    }
+
+    if (Q.gt(CONSTANTS.Q_MAX)) {
+        alert(`Quantity (Q) must be less than or equal to ${CONSTANTS.Q_MAX}.`);
+        return;
+    }
+
+    if (A.gt(CONSTANTS.A_MAX) || W.gt(CONSTANTS.W_MAX)) {
+        alert("Invalid values: Ensure A ≤ 100 and W ≤ 99.99.");
+        return;
+    }
+
+    hasCalculated = true;
+    let calculationResult;
+    try {
+        calculationResult = createCalculation(formulaType, Q, W, A);
+        if (!calculationResult) throw new Error("Failed to create calculation");
+    } catch {
+        alert("Calculation failed. Please check inputs.");
+        return;
+    }
+
+    // Add verification step and wait for user confirmation
+    const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
+    if (!isConfirmed) {
+        return; // Don't proceed if user cancels
+    }
+
+    calculations.push(calculationResult);
+    const newEntry = document.createElement("div");
+    newEntry.className = "calculation-entry";
+    newEntry.setAttribute("tabindex", "0");
+    newEntry.setAttribute("role", "region");
+    newEntry.setAttribute("aria-label", `Calculation ${formulaType}`);
+    newEntry.innerHTML = `
+        <button type="button" class="delete-button" onclick="deleteCalculation(this)" title="Delete" aria-label="Delete calculation">❌</button>
+        <div class="lot-label"></div>
+        <div class="reference-values">W="${formatNumber(W, true)}" A="${formatNumber(A, true)}"</div>
+        <div class="calculation-content">${calculationResult.plainText}</div>
+        <div class="page-number">${calculationCount + 1}/${calculationCount + 1}</div>
+        <span class="loading-indicator">Rendering...</span>
+    `;
+
+    domCache.stepsContainer.insertBefore(newEntry, domCache.stepsContainer.firstChild);
+    calculationCount++;
+    domCache.calculationSteps.classList.remove("hidden");
+
+    updatePageNumbers();
+    updateQuantityTracker();
+
+    if (isMathJaxReady) {
+        setTimeout(() => {
+            newEntry.innerHTML = `
+                <button type="button" class="delete-button" onclick="deleteCalculation(this)" title="Delete" aria-label="Delete calculation">❌</button>
+                <div class="lot-label"></div>
+                <div class="reference-values">W="${formatNumber(W, true)}" A="${formatNumber(A, true)}"</div>
+                <div class="calculation-content">${calculationResult.mathJax}</div>
+                <div class="page-number">${calculationCount}/${calculationCount}</div>
+            `;
+            queueMathJax(newEntry);
+        }, 50);
+    } else {
+        newEntry.querySelector('.loading-indicator').style.display = 'block';
+        setTimeout(() => {
+            if (!isMathJaxReady) retryMathJaxLoad();
+        }, CONSTANTS.MATHJAX_TIMEOUT);
+    }
+
+    // Clear inputs after successful calculation
+    setTimeout(() => {
+        domCache.QInput.value = "";
+        domCache.waterInput.value = "";
+        domCache.assayInput.value = "";
+        domCache.progressBar.style.width = "0%";
+        domCache.buttons.style.display = "none";
+        domCache.assayGroup.style.display = "none";
+        domCache.waterGroup.style.display = "none";
+        updateQuantityTracker();
+        domCache.QInput.focus();
+    }, 100);
+
+    newEntry.focus();
+}
+</script>
 </body>
 </html>
