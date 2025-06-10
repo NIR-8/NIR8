@@ -1697,12 +1697,8 @@ function showInfo() {
     const modal = document.getElementById('infoModal');
     const formulaInfo = document.getElementById('formulaInfo');
     const acbInfo = document.getElementById('acbInfo');
-    formulaInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'block' : 'none';
-    acbInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'none' : 'block';
-    modal.style.display = 'block';
-    document.querySelector('.close').focus();
-}
-
+   formulaInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'block' : 'none';
+acbInfo.style.display = domCache.formulaCalculator.classList.contains('active') ? 'none' : 'block';
 function closeModal() {
     isAutoClosed = true;
     document.getElementById('infoModal').style.display = 'none';
