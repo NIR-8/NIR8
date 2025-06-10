@@ -1352,45 +1352,45 @@
 
         // Update quantity tracker with lot selection visibility
         function updateQuantityTracker() {
-            const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
-            let dispensed = new Decimal(0);
-            let remainingCalc = new Decimal(0);
-            let hasFinalCalculations = false;
-            let hasF2Calculations = false;
+    const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
+    let dispensed = new Decimal(0);
+    let remainingCalc = new Decimal(0);
+    let hasFinalCalculations = false;
 
-            calculations.forEach(calc => {
-                if (calc.formulaType === "F2") {
-                    dispensed = dispensed.plus(calc.Q);
-                    remainingCalc = remainingCalc.plus(calc.result);
-                    hasF2Calculations = true;
-                } else if (calc.formulaType === "F1" || calc.formulaType === "F3") {
-                    dispensed = dispensed.plus(calc.result);
-                    remainingCalc = remainingCalc.plus(calc.Q);
-                    hasFinalCalculations = true;
-                }
-            });
-
-            domCache.dispensedQty.textContent = formatNumber(dispensed);
-            if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
-                domCache.remainingQty.textContent = '-';
-                domCache.quantityWarning.classList.remove('active');
-                domCache.lotSelectGroup.style.display = 'none';
-            } else {
-                const remaining = stdQty.minus(remainingCalc);
-                domCache.remainingQty.textContent = formatNumber(remaining);
-                
-                // Show lot selection when remaining is zero
-                const showLotSelect = remaining.eq(0);
-                domCache.lotSelectGroup.style.display = showLotSelect ? 'block' : 'none';
-                
-                const lastCalculation = calculations.length > 0 ? calculations[calculations.length - 1].formulaType : null;
-                const isLastF1orF3 = lastCalculation === "F1" || lastCalculation === "F3";
-                if ((hasFinalCalculations && !remaining.eq(0)) || 
-    (hasF2Calculations && remaining.lte(0) && !(isLastF1orF3 && remaining.eq(0)))) {
-    domCache.quantityWarning.classList.add('active');
-                }
-            }
+    calculations.forEach(calc => {
+        if (calc.formulaType === "F2") {
+            dispensed = dispensed.plus(calc.Q);
+            remainingCalc = remainingCalc.plus(calc.result);
+        } else if (calc.formulaType === "F1" || calc.formulaType === "F3") {
+            dispensed = dispensed.plus(calc.result);
+            remainingCalc = remainingCalc.plus(calc.Q);
+            hasFinalCalculations = true;
         }
+    });
+
+    domCache.dispensedQty.textContent = formatNumber(dispensed);
+
+    if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
+        domCache.remainingQty.textContent = '-';
+        domCache.quantityWarning.classList.remove('active');
+        domCache.lotSelectGroup.style.display = 'none';
+    } else {
+        const remaining = stdQty.minus(remainingCalc);
+        domCache.remainingQty.textContent = formatNumber(remaining);
+
+        const showLotSelect = remaining.eq(0);
+        domCache.lotSelectGroup.style.display = showLotSelect ? 'block' : 'none';
+
+        // ✅ This is the fixed logic:
+        if (hasFinalCalculations && !remaining.eq(0)) {
+            domCache.quantityWarning.classList.add('active');
+        } else {
+            domCache.quantityWarning.classList.remove('active');
+        }
+    }
+}
+                
+     
 
         // Update dispensed quantity in ACB calculator based on lot selection
         function updateLotDispensedQty() {
@@ -1682,15 +1682,20 @@ if (input.id === "water" || input.id === "assay") {
 
         // Show calculator
         function showCalculator(calculator) {
-            domCache.formulaCalculator.classList.toggle('active', calculator === 'formula');
-            domCache.acbCalculator.classList.toggle('active', calculator === 'acb');
-            domCache.menuFormula.classList.toggle('active', calculator === 'formula');
-            domCache.menuAcb.classList.toggle('active', calculator === 'acb');
-            domCache.menuQtyTracker.classList.toggle('hidden', calculator === 'acb');
-            domCache.calculationSteps.classList.toggle('hidden', calculator !== 'formula' || calculationCount === 0);
-            (calculator === 'formula' ? domCache.QInput : domCache.acbInputs.b[0]).focus();
-        }
+    domCache.formulaCalculator.classList.toggle('active', calculator === 'formula');
+    domCache.acbCalculator.classList.toggle('active', calculator === 'acb');
+    domCache.menuFormula.classList.toggle('active', calculator === 'formula');
+    domCache.menuAcb.classList.toggle('active', calculator === 'acb');
+    domCache.menuQtyTracker.classList.toggle('hidden', calculator === 'acb');
+    domCache.calculationSteps.classList.toggle('hidden', calculator !== 'formula' || calculationCount === 0);
 
+    // Prevent null reference errors
+    if (calculator === 'formula') {
+        domCache.QInput?.focus();
+    } else if (domCache.acbInputs?.b?.[0]) {
+        domCache.acbInputs.b[0].focus();
+    }
+}
       // Modify the showInfo function to prevent reopening if auto-closed
 function showInfo() {
     
