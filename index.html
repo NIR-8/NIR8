@@ -1321,21 +1321,36 @@
 
         // Verify calculation before proceeding
         function verifyCalculation(calculation, Q, W, A) {
-            // Format values for display
-            const formattedQ = formatNumber(Q);
-            const formattedW = formatNumber(W, true);
-            const formattedA = formatNumber(A, true);
-            
-            // Create verification message
-            let verificationMessage = `Please verify the following:\n\n`;
-            verificationMessage += `Quantity (Q): ${formattedQ}\n`;
-            verificationMessage += `Water Content (W): ${formattedW}%\n`;
-            verificationMessage += `Assay Content (A): ${formattedA}%\n\n`;
-            verificationMessage += `Formula: F${calculation.formulaType === "F2" ? "2" : calculation.formulaType === "F1" ? "1" : "3"}\n`;
-           
-            verificationMessage += `Is this correct?`;
+    // Format values for display
+    const formattedQ = formatNumber(Q);
+    const formattedW = formatNumber(W, true);
+    const formattedA = formatNumber(A, true);
+    
+    // Create verification message (without result line)
+    let verificationMessage = `Please verify the following:\n\n`;
+    verificationMessage += `Quantity (Q): ${formattedQ}\n`;
+    verificationMessage += `Water Content (W): ${formattedW}%\n`;
+    verificationMessage += `Assay Content (A): ${formattedA}%\n\n`;
+    verificationMessage += `Formula: F${calculation.formulaType === "F2" ? "2" : calculation.formulaType === "F1" ? "1" : "3"}\n\n`;
+    verificationMessage += `Is this correct?`;
 
-            // Show confirmation dialog
+    // Show confirmation dialog
+    if (!confirm(verificationMessage)) {
+        // If user cancels, restore input fields for editing
+        domCache.QInput.value = formattedQ;
+        domCache.waterInput.value = formattedW;
+        domCache.assayInput.value = formattedA;
+        domCache.progressBar.style.width = "100%";
+        domCache.buttons.style.display = "flex";
+        domCache.assayGroup.style.display = "block";
+        domCache.waterGroup.style.display = "block";
+        return false;
+    }
+
+    return true;
+}
+        
+    // Show confirmation dialog
             if (!confirm(verificationMessage)) {
                 // If user cancels, allow them to edit the inputs
                 domCache.QInput.value = formattedQ;
@@ -1356,11 +1371,13 @@
     let dispensed = new Decimal(0);
     let remainingCalc = new Decimal(0);
     let hasFinalCalculations = false;
+    let hasF2Calculations = false;
 
     calculations.forEach(calc => {
         if (calc.formulaType === "F2") {
             dispensed = dispensed.plus(calc.Q);
             remainingCalc = remainingCalc.plus(calc.result);
+            hasF2Calculations = true;
         } else if (calc.formulaType === "F1" || calc.formulaType === "F3") {
             dispensed = dispensed.plus(calc.result);
             remainingCalc = remainingCalc.plus(calc.Q);
@@ -1378,11 +1395,12 @@
         const remaining = stdQty.minus(remainingCalc);
         domCache.remainingQty.textContent = formatNumber(remaining);
 
+        // Show lot selector if nothing is remaining
         const showLotSelect = remaining.eq(0);
         domCache.lotSelectGroup.style.display = showLotSelect ? 'block' : 'none';
 
-        // ✅ This is the fixed logic:
-        if (hasFinalCalculations && !remaining.eq(0)) {
+        // ✅ Updated warning logic
+        if ((hasFinalCalculations && !remaining.eq(0)) || (hasF2Calculations && remaining.lte(0))) {
             domCache.quantityWarning.classList.add('active');
         } else {
             domCache.quantityWarning.classList.remove('active');
