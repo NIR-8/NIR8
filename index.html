@@ -772,7 +772,9 @@
                 width: 80px;
             }
         }
-        @media print {
+
+
+       @media print {
     @page {
         size: A4 landscape;
         margin: 5mm;
@@ -810,7 +812,7 @@
         font-size: 12pt;
         position: relative;
         background: #fff;
-        overflow: visible;
+        overflow: hidden;
     }
     .calculation-entry::before {
         content: "Assay Based Calculation";
@@ -827,19 +829,16 @@
         box-sizing: border-box;
     }
     .calculation-entry::after {
-        content: "Remarks: ______________________________________________________________\a\a"; /* Added \a for extra line breaks */
+        content: "Remarks: ______________________________________________________________";
         position: absolute;
-        bottom: 3mm; /* Lowered from 8mm to 3mm to use more of the bottom space */
+        bottom: 0;
         left: 0;
         width: 100%;
         background: #f0f0f0;
-        padding: 5mm; /* Increased padding to 5mm for more writing space */
-        line-height: 1.5; /* Added to increase vertical space for writing */
+        padding: 5mm;
         font-size: 14pt;
         border-top: 1px solid #000;
         box-sizing: border-box;
-        z-index: 10;
-        white-space: pre; /* Preserve line breaks for \a */
     }
     .reference-values {
         position: absolute;
@@ -868,22 +867,11 @@
     }
     .page-number {
         position: absolute;
-        bottom: 8mm; /* Adjusted to ensure visibility */
+        bottom: 5mm;
         right: 5mm;
         font-size: 8pt;
         color: #000;
         font-weight: 700;
-        z-index: 10; /* Ensure visibility above other elements */
-        display: block !important; /* Force display */
-    }
-    .calculation-entry:nth-child(1) .page-number::after {
-        content: "Page 1";
-    }
-    .calculation-entry:nth-child(2) .page-number::after {
-        content: "Page 2";
-    }
-    .calculation-entry:nth-child(3) .page-number::after {
-        content: "Page 3";
     }
     #stepsContainer {
         display: flex;
