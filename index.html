@@ -772,110 +772,92 @@
                 width: 80px;
             }
         }
-        @media print {
-            @page {
-    size: A4 landscape;
-    margin: 10mm 15mm;
+        /* GLOBAL RESET FOR BOX-SIZING */ *, *::before, *::after { box-sizing: border-box; }
+
+@media print { @page { size: A4 landscape; margin: 10mm 15mm; }
+
+body {
+    background: transparent;
+    padding: 0;
+    margin: 0;
 }
-            body {
-                background: transparent;
-                padding: 0;
-                margin: 0;
-            }
-            #mathjax-loading, .acb-notice, .acb-toggle-btn, .calculator-container, .delete-button, .info-btn, .menu-bar, .print-btn, .progress-container, footer, .reset-acb-btn {
-                display: none !important;
-            }
-            .calculation-steps {
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                display: block !important;
-                width: 100%;
-                max-width: none;
-                margin: 0;
-                padding: 0;
-                box-shadow: none;
-                background: transparent;
-            }
-            .calculation-entry {
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                display: block !important;
-                width: 285mm;
-                height: 200mm;
-                margin: 0 auto;
-                padding: 0;
-                box-sizing: border-box;
-                page-break-after: always;
-                border: 1px solid #000;
-                font-size: 12pt;
-                position: relative;
-                background: #fff;
-                overflow: hidden;
-            }
-            .calculation-entry::before {
-                content: "Assay Based Calculation";
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                background: #f0f0f0;
-                padding: 5mm;
-                text-align: center;
-                font-size: 16pt;
-                font-weight: 600;
-                border-bottom: 1px solid #000;
-                box-sizing: border-box;
-            }
-            .calculation-entry::after {
-                content: "Remarks: ______________________________________________________________";
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                background: #f0f0f0;
-                padding: 5mm;
-                font-size: 14pt;
-                border-top: 1px solid #000;
-                box-sizing: border-box;
-            }
-            .reference-values {
-                position: absolute;
-                top: 20mm;
-                right: 10mm;
-                font-size: 10pt;
-                color: #000;
-                background: #fff;
-                padding: 2px 5px;
-                z-index: 10;
-            }
-            .calculation-entry .lot-label::before {
-                content: "LOT: ";
-                position: absolute;
-                top: 24mm;
-                left: 15mm;
-                font-size: 14pt;
-            }
-            .calculation-content {
-                margin-top: 30mm;
-                margin-bottom: 30mm;
-                padding: 0 15mm;
-                font-size: 14pt;
-                overflow: hidden;
-                text-align: left;
-            }
-            .page-number {
-                position: absolute;
-                bottom: 5mm;
-                right: 5mm;
-                font-size: 8pt;
-                color: #000;
-                font-weight: 700;
-            }
-            #stepsContainer {
-                display: flex;
-                flex-direction: column-reverse;
-            }
-        }
+
+/* Prevents anything unnecessary from being printed */
+#mathjax-loading, .acb-notice, .acb-toggle-btn, .calculator-container, .delete-button,
+.info-btn, .menu-bar, .print-btn, .progress-container, footer, .reset-acb-btn {
+    display: none !important;
+}
+
+.calculation-steps {
+    border-radius: 0;
+    box-shadow: none;
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.calculation-entry {
+    width: 285mm;
+    height: 190mm; /* Fits into A4 landscape with 10mm top/bottom margin */
+    margin: 0 auto;
+    padding: 0;
+    position: relative;
+    border: 1px solid #000;
+    font-size: 12pt;
+    background: #fff;
+    page-break-after: always;
+}
+
+.calculation-entry::before {
+    content: "Assay Based Calculation";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #f0f0f0;
+    padding: 5mm;
+    text-align: center;
+    font-size: 16pt;
+    font-weight: 600;
+    border-bottom: 1px solid #000;
+}
+
+.calculation-entry::after {
+    content: "Remarks: ______________________________________________________________";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #f0f0f0;
+    padding: 3mm; /* Reduced padding to help fit */
+    font-size: 14pt;
+    border-top: 1px solid #000;
+}
+
+.calculation-content {
+    margin-top: 30mm;
+    margin-bottom: 30mm;
+    padding: 0 15mm;
+    font-size: 14pt;
+    overflow: hidden;
+    text-align: left;
+}
+
+.page-number {
+    position: absolute;
+    bottom: 5mm;
+    right: 5mm;
+    font-size: 8pt;
+    color: #000;
+    font-weight: 700;
+}
+
+}
+
+
     </style>
 </head>
 <body>
