@@ -774,9 +774,9 @@
         }
         @media print {
             @page {
-                size: A4 landscape;
-                margin: 5mm;
-            }
+    size: A4 landscape;
+    margin: 10mm 15mm;
+}
             body {
                 background: transparent;
                 padding: 0;
@@ -1332,7 +1332,7 @@
             verificationMessage += `Water Content (W): ${formattedW}%\n`;
             verificationMessage += `Assay Content (A): ${formattedA}%\n\n`;
             verificationMessage += `Formula: F${calculation.formulaType === "F2" ? "2" : calculation.formulaType === "F1" ? "1" : "3"}\n`;
-            verificationMessage += `Result: ${calculation.result}\n\n`;
+           
             verificationMessage += `Is this correct?`;
 
             // Show confirmation dialog
