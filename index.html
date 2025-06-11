@@ -774,20 +774,29 @@
         }
 
 
-      @media print {
+      /* GLOBAL RESET FOR BOX-SIZING */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+@media print {
     @page {
         size: A4 landscape;
         margin: 8mm;
     }
- 
+
     body {
         background: transparent;
         padding: 0;
         margin: 0;
     }
-    #mathjax-loading, .acb-notice, .acb-toggle-btn, .calculator-container, .delete-button, .info-btn, .menu-bar, .print-btn, .progress-container, footer, .reset-acb-btn {
+
+    /* Hide UI elements not needed for printing */
+    #mathjax-loading, .acb-notice, .acb-toggle-btn, .calculator-container, .delete-button, .info-btn, 
+    .menu-bar, .print-btn, .progress-container, footer, .reset-acb-btn {
         display: none !important;
     }
+
     .calculation-steps {
         border-radius: 0 !important;
         box-shadow: none !important;
@@ -796,25 +805,23 @@
         max-width: none;
         margin: 0;
         padding: 0;
-        box-shadow: none;
         background: transparent;
     }
+
     .calculation-entry {
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        display: block !important;
-        width: 280mm;
-        height: 190mm;
+        width: 280mm !important;
+        height: 190mm !important;
         margin: 0 auto;
         padding: 0;
-        box-sizing: border-box;
-        page-break-after: always;
         border: 1px solid #000;
         font-size: 12pt;
         position: relative;
         background: #fff;
         overflow: hidden;
+        page-break-after: always;
+        /* box-sizing is already set globally */
     }
+
     .calculation-entry::before {
         content: "Assay Based Calculation";
         position: absolute;
@@ -827,8 +834,8 @@
         font-size: 16pt;
         font-weight: 600;
         border-bottom: 1px solid #000;
-        box-sizing: border-box;
     }
+
     .calculation-entry::after {
         content: "Remarks: ______________________________________________________________";
         position: absolute;
@@ -839,8 +846,8 @@
         padding: 5mm;
         font-size: 14pt;
         border-top: 1px solid #000;
-        box-sizing: border-box;
     }
+
     .reference-values {
         position: absolute;
         top: 20mm;
@@ -851,6 +858,7 @@
         padding: 2px 5px;
         z-index: 10;
     }
+
     .calculation-entry .lot-label::before {
         content: "LOT: ";
         position: absolute;
@@ -858,6 +866,7 @@
         left: 15mm;
         font-size: 14pt;
     }
+
     .calculation-content {
         margin-top: 30mm;
         margin-bottom: 30mm;
@@ -866,6 +875,7 @@
         overflow: hidden;
         text-align: left;
     }
+
     .page-number {
         position: absolute;
         bottom: 5mm;
@@ -874,6 +884,7 @@
         color: #000;
         font-weight: 700;
     }
+
     #stepsContainer {
         display: flex;
         flex-direction: column-reverse;
