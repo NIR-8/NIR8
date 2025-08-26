@@ -1989,6 +1989,35 @@ function closeModal() {
 
         // Handle window resize
         window.addEventListener('resize', updatePageNumbers);
+
+// Initialize default std qty
+window.addEventListener("DOMContentLoaded", () => {
+    domCache.stdQtyInput.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
+    syncStdQtyToACB(CONSTANTS.ACB_DEFAULT_A);
+});
+
+// Sync std qty to ACB A-values
+function syncStdQtyToACB(value) {
+    const stdVal = new Decimal(value || 0).toFixed(3);
+
+    domCache.acbInputs.a.forEach(input => {
+        input.value = stdVal;
+        input.classList.remove('acb-manual-input');
+        input.classList.add('acb-prefilled');
+    });
+
+    // Update total A
+    const totalA = new Decimal(stdVal).times(domCache.acbInputs.a.length);
+    domCache.acbInputs.totals.a.textContent = totalA.toFixed(3);
+}
+
+// Update when stdQty input changes
+domCache.stdQtyInput.addEventListener("change", () => {
+    const newVal = parseFloat(domCache.stdQtyInput.value || 0);
+    if (!isNaN(newVal) && newVal > 0) {
+        syncStdQtyToACB(newVal);
+    }
+});
     </script> 
 
 <!-- Improved Verification Modal -->
