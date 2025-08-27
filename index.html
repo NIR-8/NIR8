@@ -1051,31 +1051,20 @@
         <button type="button" onclick="printWithCheck()" class="print-btn" aria-label="Print calculations">Print Calculations</button>
         <div id="stepsContainer"></div>
     </div>
-    <div id="infoModal" class="info-modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()" aria-label="Close information modal">×</span>
-            <div id="formulaInfo" class="info-section">
-                <h3>Formula Calculator-Shortcuts</h3>
-                <div class="info-item"><span class="info-key">F1/F2/F3:</span>Calculate respective formulas</div>
+    <div id="infoModal" class="info-modal" style="display:flex;">
+    <div class="modal-content">
+        <h3>Enter Standard Quantity</h3>
+        <div class="input-group">
+            <label for="modalStdQty">Std Qty (kg):</label>
+            <input type="number" id="modalStdQty" value="417.000" step="0.001" min="0" required>
+        </div>
+        <div class="button-row">
+            <button type="button" onclick="confirmStdQty()">Proceed</button>
+        </div>
+    </div>
+</div>
               
-                <div class="info-item"><span class="info-key">❌:</span>Remove individual calculations</div>
-
-                <div class="info-item"><span class="info-key">F5:</span>Refresh page</div>
-
- <div class="info-item"><span class="info-key">F8:</span>Print calculations</div>
-
-                <div class="info-item"><span class="info-key">Enter:</span>Navigate between fields</div>
-                <div class="info-item"><span class="info-key">Click Remaining Qty:</span>Copy to Q field</div>
-                  <div class="info-item"><span class="info-key">Lot Select:</span>Assign dispensed qty to selected lot</div>
-            </div>
-            <div id="acbInfo" class="info-section" style="display:none">
-                <h3>(A+C)-B Calculator Features</h3>
-                <div class="info-item"><span class="info-key">Edit Button:</span>Toggle editing of standard quantities</div>
-                <div class="info-item"><span class="info-key">Enter:</span>Navigate between editable fields</div>
-                <div class="info-item"><span class="info-key">Auto-update:</span>Changes automatically update totals</div>
-                <div class="info-item"><span class="info-key">Reset Button (↻):</span>Reset all values in this calculator</div>
-              
-            </div>
+           
             <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
     </div>
@@ -1884,11 +1873,7 @@ function closeModal() {
             domCache.calculationSteps.classList.add("hidden");
             domCache.QInput.focus();
 
-  // Show help popup on first load
-    setTimeout(() => {
-        showInfo();
-        setTimeout(closeModal, 4000); // Auto-close after 4 seconds
-    }, 500); // Small delay to let page load first
+
     
     
             // Input listeners
@@ -2252,6 +2237,17 @@ async function calculate(formulaType) {
     }, 100);
 
     newEntry.focus();
+}
+
+function confirmStdQty() {
+    const val = parseFloat(document.getElementById("modalStdQty").value);
+    if (!val || val <= 0) {
+        alert("Please enter a valid Std Qty");
+        return;
+    }
+    domCache.stdQtyInput.value = val.toFixed(3);
+    updateQuantityTracker();
+    document.getElementById("infoModal").style.display = "none";
 }
 </script>
 </body>
