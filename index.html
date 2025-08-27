@@ -1981,26 +1981,40 @@ window.addEventListener("DOMContentLoaded", () => {
     syncStdQtyToACB(CONSTANTS.ACB_DEFAULT_A);
 });
 
-// Sync std qty to ACB A-values
-function syncStdQtyToACB(value) {
-    const stdVal = new Decimal(value || 0).toFixed(3);
+function confirmStdQty() {
+    const val = parseFloat(document.getElementById("modalStdQty").value);
+    if (!val || val <= 0) {
+        alert("Please enter a valid Std Qty");
+        return;
+    }
 
+    // Update top menu Std Qty tracker
+    domCache.stdQtyInput.value = val.toFixed(3);
+    updateQuantityTracker();
+
+    // Update A+C-B calculator Std. Qty (A) fields (lot1-a → lot4-a)
     domCache.acbInputs.a.forEach(input => {
-        input.value = stdVal;
-        input.classList.remove('acb-manual-input');
+        input.value = val.toFixed(3);
+        input.classList.remove('edited', 'acb-manual-input');
         input.classList.add('acb-prefilled');
     });
 
-    // Update total A
-    const totalA = new Decimal(stdVal).times(domCache.acbInputs.a.length);
-    domCache.acbInputs.totals.a.textContent = totalA.toFixed(3);
+    // Update total A accordingly
+    domCache.acbInputs.totals.a.textContent = (val * 4).toFixed(3);
+
+    // Hide modal
+    document.getElementById("infoModal").style.display = "none";
 }
 
-// Update when stdQty input changes
 domCache.stdQtyInput.addEventListener("change", () => {
-    const newVal = parseFloat(domCache.stdQtyInput.value || 0);
-    if (!isNaN(newVal) && newVal > 0) {
-        syncStdQtyToACB(newVal);
+    const val = parseFloat(domCache.stdQtyInput.value);
+    if (val && val > 0) {
+        domCache.acbInputs.a.forEach(input => {
+            input.value = val.toFixed(3);
+            input.classList.remove('edited', 'acb-manual-input');
+            input.classList.add('acb-prefilled');
+        });
+        domCache.acbInputs.totals.a.textContent = (val * 4).toFixed(3);
     }
 });
     </script> 
