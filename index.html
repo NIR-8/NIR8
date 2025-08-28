@@ -1472,48 +1472,29 @@ function copyRemainingToQ() {
     }
 }
 
-        // Reset ACB calculator
-        function resetACBCalculator() {
-            if (!confirm("Are you sure you want to reset the (A+C)-B calculator? This will clear all entered values.")) {
-                return;
-            }
-            
-            // Reset standard values
-            domCache.acbInputs.a.forEach(input => {
-                input.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
-                input.classList.remove('edited', 'acb-manual-input');
-                input.classList.add('acb-prefilled');
-            });
-            
-            domCache.acbInputs.c.forEach(input => {
-                input.value = CONSTANTS.ACB_DEFAULT_C.toFixed(3);
-                input.classList.remove('edited', 'acb-manual-input');
-                input.classList.add('acb-prefilled');
-            });
-            
-            // Clear issued values
-            domCache.acbInputs.b.forEach(input => {
-                input.value = '';
-                input.classList.remove('acb-manual-input');
-            });
-            
-            // Reset totals
-            domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
-            domCache.acbInputs.totals.b.textContent = '0.000';
-            domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
-            domCache.acbInputs.totals.result.textContent = '0.000';
-            
-            // Reset results
-            domCache.acbInputs.results.forEach(result => {
-                result.textContent = '-';
-                result.classList.remove('acb-output', 'acb-prefilled');
-            });
-            
-            // Reset edit mode if active
-            if (isACBEditingEnabled) {
-                toggleEdit();
-            }
-        }
+function resetACBCalculator() {
+    if (!confirm("Are you sure you want to reset only Issued Qty (B) values?")) {
+        return;
+    }
+
+    // Clear issued values (B only)
+    domCache.acbInputs.b.forEach(input => {
+        input.value = '';
+        input.classList.remove('acb-manual-input');
+    });
+
+    // Reset totals for B and results
+    domCache.acbInputs.totals.b.textContent = '0.000';
+    domCache.acbInputs.totals.result.textContent = '0.000';
+
+    // Reset results column
+    domCache.acbInputs.results.forEach(result => {
+        result.textContent = '-';
+        result.classList.remove('acb-output', 'acb-prefilled');
+    });
+
+    // Keep A and C as they are (do not reset)
+}
 
         // Calculate
         function calculate(formulaType) {
@@ -1949,10 +1930,7 @@ function closeModal() {
                 }
             });
 
-            // Modal listeners
-            window.addEventListener('click', e => {
-                if (e.target === document.getElementById('infoModal')) closeModal();
-            });
+            
 
             // Keyboard shortcuts
             document.addEventListener("keydown", e => {
