@@ -1052,11 +1052,25 @@
         <div id="stepsContainer"></div>
     </div>
     <div id="infoModal" class="info-modal">
-        <div class="modal-content">
+   <div class="modal-content">
             <span class="close" onclick="closeModal()" aria-label="Close information modal">×</span>
             <div id="formulaInfo" class="info-section">
                 <h3>Formula Calculator-Shortcuts</h3>
                 <div class="info-item"><span class="info-key">F1/F2/F3:</span>Calculate respective formulas</div>
+<!-- Std Qty Modal -->
+<div id="stdQtyModal" class="info-modal" style="display:none;">
+  <div class="modal-content">
+    <h3 style="text-align:center; margin-top:0;">Set Standard Quantity</h3>
+    <div style="text-align:center; margin-bottom:15px;">
+      <label for="stdQtyEdit">Std Qty (kg):</label>
+      <input type="number" step="0.001" id="stdQtyEdit" value="417.000" style="width:150px; text-align:center;">
+    </div>
+    <div style="text-align:center;">
+      <button type="button" onclick="confirmStdQty()">Proceed</button>
+    </div>
+  </div>
+</div>
+     
               
                 <div class="info-item"><span class="info-key">❌:</span>Remove individual calculations</div>
 
@@ -2018,6 +2032,43 @@ domCache.stdQtyInput.addEventListener("change", () => {
         syncStdQtyToACB(newVal);
     }
 });
+
+
+// --- Std Qty Modal Logic ---
+// Show Std Qty modal on load
+window.addEventListener("load", () => {
+    document.getElementById("stdQtyModal").style.display = "block";
+});
+
+// Confirm Std Qty selection
+function confirmStdQty() {
+    let value = parseFloat(document.getElementById("stdQtyEdit").value);
+    if (isNaN(value) || value <= 0) {
+        alert("Please enter a valid Std Qty greater than 0.");
+        return;
+    }
+    applyStdQty(value);
+    document.getElementById("stdQtyModal").style.display = "none";
+}
+
+// Apply Std Qty everywhere (menu bar + ACB calculator)
+function applyStdQty(value) {
+    // Update menu input
+    domCache.stdQtyInput.value = value.toFixed(3);
+
+    // Update ACB Lot A fields
+    domCache.acbInputs.a.forEach(input => {
+        input.value = value.toFixed(3);
+        input.classList.remove('edited', 'acb-manual-input');
+        input.classList.add('acb-prefilled');
+    });
+
+    // Update total-A
+    const totalA = value * domCache.acbInputs.a.length;
+    domCache.acbInputs.totals.a.textContent = totalA.toFixed(3);
+
+    updateQuantityTracker();
+}
     </script> 
 
 <!-- Improved Verification Modal -->
