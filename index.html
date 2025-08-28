@@ -1898,11 +1898,7 @@ function closeModal() {
             domCache.calculationSteps.classList.add("hidden");
             domCache.QInput.focus();
 
-  // Show help popup on first load
-    setTimeout(() => {
-        showInfo();
-        setTimeout(closeModal, 4000); // Auto-close after 4 seconds
-    }, 500); // Small delay to let page load first
+
     
     
             // Input listeners
