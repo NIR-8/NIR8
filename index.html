@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NIR8 Calculators (Patched)</title>
+  <!-- ... keep all your existing head content, styles, and scripts ... -->
+</head>
+<body>
+  <!-- ... keep all your existing content before infoModal ... -->
+
+  <div id="infoModal" class="info-modal">
+    <!-- existing info modal code here -->
+  </div>
+
+  <!-- Std Qty Modal -->
+  <div id="stdQtyModal" class="info-modal" style="display:none;">
+    <div class="modal-content">
+      <h3 style="text-align:center; margin-top:0;">Set Standard Quantity</h3>
+      <div style="text-align:center; margin-bottom:15px;">
+        <label for="stdQtyEdit">Std Qty (kg):</label>
+        <input type="number" step="0.001" id="stdQtyEdit" value="417.000" style="width:150px; text-align:center;">
+      </div>
+      <div style="text-align:center;">
+        <button type="button" onclick="confirmStdQty()">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ... keep all your existing footer ... -->
+
+  <script>
+    // keep all your existing script code here...
+
+    // --- Std Qty Modal Logic ---
+    window.addEventListener("load", () => {
+        document.getElementById("stdQtyModal").style.display = "block";
+    });
+
+    function confirmStdQty() {
+        let value = parseFloat(document.getElementById("stdQtyEdit").value);
+        if (isNaN(value) || value <= 0) {
+            alert("Please enter a valid Std Qty greater than 0.");
+            return;
+        }
+        applyStdQty(value);
+        document.getElementById("stdQtyModal").style.display = "none";
+    }
+
+    function applyStdQty(value) {
+        // Update menu input
+        domCache.stdQtyInput.value = value.toFixed(3);
+
+        // Update ACB Lot A fields
+        domCache.acbInputs.a.forEach(input => {
+            input.value = value.toFixed(3);
+            input.classList.remove('edited', 'acb-manual-input');
+            input.classList.add('acb-prefilled');
+        });
+
+        // Update total-A
+        const totalA = value * domCache.acbInputs.a.length;
+        domCache.acbInputs.totals.a.textContent = totalA.toFixed(3);
+
+        updateQuantityTracker();
+    }
+  </script>
+</body>
+</html>
