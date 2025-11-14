@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "id": "admin",
+      "name": "Admin User",
+      "password": "password123"
+    },
+    {
+      "id": "user1",
+      "name": "User One",
+      "password": "pass123"
+    },
+    {
+      "id": "operator",
+      "name": "Operator",
+      "password": "operator123"
+    }
+  ],
+  "batches": [],
+  "messages": [
+    {
+      "id": "1",
+      "sender": "System",
+      "content": "Welcome to Batch Management System! Data stored in GitHub.",
+      "timestamp": "2025-11-14T06:00:33.214Z"
+    }
+  ]
+}
