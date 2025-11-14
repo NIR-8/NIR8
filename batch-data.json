@@ -16,7 +16,26 @@
       "password": "operator123"
     }
   ],
-  "batches": [],
+  "batches": [
+    {
+      "id": "1763100065533",
+      "product": "Product A",
+      "batchNumber": "V2500564",
+      "comments": "Check",
+      "status": "pending",
+      "author": "Admin User",
+      "createdAt": "2025-11-14T06:01:05.533Z",
+      "scheduleShift": "",
+      "scheduleDate": "",
+      "logs": [
+        {
+          "user": "Admin User",
+          "action": "created",
+          "timestamp": "2025-11-14T06:01:05.533Z"
+        }
+      ]
+    }
+  ],
   "messages": [
     {
       "id": "1",
