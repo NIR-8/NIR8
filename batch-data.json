@@ -42,6 +42,12 @@
       "sender": "System",
       "content": "Welcome to Batch Management System! Data stored in GitHub.",
       "timestamp": "2025-11-14T06:00:33.214Z"
+    },
+    {
+      "id": "1763100066701",
+      "sender": "System",
+      "content": "Admin User posted new batch: Product A - V2500564",
+      "timestamp": "2025-11-14T06:01:06.702Z"
     }
   ]
 }
