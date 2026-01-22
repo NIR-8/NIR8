@@ -2254,5 +2254,228 @@ async function calculate(formulaType) {
     newEntry.focus();
 }
 </script>
+<!-- Add this just before the closing </body> tag -->
+<div id="betaBotPopup" class="beta-bot-popup">
+    <button class="beta-bot-toggle" onclick="toggleBetaBot()" aria-label="Try beta version">
+        Try Beta
+    </button>
+    <div class="beta-bot-content">
+        <div class="beta-bot-header">
+            <span>🎯 Try Beta Version</span>
+            <button class="beta-bot-close" onclick="toggleBetaBot()" aria-label="Close">×</button>
+        </div>
+        <div class="beta-bot-body">
+            <p>Experience enhanced features in our beta version!</p>
+            <a href="https://nir7.pages.dev" target="_blank" class="beta-bot-link">
+                Visit nir7.pages.dev →
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Beta Bot Popup Styles */
+.beta-bot-popup {
+    position: fixed;
+    bottom: 70px; /* Position above the footer */
+    right: 20px;
+    z-index: 1000;
+    font-family: Poppins, sans-serif;
+}
+
+.beta-bot-toggle {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    border-radius: 25px 25px 5px 25px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.beta-bot-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.beta-bot-toggle:active {
+    transform: translateY(0);
+}
+
+.beta-bot-toggle::after {
+    content: '🔬';
+    margin-left: 8px;
+    font-size: 16px;
+}
+
+.beta-bot-content {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    width: 280px;
+    margin-bottom: 15px;
+    display: none;
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+.beta-bot-popup.active .beta-bot-content {
+    display: block;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.beta-bot-header {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    padding: 15px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.beta-bot-close {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+}
+
+.beta-bot-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.beta-bot-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.beta-bot-body p {
+    color: #444;
+    margin-bottom: 15px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.beta-bot-link {
+    display: inline-block;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3);
+}
+
+.beta-bot-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(79, 172, 254, 0.4);
+}
+
+.beta-bot-link:active {
+    transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .beta-bot-popup {
+        bottom: 60px;
+        right: 15px;
+    }
+    
+    .beta-bot-content {
+        width: 260px;
+        right: -50px;
+    }
+    
+    .beta-bot-toggle {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .beta-bot-popup {
+        bottom: 50px;
+        right: 10px;
+    }
+    
+    .beta-bot-content {
+        width: 240px;
+        right: -40px;
+    }
+}
+
+/* Hide during printing */
+@media print {
+    .beta-bot-popup {
+        display: none !important;
+    }
+}
+</style>
+
+<script>
+function toggleBetaBot() {
+    const popup = document.getElementById('betaBotPopup');
+    popup.classList.toggle('active');
+    
+    // Close popup when clicking outside
+    if (popup.classList.contains('active')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeBetaBotOnClickOutside);
+        }, 10);
+    } else {
+        document.removeEventListener('click', closeBetaBotOnClickOutside);
+    }
+}
+
+function closeBetaBotOnClickOutside(event) {
+    const popup = document.getElementById('betaBotPopup');
+    if (!popup.contains(event.target)) {
+        popup.classList.remove('active');
+        document.removeEventListener('click', closeBetaBotOnClickOutside);
+    }
+}
+
+// Auto-show popup after 3 seconds on first visit
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('betaBotShown')) {
+        setTimeout(() => {
+            document.getElementById('betaBotPopup').classList.add('active');
+            localStorage.setItem('betaBotShown', 'true');
+        }, 3000);
+    }
+});
+</script>
 </body>
 </html>
