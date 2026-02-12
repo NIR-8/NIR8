@@ -2467,15 +2467,7 @@ function closeBetaBotOnClickOutside(event) {
     }
 }
 
-// Auto-show popup after 3 seconds on first visit
-document.addEventListener('DOMContentLoaded', () => {
-    if (!localStorage.getItem('betaBotShown')) {
-        setTimeout(() => {
-            document.getElementById('betaBotPopup').classList.add('active');
-            localStorage.setItem('betaBotShown', 'true');
-        }, 3000);
-    }
-});
+
 </script>
 </body>
 </html>
