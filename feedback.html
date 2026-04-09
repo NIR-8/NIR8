@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Help Us Improve – NIR8 Calculators</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"></noscript>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Poppins, sans-serif;
+            background: #f7f8fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            color: #1a1a1a;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        /* Back link */
+        .back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #888;
+            text-decoration: none;
+            margin-bottom: 40px;
+            transition: color 0.2s;
+        }
+        .back:hover { color: #333; }
+        .back svg { width: 14px; height: 14px; }
+
+        /* Heading */
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+            color: #111;
+        }
+        .sub {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        /* Textarea */
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            padding: 16px;
+            font-family: Poppins, sans-serif;
+            font-size: 14px;
+            color: #1a1a1a;
+            background: #fff;
+            border: 1.5px solid #e2e2e2;
+            border-radius: 10px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+            line-height: 1.6;
+        }
+        textarea::placeholder { color: #bbb; }
+        textarea:focus { border-color: #4facfe; }
+
+        /* Char count */
+        .meta {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+            margin-bottom: 20px;
+        }
+        .char { font-size: 12px; color: #bbb; }
+        .char.warn { color: #e53935; }
+
+        /* Submit */
+        button[type="submit"] {
+            width: 100%;
+            padding: 13px;
+            background: #111;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: Poppins, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.2px;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        button[type="submit"]:hover { background: #222; }
+        button[type="submit"]:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* Error */
+        .err {
+            display: none;
+            font-size: 13px;
+            color: #e53935;
+            margin-top: 12px;
+            text-align: center;
+        }
+        .err.show { display: block; }
+
+        /* Success state */
+        .success {
+            display: none;
+            text-align: center;
+            animation: up 0.35s ease both;
+        }
+        .success-icon {
+            font-size: 36px;
+            margin-bottom: 16px;
+            color: #28a745;
+        }
+        .success h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 8px;
+        }
+        .success p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+        .success a {
+            font-size: 13px;
+            font-weight: 600;
+            color: #888;
+            text-decoration: none;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .success a:hover { color: #111; border-color: #aaa; }
+
+        /* Footer */
+        footer {
+            margin-top: 48px;
+            font-size: 12px;
+            color: #ccc;
+            text-align: center;
+        }
+
+        @keyframes up {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .form-area { animation: up 0.35s ease both; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <a href="/" class="back">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 12L6 8l4-4"/>
+        </svg>
+        NIR8 Calculators
+    </a>
+
+    <!-- FORM STATE -->
+    <div class="form-area" id="formArea">
+        <h1>Help Us Improve</h1>
+        <p class="sub">Share a bug, a suggestion, or anything on your mind.</p>
+
+        <form id="feedbackForm" novalidate>
+            <input type="hidden" name="access_key" value="d745079a-5836-41cd-959c-b7bacc1be074">
+            <input type="hidden" name="subject" value="NIR8 — User Feedback">
+            <input type="checkbox" name="botcheck" style="display:none">
+
+            <textarea
+                id="msg"
+                name="message"
+                placeholder="Write your message here…"
+                maxlength="2000"
+                autofocus
+            ></textarea>
+
+            <div class="meta">
+                <span class="char" id="charCount">0 / 2000</span>
+            </div>
+
+            <button type="submit" id="submitBtn">Send</button>
+            <div class="err" id="errMsg"></div>
+        </form>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="success" id="successArea">
+        <div class="success-icon">✓</div>
+        <h2>Message received</h2>
+        <p>Thank you. We read every submission<br>and use it to make the tool better.</p>
+        <a href="/">← Back to calculator</a>
+    </div>
+
+    <footer>NIR8 Calculators</footer>
+</div>
+
+<script>
+    const msg         = document.getElementById('msg');
+    const charCount   = document.getElementById('charCount');
+    const submitBtn   = document.getElementById('submitBtn');
+    const errMsg      = document.getElementById('errMsg');
+    const formArea    = document.getElementById('formArea');
+    const successArea = document.getElementById('successArea');
+
+    msg.addEventListener('input', () => {
+        const len = msg.value.length;
+        charCount.textContent = `${len} / 2000`;
+        charCount.classList.toggle('warn', len > 1800);
+    });
+
+    document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!msg.value.trim()) { showErr('Please write a message before sending.'); return; }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending…';
+        errMsg.classList.remove('show');
+
+        try {
+            const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(e.target) });
+            const data = await res.json();
+            if (data.success) {
+                formArea.style.display = 'none';
+                successArea.style.display = 'block';
+            } else {
+                showErr('Something went wrong. Please try again.');
+                reset();
+            }
+        } catch {
+            showErr('Network error. Please check your connection.');
+            reset();
+        }
+    });
+
+    function showErr(txt) { errMsg.textContent = txt; errMsg.classList.add('show'); }
+    function reset() { submitBtn.disabled = false; submitBtn.textContent = 'Send'; }
+</script>
+</body>
+</html>
