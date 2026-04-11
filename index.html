@@ -96,11 +96,20 @@
       font-family:var(--font-main);
       background:linear-gradient(135deg,var(--clr-primary) 0%,#00f2fe 100%);
       min-height:100vh;
-      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+      display:flex;flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
       padding:calc(var(--menu-h) + 20px) 20px calc(var(--footer-h) + 20px);
       text-align:center;
-      /* Prevent layout shift from scrollbar */
       scrollbar-gutter:stable;
+    }
+    /* main must be flex column + centered so calculator card stays centered
+       regardless of field visibility changes inside it */
+    #mainContent{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      width:100%;
     }
     /* Fix MathJax context menu */
     .CtxtMenu_Info{border-radius:15px;box-shadow:0 10px 20px #808080;}
@@ -202,17 +211,13 @@
       display:none;
       background:var(--clr-white);
       padding:24px;
-      /* Fixed width — never changes regardless of field visibility */
       width:min(90vw,400px);
       min-width:300px;
       border-radius:var(--radius-md);
       box-shadow:var(--shadow-card);
-      margin-bottom:20px;
+      margin:0 auto 20px;
       position:relative;
       flex-shrink:0;
-      /* Lock horizontal position — prevents leftward drift */
-      align-self:center;
-      /* Ensure internal text/inputs stay centered */
       text-align:center;
     }
     #acbCalculator{width:min(96vw,920px);min-width:280px;}
@@ -354,13 +359,11 @@
       padding:16px;
       box-shadow:0 4px 12px rgba(0,0,0,.1);
       text-align:left;
-      margin-top:0;
-      /* Scroll snap container — page-wise scrolling through calculations */
+      margin:0 auto;
       overflow-y:auto;
       max-height:calc(100vh - var(--menu-h) - var(--footer-h) - 40px);
       scroll-snap-type:y mandatory;
       scroll-behavior:smooth;
-      /* Hide scrollbar but keep functional */
       scrollbar-width:thin;
       scrollbar-color:rgba(79,172,254,.4) transparent;
     }
