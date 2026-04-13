@@ -154,13 +154,10 @@
     /* ── QTY TRACKER ── */
     .menu-qty-tracker{
       display:flex;align-items:center;gap:12px;
-      /* No margin-left:auto here — hamburger owns the far-right position */
+      margin-left:auto;
       flex-shrink:1;
       min-width:0;
     }
-    /* When qty tracker is hidden, hamburger still stays far right via its own margin-left:auto */
-    /* Note: hiding is now done via visibility:hidden in JS, not display:none,
-       so the space is preserved and hamburger stays at far right on both tabs */
     .menu-qty-group{display:flex;flex-direction:column;align-items:flex-start;}
     .menu-qty-label{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px;line-height:1;}
     .menu-qty-value{font-size:13px;font-weight:600;color:#fff;line-height:1;}
@@ -185,24 +182,88 @@
     }
     .menu-qty-warning.active{display:block;}
 
-    /* ── HAMBURGER — always pinned to far right ── */
-    .hamburger-btn{
-      background:transparent;border:none;
-      color:rgba(255,255,255,.9);
-      font-size:20px;cursor:pointer;
-      padding:8px 8px 8px 14px;
-      min-height:40px;min-width:40px;
-      display:flex;align-items:center;justify-content:center;
-      border-radius:var(--radius-sm);
-      /* margin-left:auto pushes this to the absolute right regardless of
-         whether qty tracker is visible or hidden */
-      margin-left:auto;
-      border-left:1px solid rgba(255,255,255,.12);
-      transition:background var(--transition-fast),color var(--transition-fast);
-      flex-shrink:0;
+    /* ── HAMBURGER removed — replaced by floating left rail ── */
+
+    /* ═══════════════════════════════════════════
+       FLOATING LEFT RAIL NAV
+    ═══════════════════════════════════════════ */
+    .left-rail{
+      position:fixed;
+      top:50%;
+      left:12px;
+      transform:translateY(-50%);
+      z-index:200;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
     }
-    .hamburger-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
-    .hamburger-btn:focus-visible{outline:2px solid var(--clr-primary);outline-offset:2px;}
+    .rail-item{
+      display:flex;
+      align-items:center;
+      gap:0;
+      background:rgba(255,255,255,.2);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:40px;
+      padding:10px;
+      cursor:pointer;
+      text-decoration:none;
+      color:#fff;
+      font-family:var(--font-main);
+      font-size:13px;
+      font-weight:600;
+      white-space:nowrap;
+      overflow:hidden;
+      max-width:40px;
+      transition:
+        max-width .32s cubic-bezier(0.4,0,0.2,1),
+        gap .32s cubic-bezier(0.4,0,0.2,1),
+        background .2s ease,
+        box-shadow .2s ease;
+      box-shadow:0 2px 12px rgba(0,0,0,.1);
+    }
+    .rail-item:hover,
+    .rail-item:focus-visible{
+      max-width:200px;
+      gap:10px;
+      background:rgba(255,255,255,.32);
+      box-shadow:0 4px 20px rgba(0,0,0,.18);
+      outline:none;
+    }
+    .rail-item:focus-visible{
+      outline:2px solid rgba(255,255,255,.8);
+      outline-offset:2px;
+    }
+    .rail-icon{
+      width:20px;height:20px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;flex-shrink:0;line-height:1;
+    }
+    .rail-label{
+      font-size:12px;font-weight:600;
+      color:#fff;
+      opacity:0;
+      max-width:0;
+      overflow:hidden;
+      transition:
+        opacity .18s ease .12s,
+        max-width .32s cubic-bezier(0.4,0,0.2,1);
+      white-space:nowrap;
+      letter-spacing:.2px;
+    }
+    .rail-item:hover .rail-label,
+    .rail-item:focus-visible .rail-label{
+      opacity:1;
+      max-width:160px;
+    }
+
+    /* Hide left rail on very small screens — no room */
+    @media(max-width:420px){
+      .left-rail{ display:none; }
+    }
+
+    /* ── WRITE US PANEL — slides from left ── */
 
     /* ═══════════════════════════════════════════
        CALCULATOR CONTAINERS
@@ -557,11 +618,11 @@
     }
 
     /* ═══════════════════════════════════════════
-       SIDENAV OVERLAY
+       OVERLAY (shared by write-us panel)
     ═══════════════════════════════════════════ */
     .sidenav-overlay{
       display:none;position:fixed;inset:0;
-      background:rgba(0,0,0,.4);z-index:400;
+      background:rgba(0,0,0,.35);z-index:400;
       opacity:0;
       backdrop-filter:blur(2px);
       -webkit-backdrop-filter:blur(2px);
@@ -570,73 +631,17 @@
     .sidenav-overlay.open{display:block;opacity:1;}
 
     /* ═══════════════════════════════════════════
-       SIDENAV PANEL
-    ═══════════════════════════════════════════ */
-    .sidenav{
-      position:fixed;top:0;right:0;
-      width:min(280px,85vw);height:100%;
-      background:var(--clr-white);z-index:500;
-      display:flex;flex-direction:column;
-      transform:translateX(100%);
-      transition:transform var(--transition-panel);
-      box-shadow:var(--shadow-panel);
-    }
-    .sidenav.open{transform:translateX(0);}
-    .sidenav-header{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:18px 18px 14px;
-      border-bottom:1px solid #f0f0f0;
-      flex-shrink:0;
-    }
-    .sn-logo{font-size:15px;font-weight:700;color:#111;letter-spacing:-.2px;}
-    .sn-logo span{color:var(--clr-primary);}
-    .sidenav-close{
-      background:none;border:none;font-size:22px;color:#bbb;
-      cursor:pointer;padding:4px;border-radius:4px;line-height:1;
-      transition:color var(--transition-fast),background var(--transition-fast);
-      width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-    }
-    .sidenav-close:hover{color:#333;background:#f5f5f5;}
-    .sidenav-nav{flex:1;padding:8px 0;overflow-y:auto;}
-    .sidenav-item{
-      display:flex;align-items:center;gap:13px;padding:12px 18px;
-      text-decoration:none;color:#222;font-size:14px;font-weight:500;
-      transition:background var(--transition-fast);
-      cursor:pointer;border:none;background:none;
-      width:100%;text-align:left;font-family:var(--font-main);
-    }
-    .sidenav-item:hover{background:#f7f8fa;}
-    .sidenav-item:focus-visible{outline:2px solid var(--clr-primary);outline-offset:-2px;}
-    .sn-icon{
-      width:36px;height:36px;border-radius:8px;
-      display:flex;align-items:center;justify-content:center;
-      font-size:16px;flex-shrink:0;
-    }
-    .sn-icon.purple{background:#ede9fb;}
-    .sn-icon.blue{background:#e0f3ff;}
-    .sn-icon.green{background:#e8f5e9;}
-    .sn-text{flex:1;}
-    .sn-text strong{display:block;font-size:13px;font-weight:600;color:#111;margin-bottom:1px;}
-    .sn-text small{font-size:11px;color:#aaa;}
-    .sn-arrow{font-size:14px;color:#ccc;}
-    .sidenav-divider{height:1px;background:#f0f0f0;margin:4px 18px;}
-    .sidenav-footer{
-      padding:14px 18px;border-top:1px solid #f0f0f0;
-      font-size:11px;color:#ccc;text-align:center;flex-shrink:0;
-    }
-
-    /* ═══════════════════════════════════════════
-       WRITE US PANEL
+       WRITE US PANEL — slides from LEFT
     ═══════════════════════════════════════════ */
     .writeus-panel{
-      position:fixed;top:0;right:0;
-      width:min(280px,85vw);height:100%;
-      background:var(--clr-white);z-index:600;
+      position:fixed;top:0;left:0;
+      width:min(300px,88vw);height:100%;
+      background:var(--clr-white);z-index:500;
       display:flex;flex-direction:column;
-      padding:22px 18px 18px;
-      transform:translateX(100%);
+      padding:22px 20px 20px;
+      transform:translateX(-100%);
       transition:transform var(--transition-panel);
-      box-shadow:var(--shadow-panel);
+      box-shadow:8px 0 40px rgba(0,0,0,.12);
       overflow-y:auto;
     }
     .writeus-panel.open{transform:translateX(0);}
@@ -705,11 +710,9 @@
       .menu-container{flex-wrap:wrap;gap:6px;padding:8px 12px;height:auto;}
       .menu-bar{height:auto;}
       body{padding-top:90px;}
-      /* Qty tracker wraps to second row on mobile */
       .menu-qty-tracker{order:3;width:100%;justify-content:center;margin-left:0!important;flex-shrink:0;}
-      /* Hamburger stays first row far right */
-      .hamburger-btn{order:2;margin-left:auto;}
       .menu-item{order:1;}
+      .left-rail{left:6px;gap:6px;}
       .calculation-entry{min-height:180px;font-size:12pt;}
       .calculation-entry::before{font-size:14pt;padding:4mm;}
       .calculation-entry::after{font-size:12pt;padding:4mm;bottom:8mm;}
@@ -719,6 +722,8 @@
     }
     @media(max-width:480px){
       .calculator-container{width:100%;padding:16px;}
+      .left-rail{display:none;}
+      .writeus-panel{width:100%;}
       .calculation-entry{font-size:10pt;}
       .calculation-entry::before{font-size:12pt;padding:3mm;}
       .calculation-entry::after{font-size:10pt;padding:3mm;bottom:6mm;}
@@ -727,7 +732,6 @@
       .calculation-content{margin-top:28mm;margin-bottom:22mm;font-size:10pt;padding:0 8mm;}
       .acb-td,.acb-th{font-size:10px;padding:4px;}
       .menu-qty-input,.lot-select{width:80px;}
-      .sidenav,.writeus-panel{width:100%;max-width:100%;}
     }
 
     /* ═══════════════════════════════════════════
@@ -739,8 +743,8 @@
       #mjLoading,.acb-notice,.acb-toggle-btn,.calculator-container,
       .delete-button,.info-btn,.menu-bar,.print-btn,
       .progress-container,footer,.reset-acb-btn,
-      .sidenav,.sidenav-overlay,.writeus-panel,
-      .hamburger-btn,.sidenav-footer{display:none!important;}
+      .sidenav-overlay,.writeus-panel,
+      .left-rail{display:none!important;}
       .calculation-steps{
         box-shadow:none!important;display:block!important;
         width:100%;max-width:none;margin:0;padding:0;background:transparent!important;
@@ -834,11 +838,6 @@
           </select>
         </div>
       </div>
-
-      <!-- Hamburger — far right -->
-      <button class="hamburger-btn" id="hamburgerBtn"
-        aria-label="Open navigation menu" aria-expanded="false"
-        aria-controls="sidenav">☰</button>
 
     </div>
   </header>
@@ -1023,58 +1022,46 @@
   </aside>
 
   <!-- ══════════════════════════════
-       SIDENAV OVERLAY
+       OVERLAY (write-us backdrop)
   ══════════════════════════════ -->
   <div class="sidenav-overlay" id="sidenavOverlay" aria-hidden="true"></div>
 
   <!-- ══════════════════════════════
-       SIDENAV
+       FLOATING LEFT RAIL NAV
   ══════════════════════════════ -->
-  <nav class="sidenav" id="sidenav" aria-label="Site navigation" aria-hidden="true">
-    <div class="sidenav-header">
-      <span class="sn-logo">NIR8<span> Calculators</span></span>
-      <button class="sidenav-close" id="sidenavClose" aria-label="Close menu">×</button>
-    </div>
-    <ul class="sidenav-nav" role="list" style="list-style:none;padding:8px 0;">
-      <li>
-        <button class="sidenav-item" id="openWriteUs">
-          <div class="sn-icon purple" aria-hidden="true">✍️</div>
-          <div class="sn-text">
-            <strong>Write Us</strong>
-            <small>Share feedback or report a bug</small>
-          </div>
-          <span class="sn-arrow" aria-hidden="true">›</span>
-        </button>
-      </li>
-      <li><div class="sidenav-divider"></div></li>
-      <li>
-        <a class="sidenav-item" href="/changelog.html" target="_blank" rel="noopener noreferrer">
-          <div class="sn-icon blue" aria-hidden="true">📋</div>
-          <div class="sn-text">
-            <strong>Version History</strong>
-            <small>See what's changed over time</small>
-          </div>
-          <span class="sn-arrow" aria-hidden="true">›</span>
-        </a>
-      </li>
-      <li><div class="sidenav-divider"></div></li>
-      <li>
-        <a class="sidenav-item" href="/about.html" target="_blank" rel="noopener noreferrer">
-          <div class="sn-icon green" aria-hidden="true">ℹ️</div>
-          <div class="sn-text">
-            <strong>About</strong>
-            <small>What is NIR8 Calculators?</small>
-          </div>
-          <span class="sn-arrow" aria-hidden="true">›</span>
-        </a>
-      </li>
-      <!-- ADD MORE ITEMS HERE -->
-    </ul>
-    <div class="sidenav-footer">NIR8 Calculators · Always double-check results.</div>
+  <nav class="left-rail" aria-label="Quick navigation">
+
+    <!-- Write Us -->
+    <button class="rail-item" id="openWriteUs"
+      aria-label="Write us — share feedback or report a bug"
+      title="Write Us">
+      <span class="rail-icon" aria-hidden="true">✍️</span>
+      <span class="rail-label">Write Us</span>
+    </button>
+
+    <!-- Version History -->
+    <a class="rail-item" href="/changelog.html"
+      target="_blank" rel="noopener noreferrer"
+      aria-label="Version history — see what's changed"
+      title="Version History">
+      <span class="rail-icon" aria-hidden="true">📋</span>
+      <span class="rail-label">Version History</span>
+    </a>
+
+    <!-- About -->
+    <a class="rail-item" href="/about.html"
+      target="_blank" rel="noopener noreferrer"
+      aria-label="About NIR8 Calculators"
+      title="About">
+      <span class="rail-icon" aria-hidden="true">ℹ️</span>
+      <span class="rail-label">About</span>
+    </a>
+
+    <!-- ADD MORE RAIL ITEMS HERE -->
   </nav>
 
   <!-- ══════════════════════════════
-       WRITE US PANEL
+       WRITE US PANEL (slides from left)
   ══════════════════════════════ -->
   <div class="writeus-panel" id="writeusPanel"
     role="dialog" aria-modal="true" aria-label="Write us" aria-hidden="true">
@@ -1713,54 +1700,41 @@
   }
 
   /* ══════════════════════════════════
-     SIDENAV + WRITE US
+     LEFT RAIL + WRITE US PANEL
   ══════════════════════════════════ */
-  (function initNav(){
-    const hamburger = $('hamburgerBtn');
-    const sidenav   = $('sidenav');
-    const overlay   = $('sidenavOverlay');
-    const snClose   = $('sidenavClose');
-    const openWU    = $('openWriteUs');
-    const wuPanel   = $('writeusPanel');
-    const wpBack    = $('wpBack');
-    const wpMsg     = $('wpMsg');
-    const wpChar    = $('wpChar');
-    const wpSend    = $('wpSend');
-    const wpErr     = $('wpErr');
-    const wpForm    = $('wpFormArea');
-    const wpSucc    = $('wpSuccess');
-    const wuForm    = $('writeusForm');
+  (function initRail(){
+    const overlay  = $('sidenavOverlay');
+    const openWU   = $('openWriteUs');
+    const wuPanel  = $('writeusPanel');
+    const wpBack   = $('wpBack');
+    const wpMsg    = $('wpMsg');
+    const wpChar   = $('wpChar');
+    const wpSend   = $('wpSend');
+    const wpErr    = $('wpErr');
+    const wpForm   = $('wpFormArea');
+    const wpSucc   = $('wpSuccess');
+    const wuForm   = $('writeusForm');
 
-    function openNav(){
-      sidenav.classList.add('open');
-      sidenav.setAttribute('aria-hidden','false');
-      overlay.classList.add('open');
-      hamburger.setAttribute('aria-expanded','true');
-      snClose.focus();
-    }
-    function closeNav(){
-      sidenav.classList.remove('open');
-      sidenav.setAttribute('aria-hidden','true');
-      overlay.classList.remove('open');
-      wuPanel.classList.remove('open');
-      wuPanel.setAttribute('aria-hidden','true');
-      hamburger.setAttribute('aria-expanded','false');
-      hamburger.focus();
-    }
-
-    hamburger.addEventListener('click', openNav);
-    snClose.addEventListener('click', closeNav);
-    overlay.addEventListener('click', closeNav);
-    document.addEventListener('keydown', e => { if(e.key==='Escape') closeNav(); });
-
-    openWU.addEventListener('click', () => {
+    function openPanel(){
       wuPanel.classList.add('open');
       wuPanel.setAttribute('aria-hidden','false');
-      setTimeout(() => wpMsg.focus(), 300);
-    });
-    wpBack.addEventListener('click', () => {
+      overlay.classList.add('open');
+      openWU.classList.add('rail-active');
+      setTimeout(() => wpMsg.focus(), 320);
+    }
+    function closePanel(){
       wuPanel.classList.remove('open');
       wuPanel.setAttribute('aria-hidden','true');
+      overlay.classList.remove('open');
+      openWU.classList.remove('rail-active');
+      openWU.focus();
+    }
+
+    openWU.addEventListener('click', openPanel);
+    wpBack.addEventListener('click', closePanel);
+    overlay.addEventListener('click', closePanel);
+    document.addEventListener('keydown', e => {
+      if(e.key==='Escape' && wuPanel.classList.contains('open')) closePanel();
     });
 
     wpMsg.addEventListener('input', () => {
@@ -1771,16 +1745,21 @@
 
     wuForm.addEventListener('submit', async e => {
       e.preventDefault();
-      if(!wpMsg.value.trim()){ wpErr.textContent='Please write something first.'; wpErr.classList.add('show'); return; }
-      wpSend.disabled=true; wpSend.textContent='Sending…'; wpErr.classList.remove('show');
+      if(!wpMsg.value.trim()){
+        wpErr.textContent='Please write something first.';
+        wpErr.classList.add('show'); return;
+      }
+      wpSend.disabled=true; wpSend.textContent='Sending…';
+      wpErr.classList.remove('show');
       try{
-        const r = await fetch('https://api.web3forms.com/submit',{ method:'POST', body:new FormData(wuForm) });
-        const d = await r.json();
-        if(d.success){
-          wpForm.style.display='none'; wpSucc.style.display='block';
-          setTimeout(() => { closeNav(); setTimeout(resetWU,400); }, 3000);
-        } else { showWUErr('Something went wrong. Please try again.'); resetWUBtn(); }
-      } catch { showWUErr('Network error. Please check your connection.'); resetWUBtn(); }
+        const r    = await fetch('https://api.web3forms.com/submit',{ method:'POST', body:new FormData(wuForm) });
+        const data = await r.json();
+        if(data.success){
+          wpForm.style.display='none';
+          wpSucc.style.display='block';
+          setTimeout(() => { closePanel(); setTimeout(resetWU, 400); }, 3000);
+        } else { showWUErr('Something went wrong. Try again.'); resetWUBtn(); }
+      } catch { showWUErr('Network error. Check your connection.'); resetWUBtn(); }
     });
 
     function showWUErr(t){ wpErr.textContent=t; wpErr.classList.add('show'); }
