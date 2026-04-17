@@ -7,14 +7,12 @@
   <meta name="theme-color" content="#4facfe">
   <title>NIR8 Calculators – Assay &amp; Formula Calculator for Pharmaceutical Dispensing</title>
 
-  <!-- ── SEO ── -->
   <meta name="description" content="NIR8 Calculators – free online pharmaceutical assay calculator. Calculate F1, F2, F3 formulas and (A+C)-B lot quantities with water content and assay correction. Instant results, printable.">
   <meta name="keywords" content="assay calculator,pharmaceutical calculator,formula calculator,water content correction,F1 F2 F3 formula,dispensing calculator,lot quantity calculator">
   <meta name="author" content="NIR8">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://nir8.pages.dev/">
 
-  <!-- ── OG / TWITTER ── -->
   <meta property="og:title" content="NIR8 Calculators – Assay &amp; Formula Calculator">
   <meta property="og:description" content="Free online pharmaceutical assay calculator. F1, F2, F3 formulas and (A+C)-B lot quantities. Instant results, printable.">
   <meta property="og:type" content="website">
@@ -24,33 +22,27 @@
   <meta name="twitter:title" content="NIR8 Calculators – Assay &amp; Formula Calculator">
   <meta name="twitter:description" content="Free online pharmaceutical assay calculator. Instant results, printable.">
 
-  <!-- ── FAVICON ── -->
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <!-- ── PRECONNECTS — max 4, only critical origins ── -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.googletagmanager.com">
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="sitemap" type="application/xml" href="/sitemap.xml">
 
-  <!-- ── FONT — non-render-blocking ── -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"></noscript>
 
-  <!-- ── STRUCTURED DATA ── -->
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication","name":"NIR8 Calculators","description":"Pharmaceutical assay-based formula calculator supporting F1, F2, F3 and (A+C)-B lot quantity calculations.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
   </script>
 
-  <!-- ── MATHJAX CONFIG — defined before script loads ── -->
   <script>
     MathJax={loader:{load:['input/tex','output/chtml']},tex:{inlineMath:[['$','$'],['\\(','\\)']],packages:{'[+]':['base','ams']},processEscapes:true},chtml:{scale:0.9,mtextInheritFont:true},startup:{typeset:false,pageReady(){MathJax.startup.defaultPageReady();document.dispatchEvent(new Event('MathJaxReady'));}}};
   </script>
 
-  <!-- ── DECIMAL.JS — local with CDN fallback ── -->
   <script src="decimal.min.js" onerror="loadDecimalFallback()"></script>
   <script>
     function loadDecimalFallback(){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js';s.onerror=function(){alert('Unable to load Decimal.js. Please check your network connection.');};s.onload=initDecimal;document.head.appendChild(s);}
@@ -59,104 +51,94 @@
   </script>
 
   <style>
-    /* ═══════════════════════════════════════════
-       CSS CUSTOM PROPERTIES
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       CSS VARIABLES
+    ═══════════════════════════════ */
     :root{
       --clr-primary:#4facfe;
-      --clr-primary-dark:#00b4d8;
       --clr-success:#28a745;
       --clr-success-dark:#218838;
       --clr-danger:#ff4444;
       --clr-text:#1a1a1a;
-      --clr-muted:#888;
       --clr-border:#ddd;
-      --clr-bg-light:#f7f8fa;
       --clr-white:#fff;
       --clr-purple:#c9b8f0;
-      --clr-purple-dark:#3b1f7a;
-      --radius-sm:5px;
-      --radius-md:10px;
-      --radius-lg:14px;
-      --shadow-card:0 5px 15px rgba(0,0,0,.2);
-      --shadow-panel:-8px 0 40px rgba(0,0,0,.12);
+      --radius-sm:6px;
+      --radius-md:12px;
+      --radius-lg:16px;
       --transition-fast:0.2s ease;
       --transition-panel:0.3s cubic-bezier(0.4,0,0.2,1);
-      --font-main:Poppins,system-ui,sans-serif;
+      --font:Poppins,system-ui,sans-serif;
       --menu-h:56px;
       --footer-h:44px;
+      /* Frosted glass tokens */
+      --glass-bg:rgba(255,255,255,.18);
+      --glass-bg-strong:rgba(255,255,255,.28);
+      --glass-border:rgba(255,255,255,.32);
+      --glass-shadow:0 8px 32px rgba(0,0,0,.12);
+      --glass-blur:blur(16px);
     }
 
-    /* ═══════════════════════════════════════════
-       RESET + BASE
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       RESET
+    ═══════════════════════════════ */
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     html{scroll-behavior:smooth;}
     body{
-      font-family:var(--font-main);
+      font-family:var(--font);
       background:linear-gradient(135deg,var(--clr-primary) 0%,#00f2fe 100%);
+      /* Fixed background so glass cards look correct at all scroll positions */
+      background-attachment:fixed;
       min-height:100vh;
-      display:flex;flex-direction:column;
-      align-items:center;
+      display:flex;flex-direction:column;align-items:center;
       justify-content:flex-start;
-      padding:calc(var(--menu-h) + 20px) 20px calc(var(--footer-h) + 20px);
+      padding:calc(var(--menu-h) + 24px) 20px calc(var(--footer-h) + 24px);
       text-align:center;
       scrollbar-gutter:stable;
     }
-    /* main must be flex column + centered so calculator card stays centered
-       regardless of field visibility changes inside it */
     #mainContent{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      width:100%;
+      display:flex;flex-direction:column;
+      align-items:center;width:100%;
     }
-    /* Fix MathJax context menu */
-    .CtxtMenu_Info{border-radius:15px;box-shadow:0 10px 20px #808080;}
+    .CtxtMenu_Info{border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);}
 
-    /* ═══════════════════════════════════════════
-       MENU BAR
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       MENU BAR — frosted glass
+    ═══════════════════════════════ */
     .menu-bar{
       position:fixed;top:0;left:0;right:0;
       height:var(--menu-h);
-      background:rgba(0,0,0,.85);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
+      background:rgba(0,0,0,.55);
+      backdrop-filter:var(--glass-blur);
+      -webkit-backdrop-filter:var(--glass-blur);
+      border-bottom:1px solid rgba(255,255,255,.1);
       display:flex;align-items:center;justify-content:center;
       z-index:100;
-      border-bottom:1px solid rgba(255,255,255,.06);
     }
     .menu-container{
       display:flex;align-items:center;
       width:100%;max-width:1100px;
-      padding:0 16px;
-      gap:4px;
+      padding:0 16px;gap:4px;
     }
     .menu-item{
       color:rgba(255,255,255,.9);
-      font-family:var(--font-main);
-      font-size:14px;font-weight:600;
-      padding:8px 14px;
-      border-radius:var(--radius-sm);
+      font-family:var(--font);font-size:14px;font-weight:600;
+      padding:8px 14px;border-radius:var(--radius-sm);
       border:none;background:transparent;
       cursor:pointer;white-space:nowrap;
       min-height:40px;
       display:inline-flex;align-items:center;
       transition:background var(--transition-fast),color var(--transition-fast);
-      text-decoration:none;
-      flex-shrink:0;
+      text-decoration:none;flex-shrink:0;
     }
     .menu-item:hover{background:rgba(255,255,255,.12);color:#fff;}
     .menu-item.active{background:var(--clr-success);color:#fff;}
     .menu-item:focus-visible{outline:2px solid var(--clr-primary);outline-offset:2px;}
 
-    /* ── QTY TRACKER ── */
+    /* qty tracker */
     .menu-qty-tracker{
       display:flex;align-items:center;gap:12px;
-      margin-left:auto;
-      flex-shrink:1;
-      min-width:0;
+      margin-left:auto;flex-shrink:1;min-width:0;
     }
     .menu-qty-group{display:flex;flex-direction:column;align-items:flex-start;}
     .menu-qty-label{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px;line-height:1;}
@@ -164,16 +146,15 @@
     .menu-qty-input,.lot-select{
       width:72px;padding:4px 6px;
       border:1px solid rgba(255,255,255,.25);border-radius:4px;
-      background:rgba(255,255,255,.1);color:#fff;
-      font-size:12px;font-family:var(--font-main);
-      text-align:center;
+      background:rgba(255,255,255,.12);color:#fff;
+      font-size:12px;font-family:var(--font);text-align:center;
     }
     .menu-qty-input::placeholder{color:rgba(255,255,255,.5);}
     .menu-qty-input:focus,.lot-select:focus{
       outline:none;border-color:var(--clr-success);
-      background:rgba(255,255,255,.18);
+      background:rgba(255,255,255,.2);
     }
-    .lot-select option{background:#222;color:#fff;}
+    .lot-select option{background:#1a1a2e;color:#fff;}
     .menu-qty-warning{
       font-size:10px;font-weight:700;
       color:#fff;background:var(--clr-danger);
@@ -182,132 +163,124 @@
     }
     .menu-qty-warning.active{display:block;}
 
-    /* ── HAMBURGER removed — replaced by floating left rail ── */
-
-    /* ═══════════════════════════════════════════
-       FLOATING LEFT RAIL NAV
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       FLOATING LEFT RAIL
+    ═══════════════════════════════ */
     .left-rail{
       position:fixed;
-      top:50%;
-      left:12px;
+      top:50%;left:10px;
       transform:translateY(-50%);
       z-index:200;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
+      display:flex;flex-direction:column;gap:8px;
     }
     .rail-item{
-      display:flex;
-      align-items:center;
-      gap:0;
-      background:rgba(255,255,255,.2);
-      backdrop-filter:blur(14px);
-      -webkit-backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.35);
+      display:flex;align-items:center;gap:0;
+      background:var(--glass-bg);
+      backdrop-filter:var(--glass-blur);
+      -webkit-backdrop-filter:var(--glass-blur);
+      border:1px solid var(--glass-border);
       border-radius:40px;
       padding:10px;
-      cursor:pointer;
-      text-decoration:none;
-      color:#fff;
-      font-family:var(--font-main);
-      font-size:13px;
-      font-weight:600;
-      white-space:nowrap;
-      overflow:hidden;
+      cursor:pointer;text-decoration:none;
+      color:#fff;font-family:var(--font);
+      font-size:12px;font-weight:600;
+      white-space:nowrap;overflow:hidden;
       max-width:40px;
+      box-shadow:var(--glass-shadow);
       transition:
         max-width .32s cubic-bezier(0.4,0,0.2,1),
         gap .32s cubic-bezier(0.4,0,0.2,1),
-        background .2s ease,
-        box-shadow .2s ease;
-      box-shadow:0 2px 12px rgba(0,0,0,.1);
+        background .2s ease,box-shadow .2s ease;
+      border:none;
     }
-    .rail-item:hover,
-    .rail-item:focus-visible{
-      max-width:200px;
-      gap:10px;
-      background:rgba(255,255,255,.32);
-      box-shadow:0 4px 20px rgba(0,0,0,.18);
+    .rail-item:hover,.rail-item:focus-visible{
+      max-width:200px;gap:10px;
+      background:var(--glass-bg-strong);
+      box-shadow:0 4px 24px rgba(0,0,0,.2);
       outline:none;
     }
-    .rail-item:focus-visible{
-      outline:2px solid rgba(255,255,255,.8);
-      outline-offset:2px;
-    }
+    .rail-item:focus-visible{outline:2px solid rgba(255,255,255,.8);outline-offset:2px;}
+    .rail-item.rail-active{background:var(--glass-bg-strong);}
     .rail-icon{
       width:20px;height:20px;
       display:flex;align-items:center;justify-content:center;
       font-size:16px;flex-shrink:0;line-height:1;
     }
     .rail-label{
-      font-size:12px;font-weight:600;
-      color:#fff;
-      opacity:0;
-      max-width:0;
-      overflow:hidden;
-      transition:
-        opacity .18s ease .12s,
-        max-width .32s cubic-bezier(0.4,0,0.2,1);
-      white-space:nowrap;
-      letter-spacing:.2px;
+      font-size:12px;font-weight:600;color:#fff;
+      opacity:0;max-width:0;overflow:hidden;
+      white-space:nowrap;letter-spacing:.2px;
+      transition:opacity .18s ease .1s,max-width .32s cubic-bezier(0.4,0,0.2,1);
     }
     .rail-item:hover .rail-label,
-    .rail-item:focus-visible .rail-label{
-      opacity:1;
-      max-width:160px;
-    }
+    .rail-item:focus-visible .rail-label{opacity:1;max-width:160px;}
 
-    /* Hide left rail on very small screens — no room */
-    @media(max-width:420px){
-      .left-rail{ display:none; }
-    }
-
-    /* ── WRITE US PANEL — slides from left ── */
-
-    /* ═══════════════════════════════════════════
-       CALCULATOR CONTAINERS
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       CALCULATOR CARD — frosted glass, grows as fields appear
+    ═══════════════════════════════ */
     .calculator-container{
       display:none;
-      background:var(--clr-white);
-      padding:24px;
-      width:min(90vw,400px);
-      min-width:300px;
-      border-radius:var(--radius-md);
-      box-shadow:var(--shadow-card);
+      background:var(--glass-bg-strong);
+      backdrop-filter:var(--glass-blur);
+      -webkit-backdrop-filter:var(--glass-blur);
+      border:1px solid var(--glass-border);
+      /* Width is fixed — prevents horizontal shift */
+      width:min(90vw,380px);
+      /* Height grows naturally — no min-height set */
+      border-radius:var(--radius-lg);
+      box-shadow:var(--glass-shadow);
       margin:0 auto 20px;
       position:relative;
-      flex-shrink:0;
       text-align:center;
+      /* Smooth height growth as fields appear */
+      transition:box-shadow var(--transition-fast);
+      overflow:hidden;
     }
-    #acbCalculator{width:min(96vw,920px);min-width:280px;}
     .calculator-container.active{display:block;}
+    /* ACB wider */
+    #acbCalculator{width:min(96vw,920px);}
+
     .calculator-container h2{
       font-size:18px;font-weight:700;
-      color:var(--clr-text);margin-bottom:4px;
+      color:#fff;
+      padding:18px 20px 0;
+      text-shadow:0 1px 4px rgba(0,0,0,.15);
+    }
+    /* Inner padding wrapper so h2 and fields share padding */
+    .calc-inner{padding:0 20px 20px;}
+
+    .input-group{margin-top:14px;text-align:left;}
+
+    /* GROWING CARD: hidden fields collapse to zero height, not just invisible */
+    .input-group.field-hidden{
+      overflow:hidden;
+      max-height:0;
+      margin-top:0;
+      opacity:0;
+      pointer-events:none;
+      transition:max-height .3s ease,opacity .2s ease,margin-top .3s ease;
+    }
+    .input-group:not(.field-hidden){
+      max-height:120px;
+      opacity:1;
+      transition:max-height .35s ease,opacity .25s ease .05s,margin-top .3s ease;
     }
 
-    /* Input groups use visibility to hide/show — prevents layout reflow & left drift */
-    .input-group{margin-top:12px;text-align:left;}
-    .input-group.field-hidden{
-      visibility:hidden;
-      /* Keep height so layout never shifts */
-      pointer-events:none;
-    }
     .input-group label{
       font-size:13px;font-weight:600;
-      color:#555;display:block;margin-bottom:4px;
+      /* White text on glass */
+      color:rgba(255,255,255,.85);
+      display:block;margin-bottom:5px;
     }
-    /* Scoped to calculator only — prevents conflict with menu inputs */
     .calculator-container input[type=number],
     .calculator-container select{
       width:100%;padding:10px 12px;
-      border:2px solid var(--clr-border);
+      border:1.5px solid rgba(255,255,255,.3);
       border-radius:var(--radius-sm);
-      font-size:15px;font-family:var(--font-main);
-      text-align:center;color:var(--clr-text);
-      background:var(--clr-white);
+      font-size:15px;font-family:var(--font);
+      text-align:center;
+      color:var(--clr-text);
+      background:rgba(255,255,255,.92);
       transition:border-color var(--transition-fast),box-shadow var(--transition-fast);
       -moz-appearance:textfield;
     }
@@ -316,139 +289,162 @@
     .calculator-container input[type=number]:focus,
     .calculator-container select:focus{
       border-color:var(--clr-primary);outline:none;
-      box-shadow:0 0 0 3px rgba(79,172,254,.2);
+      box-shadow:0 0 0 3px rgba(79,172,254,.25);
+      background:#fff;
     }
-
     .input-row{display:flex;gap:10px;}
     .input-row .input-group{flex:1;}
 
     /* Progress bar */
     .progress-container{
-      height:4px;background:#eee;border-radius:2px;
-      margin:14px 0 0;overflow:hidden;
+      height:3px;background:rgba(255,255,255,.2);
+      border-radius:2px;margin:14px 0 0;overflow:hidden;
     }
     .progress-bar{
       height:100%;width:0%;
-      background:linear-gradient(to right,var(--clr-primary),#00f2fe);
-      border-radius:2px;
-      transition:width .3s ease;
+      background:rgba(255,255,255,.8);
+      border-radius:2px;transition:width .3s ease;
     }
 
-    /* Buttons */
+    /* Calc buttons */
     .button-row{display:flex;gap:8px;margin-top:14px;}
     .btn{
       flex:1;padding:11px 8px;
-      background:var(--clr-success);color:#fff;
-      border:none;border-radius:var(--radius-sm);
-      font-family:var(--font-main);font-size:14px;font-weight:600;
+      background:rgba(40,167,69,.85);
+      backdrop-filter:blur(4px);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.2);
+      border-radius:var(--radius-sm);
+      font-family:var(--font);font-size:14px;font-weight:600;
       cursor:pointer;user-select:none;
       transition:background var(--transition-fast),transform .1s;
     }
-    .btn:hover{background:var(--clr-success-dark);}
+    .btn:hover{background:rgba(33,136,56,.95);}
     .btn:active{transform:scale(.98);}
-    .btn:focus-visible{outline:2px solid var(--clr-success);outline-offset:2px;}
-    /* Override global button style that conflicts */
-    button{font-family:var(--font-main);}
+    .btn:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+    button{font-family:var(--font);}
 
-    /* ═══════════════════════════════════════════
-       ACB TABLE
-    ═══════════════════════════════════════════ */
-    .acb-table{
-      border-collapse:collapse;width:100%;
-      margin:12px 0;table-layout:auto;
+    /* Error messages */
+    .error-message{
+      color:#ffe082;font-size:12px;
+      margin-top:4px;font-weight:500;text-align:left;
     }
+
+    /* ═══════════════════════════════
+       ACB TABLE — frosted glass card
+    ═══════════════════════════════ */
+    .acb-table{border-collapse:collapse;width:100%;margin:12px 0;table-layout:auto;}
     .acb-td,.acb-th{
-      border:1px solid #e0e0e0;padding:8px;
+      border:1px solid rgba(255,255,255,.15);padding:8px;
       text-align:center;font-size:13px;
       min-width:60px;word-break:break-word;
     }
-    .acb-th{background:#f5f5f5;color:#444;font-weight:600;}
+    .acb-th{background:rgba(255,255,255,.15);color:#fff;font-weight:600;}
+    .acb-td{color:rgba(255,255,255,.9);}
     .acb-input{
       width:100%;padding:6px;
-      border:1.5px solid var(--clr-border);border-radius:4px;
-      font-size:13px;font-family:var(--font-main);
-      text-align:center;background:transparent;
+      border:1.5px solid rgba(255,255,255,.3);border-radius:4px;
+      font-size:13px;font-family:var(--font);
+      text-align:center;
+      background:rgba(255,255,255,.9);
+      color:var(--clr-text);
       -moz-appearance:textfield;
       transition:border-color var(--transition-fast);
     }
     .acb-input::-webkit-inner-spin-button,
     .acb-input::-webkit-outer-spin-button{-webkit-appearance:none;}
-    .acb-input:focus{border-color:#00c853;outline:none;box-shadow:0 0 0 2px rgba(0,200,83,.15);}
+    .acb-input:focus{border-color:#00c853;outline:none;box-shadow:0 0 0 2px rgba(0,200,83,.2);background:#fff;}
     .acb-input.edited{border-color:#ffc107;background:#fffde7;}
-    .acb-input[readonly]{background:#f9f9f9;cursor:not-allowed;color:#666;}
+    .acb-input[readonly]{background:rgba(255,255,255,.5);cursor:not-allowed;color:#555;}
     .acb-span{display:block;padding:6px;font-size:13px;}
-    .acb-prefilled{color:var(--clr-text);}
-    .acb-manual-input,.acb-output{color:#1565c0;font-weight:600;}
-    .acb-highlight-row{background:#f0f7ff;}
+    .acb-prefilled{color:rgba(255,255,255,.9);}
+    .acb-manual-input,.acb-output{color:#a8d8ff;font-weight:700;}
+    .acb-highlight-row{background:rgba(255,255,255,.08);}
     .acb-notice{
       display:none;text-align:center;
-      background:#fff9c4;border:1px solid #f9e400;
+      background:rgba(255,235,59,.85);
+      backdrop-filter:blur(4px);
+      border:1px solid rgba(255,235,59,.5);
+      color:#333;
       padding:8px 16px;border-radius:var(--radius-sm);
       font-size:13px;margin:8px auto;width:fit-content;
     }
     .header-row{
       display:flex;align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;gap:8px;
-      margin-bottom:8px;
+      justify-content:space-between;flex-wrap:wrap;gap:8px;
+      padding:16px 20px 0;
+    }
+    .calculator-container h2.acb-h2{
+      padding:0;color:#fff;
     }
     .acb-toggle-btn{
-      background:var(--clr-success);color:#fff;
-      padding:7px 14px;border:none;border-radius:var(--radius-sm);
+      background:rgba(40,167,69,.8);
+      backdrop-filter:blur(4px);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.2);
+      padding:7px 14px;border-radius:var(--radius-sm);
       font-size:13px;font-weight:600;cursor:pointer;
-      transition:background var(--transition-fast);
-      flex-shrink:0;
+      transition:background var(--transition-fast);flex-shrink:0;
     }
-    .acb-toggle-btn:hover{background:var(--clr-success-dark);}
+    .acb-toggle-btn:hover{background:rgba(33,136,56,.95);}
     .reset-acb-btn{
       position:absolute;bottom:10px;right:10px;
       background:transparent;border:none;cursor:pointer;
-      font-size:20px;color:#ef5350;
+      font-size:20px;color:rgba(255,107,107,.9);
       width:32px;height:32px;
       display:flex;align-items:center;justify-content:center;
       border-radius:50%;
       transition:background var(--transition-fast),transform .3s;
     }
-    .reset-acb-btn:hover{background:rgba(239,83,80,.1);transform:rotate(90deg);}
+    .reset-acb-btn:hover{background:rgba(255,107,107,.15);transform:rotate(90deg);}
 
-    /* ═══════════════════════════════════════════
-       CALCULATION STEPS
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       CALCULATION STEPS — frosted glass
+    ═══════════════════════════════ */
     .calculation-steps{
       width:min(96vw,920px);
-      background:var(--clr-white);
+      background:rgba(255,255,255,.15);
+      backdrop-filter:var(--glass-blur);
+      -webkit-backdrop-filter:var(--glass-blur);
+      border:1px solid var(--glass-border);
       padding:16px;
-      box-shadow:0 4px 12px rgba(0,0,0,.1);
-      text-align:left;
-      margin:0 auto;
+      box-shadow:var(--glass-shadow);
+      border-radius:var(--radius-lg);
+      text-align:left;margin:0 auto;
       overflow-y:auto;
       max-height:calc(100vh - var(--menu-h) - var(--footer-h) - 40px);
       scroll-snap-type:y mandatory;
       scroll-behavior:smooth;
       scrollbar-width:thin;
-      scrollbar-color:rgba(79,172,254,.4) transparent;
+      scrollbar-color:rgba(255,255,255,.3) transparent;
     }
     .calculation-steps::-webkit-scrollbar{width:4px;}
     .calculation-steps::-webkit-scrollbar-track{background:transparent;}
-    .calculation-steps::-webkit-scrollbar-thumb{background:rgba(79,172,254,.4);border-radius:2px;}
+    .calculation-steps::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:2px;}
+
+    /* Print button — frosted */
     .print-btn{
       display:none;
-      background:#1976d2;color:#fff;
-      padding:10px 22px;border:none;border-radius:var(--radius-sm);
+      background:rgba(25,118,210,.8);
+      backdrop-filter:blur(4px);
+      border:1px solid rgba(255,255,255,.2);
+      color:#fff;
+      padding:10px 22px;border-radius:var(--radius-sm);
       font-size:14px;font-weight:600;cursor:pointer;
       margin-bottom:12px;
       transition:background var(--transition-fast);
     }
-    .print-btn:hover{background:#1565c0;}
+    .print-btn:hover{background:rgba(21,101,192,.95);}
     .calculation-steps:not(.hidden) .print-btn{display:inline-flex;align-items:center;gap:6px;}
 
+    /* Calculation entries remain white for print clarity */
     .calculation-entry{
       margin-bottom:16px;border:1px solid #333;
       padding:15px;position:relative;
       width:100%;min-height:200px;
       font-size:14pt;overflow:hidden;
       contain:layout style;
-      /* Snap each calculation into view */
+      background:#fff;
       scroll-snap-align:start;
       scroll-margin-top:8px;
     }
@@ -471,8 +467,7 @@
     }
     .reference-values{
       position:absolute;top:24mm;right:15mm;
-      font-size:10pt;color:#333;z-index:2;
-      font-weight:600;
+      font-size:10pt;color:#333;z-index:2;font-weight:600;
     }
     .calculation-content{
       margin-top:30mm;margin-bottom:30mm;
@@ -484,9 +479,8 @@
       cursor:pointer;font-size:18px;color:#e53935;
       width:28px;height:28px;
       display:flex;align-items:center;justify-content:center;
-      border-radius:4px;padding:0;
+      border-radius:4px;padding:0;z-index:5;
       transition:background var(--transition-fast);
-      z-index:5;
     }
     .delete-button:hover{background:rgba(229,57,53,.1);}
     .page-number{
@@ -498,28 +492,32 @@
       font-size:12px;color:#888;font-style:italic;
     }
 
-    /* ═══════════════════════════════════════════
-       MODALS
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       MODALS — frosted glass
+    ═══════════════════════════════ */
     .info-modal{
-      display:none;
+      visibility:hidden;opacity:0;
       position:fixed;inset:0;
-      background:rgba(0,0,0,.45);
+      background:rgba(0,0,0,.4);
+      backdrop-filter:blur(4px);
+      -webkit-backdrop-filter:blur(4px);
       z-index:10000;
-      align-items:center;justify-content:center;
+      display:flex;align-items:center;justify-content:center;
       padding:16px;
+      transition:opacity .2s ease,visibility .2s ease;
     }
-    .info-modal.open{display:flex;}
+    .info-modal.open{visibility:visible;opacity:1;}
     .modal-content{
-      background:var(--clr-white);
+      background:rgba(255,255,255,.96);
+      backdrop-filter:var(--glass-blur);
       max-height:90vh;overflow-y:auto;
       width:min(92vw,500px);
       padding:22px;border-radius:var(--radius-lg);
-      box-shadow:0 8px 32px rgba(0,0,0,.2);
+      box-shadow:0 16px 48px rgba(0,0,0,.2);
       position:relative;
       animation:modalIn .25s ease both;
     }
-    @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px);}to{opacity:1;transform:none;}}
+    @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px);}to{opacity:1;transform:none;}}
     .modal-close{
       float:right;font-size:26px;font-weight:700;
       color:#777;cursor:pointer;
@@ -531,128 +529,104 @@
     .modal-close:hover{background:#f0f0f0;color:#222;}
     .modal-close:focus-visible{outline:2px solid var(--clr-primary);outline-offset:2px;}
     .info-section{margin-bottom:16px;}
-    .info-section h3{
-      margin-top:0;color:#222;
-      border-bottom:1px solid #eee;padding-bottom:6px;
-      font-size:15px;
-    }
+    .info-section h3{margin-top:0;color:#222;border-bottom:1px solid #eee;padding-bottom:6px;font-size:15px;}
     .info-item{margin-bottom:7px;font-size:14px;}
     .info-key{font-weight:700;color:var(--clr-success);}
     .info-footer{text-align:center;margin-top:16px;font-size:12px;color:#999;}
 
-    /* Verify modal specifics */
     .verify-row{display:flex;align-items:center;margin-bottom:10px;gap:8px;}
     .verify-label{font-weight:700;color:#333;min-width:140px;text-align:right;font-size:14px;}
-    .verify-value{
-      font-weight:700;background:#d4edda;color:#155724;
-      padding:4px 10px;border-radius:4px;font-size:14px;
-    }
+    .verify-value{font-weight:700;background:#d4edda;color:#155724;padding:4px 10px;border-radius:4px;font-size:14px;}
     .modal-actions{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
     .btn-cancel{
       background:var(--clr-danger);color:#fff;border:none;
       padding:9px 20px;border-radius:var(--radius-sm);
-      font-family:var(--font-main);font-size:14px;font-weight:600;
+      font-family:var(--font);font-size:14px;font-weight:600;
       cursor:pointer;transition:background var(--transition-fast);flex:1;
     }
     .btn-cancel:hover{background:#cc0000;}
     .btn-confirm{
       background:var(--clr-success);color:#fff;border:none;
       padding:9px 20px;border-radius:var(--radius-sm);
-      font-family:var(--font-main);font-size:14px;font-weight:600;
+      font-family:var(--font);font-size:14px;font-weight:600;
       cursor:pointer;transition:background var(--transition-fast);flex:1;
     }
     .btn-confirm:hover{background:var(--clr-success-dark);}
 
-    /* ═══════════════════════════════════════════
-       ERROR MESSAGES
-    ═══════════════════════════════════════════ */
-    .error-message{
-      color:#e53935;font-size:12px;margin-top:4px;
-      text-align:left;font-weight:500;
-    }
-
-    /* ═══════════════════════════════════════════
-       FOOTER
-    ═══════════════════════════════════════════ */
-    footer{
-      position:fixed;bottom:0;left:0;right:0;
-      height:var(--footer-h);
-      background:rgba(0,0,0,.85);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      color:rgba(255,255,255,.8);
-      display:flex;align-items:center;justify-content:center;
-      font-size:13px;z-index:5;
-      border-top:1px solid rgba(255,255,255,.06);
-      gap:8px;flex-wrap:wrap;
-      padding:0 16px;
-    }
-    .info-btn{
-      background:transparent;border:none;
-      /* FIXED: was #ff9 — now white for contrast compliance */
-      color:#fff;
-      font-family:var(--font-main);font-size:13px;font-weight:700;
-      cursor:pointer;padding:6px 10px;
-      text-decoration:underline;
-      border-radius:4px;
-      transition:color var(--transition-fast);
-      min-height:36px;
-    }
-    .info-btn:hover{color:#cce5ff;}
-
-    /* ── MATHJAX LOADING ── */
+    /* ═══════════════════════════════
+       MATHJAX LOADING
+    ═══════════════════════════════ */
     #mjLoading{
       display:none;position:fixed;top:64px;right:12px;
-      background:rgba(255,255,255,.95);color:#555;
-      font-size:12px;font-style:italic;
+      background:rgba(255,255,255,.9);
+      backdrop-filter:blur(8px);
+      color:#555;font-size:12px;font-style:italic;
       padding:5px 10px;border-radius:4px;
       box-shadow:0 2px 8px rgba(0,0,0,.12);z-index:50;
     }
 
-    /* ── HIDDEN UTILITY ── */
-    .hidden{display:none!important;}
-    .sr-only{
-      position:absolute;width:1px;height:1px;padding:0;
-      margin:-1px;overflow:hidden;clip:rect(0,0,0,0);
-      white-space:nowrap;border:0;
+    /* ═══════════════════════════════
+       FOOTER — frosted glass
+    ═══════════════════════════════ */
+    footer{
+      position:fixed;bottom:0;left:0;right:0;
+      height:var(--footer-h);
+      background:rgba(0,0,0,.55);
+      backdrop-filter:var(--glass-blur);
+      -webkit-backdrop-filter:var(--glass-blur);
+      border-top:1px solid rgba(255,255,255,.1);
+      color:rgba(255,255,255,.75);
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;z-index:5;
+      gap:8px;flex-wrap:wrap;padding:0 16px;
     }
+    .info-btn{
+      background:transparent;border:none;color:#fff;
+      font-family:var(--font);font-size:13px;font-weight:700;
+      cursor:pointer;padding:6px 10px;
+      text-decoration:underline;border-radius:4px;
+      transition:color var(--transition-fast);min-height:36px;
+    }
+    .info-btn:hover{color:rgba(255,255,255,.7);}
 
-    /* ═══════════════════════════════════════════
-       OVERLAY (shared by write-us panel)
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       OVERLAY
+    ═══════════════════════════════ */
     .sidenav-overlay{
       display:none;position:fixed;inset:0;
       background:rgba(0,0,0,.35);z-index:400;
       opacity:0;
-      backdrop-filter:blur(2px);
-      -webkit-backdrop-filter:blur(2px);
+      backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
       transition:opacity .25s ease;
     }
     .sidenav-overlay.open{display:block;opacity:1;}
 
-    /* ═══════════════════════════════════════════
-       WRITE US PANEL — slides from LEFT
-    ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       WRITE US PANEL — frosted glass, slides from left
+    ═══════════════════════════════ */
     .writeus-panel{
       position:fixed;top:0;left:0;
       width:min(300px,88vw);height:100%;
-      background:var(--clr-white);z-index:500;
+      background:rgba(255,255,255,.96);
+      backdrop-filter:var(--glass-blur);
+      -webkit-backdrop-filter:var(--glass-blur);
+      z-index:500;
       display:flex;flex-direction:column;
       padding:22px 20px 20px;
       transform:translateX(-100%);
       transition:transform var(--transition-panel);
-      box-shadow:8px 0 40px rgba(0,0,0,.12);
+      box-shadow:8px 0 40px rgba(0,0,0,.14);
       overflow-y:auto;
     }
     .writeus-panel.open{transform:translateX(0);}
-    .wp-back{
+    .wp-close-btn{
       display:inline-flex;align-items:center;gap:5px;
-      font-size:13px;font-weight:500;color:#aaa;
+      font-size:13px;font-weight:600;color:#aaa;
       background:none;border:none;cursor:pointer;padding:0;
-      font-family:var(--font-main);margin-bottom:24px;
+      font-family:var(--font);margin-bottom:24px;
       transition:color var(--transition-fast);
     }
-    .wp-back:hover{color:#333;}
+    .wp-close-btn:hover{color:#333;}
     .wp-eyebrow{
       font-size:10px;font-weight:600;letter-spacing:1.5px;
       text-transform:uppercase;color:var(--clr-purple);margin-bottom:5px;
@@ -661,16 +635,16 @@
     .wp-sub{font-size:12px;color:#aaa;line-height:1.6;margin-bottom:18px;}
     .writeus-panel textarea{
       width:100%;min-height:128px;padding:12px;
-      font-family:var(--font-main);font-size:13px;color:var(--clr-text);
-      background:var(--clr-bg-light);border:1.5px solid #ebebeb;
+      font-family:var(--font);font-size:13px;color:var(--clr-text);
+      background:#f7f8fa;border:1.5px solid #ebebeb;
       border-radius:8px;resize:none;outline:none;line-height:1.6;
       transition:border-color var(--transition-fast),box-shadow var(--transition-fast);
     }
     .writeus-panel textarea::placeholder{color:#ccc;}
     .writeus-panel textarea:focus{
       border-color:var(--clr-purple);
-      box-shadow:0 0 0 3px rgba(201,184,240,.18);
-      background:var(--clr-white);
+      box-shadow:0 0 0 3px rgba(201,184,240,.2);
+      background:#fff;
     }
     .wp-meta{display:flex;justify-content:flex-end;margin:5px 0 14px;}
     .wp-char{font-size:11px;color:#ccc;}
@@ -678,34 +652,35 @@
     .wp-send{
       width:100%;padding:12px;
       background:#1a1a1a;color:#fff;border:none;
-      border-radius:8px;font-family:var(--font-main);
+      border-radius:8px;font-family:var(--font);
       font-size:13px;font-weight:700;cursor:pointer;
       transition:background var(--transition-fast),opacity var(--transition-fast);
-      letter-spacing:.2px;
     }
     .wp-send:hover{background:#333;}
     .wp-send:disabled{opacity:.4;cursor:not-allowed;}
-    .wp-err{
-      display:none;font-size:12px;color:#e53935;
-      margin-top:10px;text-align:center;font-weight:500;
-    }
+    .wp-err{display:none;font-size:12px;color:#e53935;margin-top:10px;text-align:center;font-weight:500;}
     .wp-err.show{display:block;}
-    .wp-success{
-      display:none;text-align:center;
-      padding:16px 0;animation:fadeUp .35s ease both;
-    }
+    .wp-success{display:none;text-align:center;padding:16px 0;animation:fadeUp .35s ease both;}
     .wp-tick{
       width:42px;height:42px;background:#ede9fb;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      font-size:18px;margin:0 auto 14px;color:var(--clr-purple-dark);
+      font-size:18px;margin:0 auto 14px;
     }
     .wp-success h3{font-size:15px;font-weight:700;color:#111;margin-bottom:6px;}
     .wp-success p{font-size:12px;color:#aaa;line-height:1.65;}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 
-    /* ═══════════════════════════════════════════
+    /* ═══════════════════════════════
+       UTILITIES
+    ═══════════════════════════════ */
+    .hidden{display:none!important;}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+    #remainingQty{cursor:pointer;transition:color var(--transition-fast);}
+    #remainingQty:hover{color:var(--clr-primary);}
+
+    /* ═══════════════════════════════
        RESPONSIVE
-    ═══════════════════════════════════════════ */
+    ═══════════════════════════════ */
     @media(max-width:768px){
       .menu-container{flex-wrap:wrap;gap:6px;padding:8px 12px;height:auto;}
       .menu-bar{height:auto;}
@@ -721,7 +696,7 @@
       .acb-td,.acb-th{font-size:11px;padding:5px;}
     }
     @media(max-width:480px){
-      .calculator-container{width:100%;padding:16px;}
+      .calculator-container{width:100%;}
       .left-rail{display:none;}
       .writeus-panel{width:100%;}
       .calculation-entry{font-size:10pt;}
@@ -734,20 +709,21 @@
       .menu-qty-input,.lot-select{width:80px;}
     }
 
-    /* ═══════════════════════════════════════════
+    /* ═══════════════════════════════
        PRINT
-    ═══════════════════════════════════════════ */
+    ═══════════════════════════════ */
     @media print{
       @page{size:A4 landscape;margin:8mm;}
       body{background:transparent!important;padding:0!important;margin:0!important;}
       #mjLoading,.acb-notice,.acb-toggle-btn,.calculator-container,
       .delete-button,.info-btn,.menu-bar,.print-btn,
       .progress-container,footer,.reset-acb-btn,
-      .sidenav-overlay,.writeus-panel,
-      .left-rail{display:none!important;}
+      .sidenav-overlay,.writeus-panel,.left-rail{display:none!important;}
       .calculation-steps{
         box-shadow:none!important;display:block!important;
-        width:100%;max-width:none;margin:0;padding:0;background:transparent!important;
+        background:transparent!important;border:none!important;
+        width:100%;max-width:none;margin:0;padding:0;
+        max-height:none!important;overflow:visible!important;
       }
       .calculation-entry{
         width:280mm!important;height:190mm!important;
@@ -774,39 +750,29 @@
   </style>
 </head>
 <body>
-
-  <!-- SEO h1 — visually hidden, readable by crawlers -->
   <h1 class="sr-only">NIR8 Calculators – Pharmaceutical Assay &amp; Formula Calculator</h1>
-
   <div id="mjLoading" role="status" aria-live="polite">Loading equations…</div>
-
   <noscript>
     <div style="background:#e53935;color:#fff;padding:12px;text-align:center;font-family:sans-serif;">
       JavaScript is required. Please enable JavaScript in your browser settings.
     </div>
   </noscript>
 
-  <!-- ══════════════════════════════
-       MENU BAR
-  ══════════════════════════════ -->
+  <!-- ── MENU BAR ── -->
   <header class="menu-bar" role="banner">
     <div class="menu-container">
-
       <button class="menu-item active" id="menuFormula"
         role="tab" aria-selected="true" aria-controls="formulaCalculator"
         onclick="showCalculator('formula')"
         onkeydown="if(event.key==='Enter'||event.key===' ')showCalculator('formula')">
         Formula Calculator
       </button>
-
       <button class="menu-item" id="menuAcb"
         role="tab" aria-selected="false" aria-controls="acbCalculator"
         onclick="showCalculator('acb')"
         onkeydown="if(event.key==='Enter'||event.key===' ')showCalculator('acb')">
         (A+C)-B Calculator
       </button>
-
-      <!-- Qty Tracker -->
       <div class="menu-qty-tracker" id="menuQtyTracker" aria-label="Quantity tracker">
         <div class="menu-qty-group">
           <label for="stdQty" class="menu-qty-label">Std Qty (kg)</label>
@@ -823,8 +789,7 @@
           <span id="remainingQty" class="menu-qty-value"
             role="button" tabindex="0"
             aria-label="Click to copy remaining quantity to Q field"
-            style="cursor:pointer;"
-            title="Click to copy to Q field">0.000</span>
+            style="cursor:pointer;" title="Click to copy to Q field">0.000</span>
           <span id="quantityWarning" class="menu-qty-warning" role="alert">Qty mismatch!</span>
         </div>
         <div class="menu-qty-group" id="lotSelectGroup" style="display:none">
@@ -838,122 +803,115 @@
           </select>
         </div>
       </div>
-
     </div>
   </header>
 
-  <!-- ══════════════════════════════
-       FORMULA CALCULATOR
-  ══════════════════════════════ -->
+  <!-- ── MAIN ── -->
   <main id="mainContent">
+
+    <!-- FORMULA CALCULATOR -->
     <section id="formulaCalculator" class="calculator-container active"
       aria-label="Formula Calculator" role="tabpanel">
       <h2>Formula Calculator</h2>
-
-      <div class="input-group">
-        <label for="Q">Quantity (Q)</label>
-        <input type="number" id="Q" autocomplete="off"
-          max="9999999" min="0.001" step="any"
-          placeholder="Enter quantity"
-          oninput="handleInput(event)">
-      </div>
-
-      <div class="input-row">
-        <div class="input-group">
-          <label for="water">Water Content (W %)</label>
-          <input type="number" id="water" autocomplete="off"
-            step="0.01" min="0.01" max="99.99"
-            placeholder="Water %"
+      <div class="calc-inner">
+        <div class="input-group" id="grpQ">
+          <label for="Q">Quantity (Q)</label>
+          <input type="number" id="Q" autocomplete="off"
+            max="9999999" min="0.001" step="any"
+            placeholder="Enter quantity"
             oninput="handleInput(event)">
         </div>
-        <div class="input-group">
-          <label for="assay">Assay Content (A %)</label>
-          <input type="number" id="assay" autocomplete="off"
-            step="0.01" min="0.01" max="100"
-            placeholder="Assay %"
-            oninput="handleInput(event)">
+        <div class="input-row">
+          <div class="input-group field-hidden" id="grpW">
+            <label for="water">Water Content (W %)</label>
+            <input type="number" id="water" autocomplete="off"
+              step="0.01" min="0.01" max="99.99"
+              placeholder="Water %"
+              oninput="handleInput(event)">
+          </div>
+          <div class="input-group field-hidden" id="grpA">
+            <label for="assay">Assay Content (A %)</label>
+            <input type="number" id="assay" autocomplete="off"
+              step="0.01" min="0.01" max="100"
+              placeholder="Assay %"
+              oninput="handleInput(event)">
+          </div>
         </div>
-      </div>
-
-      <div class="progress-container" aria-hidden="true">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-
-      <div class="button-row">
-        <button type="button" class="btn" onclick="calculate('F1')">Calculate F1</button>
-        <button type="button" class="btn" onclick="calculate('F2')">Calculate F2</button>
-        <button type="button" class="btn" onclick="calculate('F3')">Calculate F3</button>
+        <div class="progress-container" aria-hidden="true">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="button-row" id="buttonRow" style="display:none">
+          <button type="button" class="btn" onclick="calculate('F1')">Calculate F1</button>
+          <button type="button" class="btn" onclick="calculate('F2')">Calculate F2</button>
+          <button type="button" class="btn" onclick="calculate('F3')">Calculate F3</button>
+        </div>
       </div>
     </section>
 
-    <!-- ══════════════════════════════
-         ACB CALCULATOR
-    ══════════════════════════════ -->
+    <!-- ACB CALCULATOR -->
     <section id="acbCalculator" class="calculator-container"
       aria-label="(A+C)-B Calculator" role="tabpanel">
       <div class="header-row">
-        <h2>(A+C)-B Calculator</h2>
+        <h2 class="acb-h2">(A+C)-B Calculator</h2>
         <button type="button" class="acb-toggle-btn" id="toggleEditBtn"
           onclick="toggleEdit()">Enable Editing Std qty</button>
       </div>
-
-      <table class="acb-table">
-        <caption class="sr-only">(A+C)-B lot quantity calculator</caption>
-        <thead>
-          <tr>
-            <th class="acb-th" scope="col"></th>
-            <th class="acb-th" scope="col">Lot-I</th>
-            <th class="acb-th" scope="col">Lot-II</th>
-            <th class="acb-th" scope="col">Lot-III</th>
-            <th class="acb-th" scope="col">Lot-IV</th>
-            <th class="acb-th" scope="col">TOTAL (kg)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="acb-td">Std. Qty (A)<br><small>kg</small></td>
-            <td class="acb-td"><label for="lot1-a" class="sr-only">Lot 1 Std Qty A</label><input type="number" step="0.001" id="lot1-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><label for="lot2-a" class="sr-only">Lot 2 Std Qty A</label><input type="number" step="0.001" id="lot2-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><label for="lot3-a" class="sr-only">Lot 3 Std Qty A</label><input type="number" step="0.001" id="lot3-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><label for="lot4-a" class="sr-only">Lot 4 Std Qty A</label><input type="number" step="0.001" id="lot4-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><span id="total-a" class="acb-span acb-prefilled">1668.000</span></td>
-          </tr>
-          <tr class="acb-highlight-row">
-            <td class="acb-td">Issued Qty (B)<br><small>kg</small></td>
-            <td class="acb-td"><label for="lot1-b" class="sr-only">Lot 1 Issued Qty B</label><input type="number" step="0.001" id="lot1-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
-            <td class="acb-td"><label for="lot2-b" class="sr-only">Lot 2 Issued Qty B</label><input type="number" step="0.001" id="lot2-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
-            <td class="acb-td"><label for="lot3-b" class="sr-only">Lot 3 Issued Qty B</label><input type="number" step="0.001" id="lot3-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
-            <td class="acb-td"><label for="lot4-b" class="sr-only">Lot 4 Issued Qty B</label><input type="number" step="0.001" id="lot4-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
-            <td class="acb-td"><span id="total-b" class="acb-span acb-prefilled">0.000</span></td>
-          </tr>
-          <tr>
-            <td class="acb-td">Std. Qty (C)<br><small>kg</small></td>
-            <td class="acb-td"><label for="lot1-c" class="sr-only">Lot 1 Std Qty C</label><input type="number" step="0.001" id="lot1-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><label for="lot2-c" class="sr-only">Lot 2 Std Qty C</label><input type="number" step="0.001" id="lot2-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><label for="lot3-c" class="sr-only">Lot 3 Std Qty C</label><input type="number" step="0.001" id="lot3-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><label for="lot4-c" class="sr-only">Lot 4 Std Qty C</label><input type="number" step="0.001" id="lot4-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
-            <td class="acb-td"><span id="total-c" class="acb-span acb-prefilled">337.500</span></td>
-          </tr>
-          <tr class="acb-highlight-row">
-            <td class="acb-td">(A+C)−(B)<br><small>kg</small></td>
-            <td class="acb-td"><span id="lot1-result" class="acb-span">−</span></td>
-            <td class="acb-td"><span id="lot2-result" class="acb-span">−</span></td>
-            <td class="acb-td"><span id="lot3-result" class="acb-span">−</span></td>
-            <td class="acb-td"><span id="lot4-result" class="acb-span">−</span></td>
-            <td class="acb-td"><span id="total-result" class="acb-span acb-prefilled">0.000</span></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div id="acb-notice" class="acb-notice" role="status" aria-live="polite">You are editing standard values.</div>
+      <div style="padding:0 10px 10px;">
+        <table class="acb-table">
+          <caption class="sr-only">(A+C)-B lot quantity calculator</caption>
+          <thead>
+            <tr>
+              <th class="acb-th" scope="col"></th>
+              <th class="acb-th" scope="col">Lot-I</th>
+              <th class="acb-th" scope="col">Lot-II</th>
+              <th class="acb-th" scope="col">Lot-III</th>
+              <th class="acb-th" scope="col">Lot-IV</th>
+              <th class="acb-th" scope="col">TOTAL (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="acb-td">Std. Qty (A)<br><small>kg</small></td>
+              <td class="acb-td"><label for="lot1-a" class="sr-only">Lot 1 Std A</label><input type="number" step="0.001" id="lot1-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><label for="lot2-a" class="sr-only">Lot 2 Std A</label><input type="number" step="0.001" id="lot2-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><label for="lot3-a" class="sr-only">Lot 3 Std A</label><input type="number" step="0.001" id="lot3-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><label for="lot4-a" class="sr-only">Lot 4 Std A</label><input type="number" step="0.001" id="lot4-a" value="417.000" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><span id="total-a" class="acb-span acb-prefilled">1668.000</span></td>
+            </tr>
+            <tr class="acb-highlight-row">
+              <td class="acb-td">Issued Qty (B)<br><small>kg</small></td>
+              <td class="acb-td"><label for="lot1-b" class="sr-only">Lot 1 Issued B</label><input type="number" step="0.001" id="lot1-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
+              <td class="acb-td"><label for="lot2-b" class="sr-only">Lot 2 Issued B</label><input type="number" step="0.001" id="lot2-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
+              <td class="acb-td"><label for="lot3-b" class="sr-only">Lot 3 Issued B</label><input type="number" step="0.001" id="lot3-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
+              <td class="acb-td"><label for="lot4-b" class="sr-only">Lot 4 Issued B</label><input type="number" step="0.001" id="lot4-b" class="acb-input" placeholder="Issued B" autocomplete="off"></td>
+              <td class="acb-td"><span id="total-b" class="acb-span acb-prefilled">0.000</span></td>
+            </tr>
+            <tr>
+              <td class="acb-td">Std. Qty (C)<br><small>kg</small></td>
+              <td class="acb-td"><label for="lot1-c" class="sr-only">Lot 1 Std C</label><input type="number" step="0.001" id="lot1-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><label for="lot2-c" class="sr-only">Lot 2 Std C</label><input type="number" step="0.001" id="lot2-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><label for="lot3-c" class="sr-only">Lot 3 Std C</label><input type="number" step="0.001" id="lot3-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><label for="lot4-c" class="sr-only">Lot 4 Std C</label><input type="number" step="0.001" id="lot4-c" value="84.375" class="acb-input acb-prefilled" readonly autocomplete="off"></td>
+              <td class="acb-td"><span id="total-c" class="acb-span acb-prefilled">337.500</span></td>
+            </tr>
+            <tr class="acb-highlight-row">
+              <td class="acb-td">(A+C)−(B)<br><small>kg</small></td>
+              <td class="acb-td"><span id="lot1-result" class="acb-span">−</span></td>
+              <td class="acb-td"><span id="lot2-result" class="acb-span">−</span></td>
+              <td class="acb-td"><span id="lot3-result" class="acb-span">−</span></td>
+              <td class="acb-td"><span id="lot4-result" class="acb-span">−</span></td>
+              <td class="acb-td"><span id="total-result" class="acb-span acb-prefilled">0.000</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div id="acb-notice" class="acb-notice" role="status" aria-live="polite">You are editing standard values.</div>
+      </div>
       <button type="button" class="reset-acb-btn"
-        onclick="resetACBCalculator()" title="Reset calculator"
+        onclick="resetACBCalculator()" title="Reset"
         aria-label="Reset (A+C)-B Calculator">↻</button>
     </section>
 
-    <!-- ══════════════════════════════
-         CALCULATION STEPS
-    ══════════════════════════════ -->
+    <!-- CALCULATION STEPS -->
     <section class="calculation-steps hidden" id="calculationSteps"
       aria-label="Calculation history" role="region">
       <button type="button" onclick="printWithCheck()" class="print-btn"
@@ -962,37 +920,32 @@
     </section>
   </main>
 
-  <!-- ══════════════════════════════
-       INFO MODAL
-  ══════════════════════════════ -->
+  <!-- ── INFO MODAL ── -->
   <div id="infoModal" class="info-modal" role="dialog"
     aria-modal="true" aria-labelledby="infoTitle">
     <div class="modal-content">
       <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
       <div id="formulaInfo" class="info-section">
         <h3 id="infoTitle">Formula Calculator — Shortcuts</h3>
-        <div class="info-item"><span class="info-key">F1 / F2 / F3:</span> Calculate respective formulas</div>
-        <div class="info-item"><span class="info-key">❌:</span> Remove individual calculations</div>
-        <div class="info-item"><span class="info-key">F5:</span> Refresh page</div>
+        <div class="info-item"><span class="info-key">F1 / F2 / F3:</span> Calculate (works even while typing)</div>
         <div class="info-item"><span class="info-key">F8:</span> Print calculations</div>
-        <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
+        <div class="info-item"><span class="info-key">Enter:</span> Move to next field</div>
+        <div class="info-item"><span class="info-key">❌:</span> Delete a calculation</div>
         <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
         <div class="info-item"><span class="info-key">Lot Select:</span> Assign dispensed qty to lot</div>
       </div>
       <div id="acbInfo" class="info-section" style="display:none">
-        <h3 id="infoTitle">(A+C)-B Calculator — Features</h3>
+        <h3>(A+C)-B Calculator — Features</h3>
         <div class="info-item"><span class="info-key">Edit Button:</span> Toggle editing of standard quantities</div>
-        <div class="info-item"><span class="info-key">Enter:</span> Navigate between editable fields</div>
+        <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
         <div class="info-item"><span class="info-key">Auto-update:</span> Totals update instantly</div>
-        <div class="info-item"><span class="info-key">↻ Reset:</span> Reset all values</div>
+        <div class="info-item"><span class="info-key">↻ Reset:</span> Clear all values</div>
       </div>
       <div class="info-footer">This tool is continuously improving to serve you better.</div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════
-       VERIFY MODAL
-  ══════════════════════════════ -->
+  <!-- ── VERIFY MODAL ── -->
   <div id="verifyModal" class="info-modal" role="dialog"
     aria-modal="true" aria-labelledby="verifyTitle">
     <div class="modal-content">
@@ -1005,67 +958,49 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════
-       FOOTER
-  ══════════════════════════════ -->
+  <!-- ── FOOTER ── -->
   <footer role="contentinfo">
     <span>Results are reliable — always double-check.</span>
     <button type="button" class="info-btn" onclick="showInfo()"
       aria-label="Help and shortcuts">ℹ️ Help &amp; Shortcuts</button>
   </footer>
 
-  <!-- SEO block — hidden from users, readable by crawlers -->
+  <!-- SEO block -->
   <aside aria-hidden="true" class="sr-only">
     <h2>About NIR8 Calculators</h2>
-    <p>Free online pharmaceutical dispensing calculator. Formula Calculator supports F1, F2, F3 assay-based formulas with water content correction. The (A+C)−B Calculator tracks standard quantities across up to four lots. No download needed — works directly in your browser.</p>
-    <p>Keywords: nir8 calculator, assay calculator, pharmaceutical formula calculator, F1 F2 F3 formula, lot quantity calculator, dispensing calculator, water content correction</p>
+    <p>Free online pharmaceutical dispensing calculator. F1, F2, F3 assay-based formulas with water content correction. (A+C)−B Calculator for up to four lots. No download needed.</p>
+    <p>Keywords: nir8 calculator, assay calculator, pharmaceutical formula calculator, F1 F2 F3, lot quantity calculator, dispensing calculator</p>
   </aside>
 
-  <!-- ══════════════════════════════
-       OVERLAY (write-us backdrop)
-  ══════════════════════════════ -->
+  <!-- ── OVERLAY ── -->
   <div class="sidenav-overlay" id="sidenavOverlay" aria-hidden="true"></div>
 
-  <!-- ══════════════════════════════
-       FLOATING LEFT RAIL NAV
-  ══════════════════════════════ -->
+  <!-- ── FLOATING LEFT RAIL ── -->
   <nav class="left-rail" aria-label="Quick navigation">
-
-    <!-- Write Us -->
     <button class="rail-item" id="openWriteUs"
-      aria-label="Write us — share feedback or report a bug"
-      title="Write Us">
+      aria-label="Write us — share feedback or report a bug" title="Write Us">
       <span class="rail-icon" aria-hidden="true">✍️</span>
       <span class="rail-label">Write Us</span>
     </button>
-
-    <!-- Version History -->
     <a class="rail-item" href="/changelog.html"
       target="_blank" rel="noopener noreferrer"
-      aria-label="Version history — see what's changed"
-      title="Version History">
+      aria-label="Version history" title="Version History">
       <span class="rail-icon" aria-hidden="true">📋</span>
       <span class="rail-label">Version History</span>
     </a>
-
-    <!-- About -->
     <a class="rail-item" href="/about.html"
       target="_blank" rel="noopener noreferrer"
-      aria-label="About NIR8 Calculators"
-      title="About">
+      aria-label="About NIR8 Calculators" title="About">
       <span class="rail-icon" aria-hidden="true">ℹ️</span>
       <span class="rail-label">About</span>
     </a>
-
-    <!-- ADD MORE RAIL ITEMS HERE -->
+    <!-- ADD MORE ITEMS HERE -->
   </nav>
 
-  <!-- ══════════════════════════════
-       WRITE US PANEL (slides from left)
-  ══════════════════════════════ -->
+  <!-- ── WRITE US PANEL ── -->
   <div class="writeus-panel" id="writeusPanel"
     role="dialog" aria-modal="true" aria-label="Write us" aria-hidden="true">
-    <button class="wp-back" id="wpBack" aria-label="Back to menu">‹ &nbsp;Back</button>
+    <button class="wp-close-btn" id="wpBack" aria-label="Close panel">← Close</button>
     <div id="wpFormArea">
       <p class="wp-eyebrow">We're listening</p>
       <p class="wp-title">Write to us.</p>
@@ -1091,453 +1026,323 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════
-       MAIN APPLICATION SCRIPT
-  ══════════════════════════════ -->
+  <!-- ══════════════════════════════════════
+       MAIN SCRIPT
+  ══════════════════════════════════════ -->
   <script>
   'use strict';
 
-  /* ── CONSTANTS ── */
   const C = Object.freeze({
-    MAX_CALC:    15,
-    ACB_DEF_A:   417.000,
-    ACB_DEF_C:   84.375,
-    ACB_TOT_A:   1668.000,
-    ACB_TOT_C:   337.500,
-    Q_MAX:       9999999,
-    W_MAX:       99.99,
-    A_MAX:       100.00,
-    MJ_TIMEOUT:  12000
+    MAX_CALC:15, ACB_DEF_A:417, ACB_DEF_C:84.375,
+    ACB_TOT_A:1668, ACB_TOT_C:337.5,
+    Q_MAX:9999999, W_MAX:99.99, A_MAX:100, MJ_TIMEOUT:12000
   });
 
-  /* ── DOM CACHE ── */
-  const $ = id => document.getElementById(id);
+  const $  = id => document.getElementById(id);
   const D = {
-    Q:            $('Q'),
-    water:        $('water'),
-    assay:        $('assay'),
-    waterGrp:     null, // set after DOMContentLoaded
-    assayGrp:     null,
-    buttons:      null,
-    progressBar:  $('progressBar'),
-    calcSteps:    $('calculationSteps'),
+    Q:$('Q'), water:$('water'), assay:$('assay'),
+    grpQ:$('grpQ'), grpW:$('grpW'), grpA:$('grpA'),
+    buttons:$('buttonRow'),
+    progressBar:$('progressBar'),
+    calcSteps:$('calculationSteps'),
     stepsContainer:$('stepsContainer'),
-    formulaCalc:  $('formulaCalculator'),
-    acbCalc:      $('acbCalculator'),
-    menuFormula:  $('menuFormula'),
-    menuAcb:      $('menuAcb'),
+    formulaCalc:$('formulaCalculator'),
+    acbCalc:$('acbCalculator'),
+    menuFormula:$('menuFormula'),
+    menuAcb:$('menuAcb'),
     menuQtyTracker:$('menuQtyTracker'),
     toggleEditBtn:$('toggleEditBtn'),
-    acbNotice:    $('acb-notice'),
-    mjLoading:    $('mjLoading'),
-    stdQty:       $('stdQty'),
-    dispensedQty: $('dispensedQty'),
-    remainingQty: $('remainingQty'),
-    qtyWarning:   $('quantityWarning'),
-    lotSelect:    $('lotSelect'),
-    lotSelectGrp: $('lotSelectGroup'),
+    acbNotice:$('acb-notice'),
+    mjLoading:$('mjLoading'),
+    stdQty:$('stdQty'),
+    dispensedQty:$('dispensedQty'),
+    remainingQty:$('remainingQty'),
+    qtyWarning:$('quantityWarning'),
+    lotSelect:$('lotSelect'),
+    lotSelectGrp:$('lotSelectGroup'),
     acb:{
-      a: [1,2,3,4].map(i => $(`lot${i}-a`)),
-      b: [1,2,3,4].map(i => $(`lot${i}-b`)),
-      c: [1,2,3,4].map(i => $(`lot${i}-c`)),
-      res: [1,2,3,4].map(i => $(`lot${i}-result`)),
-      tot:{ a:$('total-a'), b:$('total-b'), c:$('total-c'), r:$('total-result') }
+      a:[1,2,3,4].map(i=>$(`lot${i}-a`)),
+      b:[1,2,3,4].map(i=>$(`lot${i}-b`)),
+      c:[1,2,3,4].map(i=>$(`lot${i}-c`)),
+      res:[1,2,3,4].map(i=>$(`lot${i}-result`)),
+      tot:{a:$('total-a'),b:$('total-b'),c:$('total-c'),r:$('total-result')}
     }
   };
 
-  /* ── STATE ── */
-  let calcCount       = 0;
-  let mjReady         = false;
-  let hasCalc         = false;
-  let acbEditEnabled  = false;
-  let acbNoticeTimer  = null;
-  let calculations    = [];
-  let mjQueue         = [];
-  let mjPending       = false;
+  let calcCount=0, mjReady=false, hasCalc=false;
+  let acbEditEnabled=false, acbNoticeTimer=null;
+  let calculations=[], mjQueue=[], mjPending=false;
 
-  /* ── DECIMAL CONFIG ── */
-  Decimal.set({ precision:20, toExpNeg:-9, toExpPos:20 });
+  Decimal.set({precision:20,toExpNeg:-9,toExpPos:20});
 
-  /* ══════════════════════════════════
-     MATHJAX
-  ══════════════════════════════════ */
-  document.addEventListener('MathJaxReady', () => {
-    mjReady = true;
-    D.mjLoading.style.display = 'none';
-    MathJax.typesetPromise().catch(e => console.warn('MathJax typeset:', e));
+  /* ── MathJax ── */
+  document.addEventListener('MathJaxReady',()=>{
+    mjReady=true; D.mjLoading.style.display='none';
+    MathJax.typesetPromise().catch(e=>console.warn('MathJax:',e));
   });
-
-  function retryMJ(attempt=1, max=2){
-    if(attempt>max){ mjReady=true; D.mjLoading.style.display='none'; return; }
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
-    s.async = true;
-    s.onload = () => { MathJax.startup.getComponents(); mjReady=true; D.mjLoading.style.display='none'; };
-    s.onerror = () => retryMJ(attempt+1, max);
+  function retryMJ(attempt=1,max=2){
+    if(attempt>max){mjReady=true;D.mjLoading.style.display='none';return;}
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+    s.async=true;
+    s.onload=()=>{MathJax.startup.getComponents();mjReady=true;D.mjLoading.style.display='none';};
+    s.onerror=()=>retryMJ(attempt+1,max);
     document.head.appendChild(s);
   }
-
   function queueMJ(el){
     mjQueue.push(el);
     if(!mjPending){
-      mjPending = true;
-      requestAnimationFrame(() => {
+      mjPending=true;
+      requestAnimationFrame(()=>{
         MathJax.typesetPromise(mjQueue)
-          .then(() => { mjPending=false; mjQueue=[]; })
-          .catch(e => { console.warn('MathJax queue error:',e); mjPending=false; mjQueue=[]; retryMJ(); });
+          .then(()=>{mjPending=false;mjQueue=[];})
+          .catch(e=>{console.warn('MathJax queue:',e);mjPending=false;mjQueue=[];retryMJ();});
       });
     }
   }
 
-  /* ══════════════════════════════════
-     NUMBER FORMATTING
-  ══════════════════════════════════ */
+  /* ── Number formatting ── */
   function trunc12(num){
     try{
-      const s = new Decimal(num).toString();
-      const neg = s[0]==='-';
-      const abs = neg ? s.slice(1) : s;
-      let r = neg?'-':'', d=0;
-      for(let i=0; i<abs.length && d<12; i++){
-        if(abs[i]==='.') r+='.'; else { r+=abs[i]; d++; }
+      const s=new Decimal(num).toString();
+      const neg=s[0]==='-'; const abs=neg?s.slice(1):s;
+      let r=neg?'-':'',d=0;
+      for(let i=0;i<abs.length&&d<12;i++){
+        if(abs[i]==='.')r+='.'; else{r+=abs[i];d++;}
       }
       return r;
-    } catch{ return String(num); }
+    }catch{return String(num);}
   }
-
-  const fmt = (() => {
-    const cache = new Map();
-    return (num, fixed2=false) => {
-      const k = `${num}_${fixed2}`;
-      if(cache.has(k)) return cache.get(k);
+  const fmt=(()=>{
+    const cache=new Map();
+    return(num,f2=false)=>{
+      const k=`${num}_${f2}`;
+      if(cache.has(k))return cache.get(k);
       try{
-        const d = new Decimal(num);
-        const v = fixed2 ? d.toFixed(2) : d.toString();
-        const r = trunc12(v);
-        if(cache.size>=600) cache.clear();
-        cache.set(k,r); return r;
-      } catch{ return String(num); }
+        const d=new Decimal(num);
+        const v=f2?d.toFixed(2):d.toString();
+        const r=trunc12(v);
+        if(cache.size>=600)cache.clear();
+        cache.set(k,r);return r;
+      }catch{return String(num);}
     };
   })();
 
-  /* ══════════════════════════════════
-     CALCULATION LOGIC
-  ══════════════════════════════════ */
-  function createCalc(type, Q, W, A){
-    const H = new Decimal(100);
-    const fQ=fmt(Q), fA=fmt(A,true), fW=fmt(W,true);
-
+  /* ── Calculation logic (UNCHANGED) ── */
+  function createCalc(type,Q,W,A){
+    const H=new Decimal(100);
+    const fQ=fmt(Q),fA=fmt(A,true),fW=fmt(W,true);
     if(type==='F1'||type==='F3'){
-      const s3 = H.sub(W);
-      const num = Q.mul(H).mul(H);
-      const den = A.mul(s3);
-      if(den.isZero()) throw new Error('Division by zero');
-      const res = num.div(den);
-      const rnd = res.toFixed(3);
-      const fn  = type==='F1'?'1':'3';
-      return {
+      const s3=H.sub(W),num=Q.mul(H).mul(H),den=A.mul(s3);
+      if(den.isZero())throw new Error('Division by zero');
+      const res=num.div(den),rnd=res.toFixed(3),fn=type==='F1'?'1':'3';
+      return{
         mathJax:`$$F_${fn}=\\frac{${fQ}\\times100\\times100}{${fA}\\times(100-${fW})}$$<br>$$=\\frac{${fQ}\\times100\\times100}{${fA}\\times${fmt(s3)}}$$<br>$$=\\frac{${fmt(num)}}{${fmt(den)}}$$<br>$$=${trunc12(rnd)}\\text{ (full: }${fmt(res)}\\text{)}$$`,
         plain:`F${fn} = (${fQ} × 100 × 100) / (${fA} × (100 − ${fW}))<br>= (${fQ} × 100 × 100) / (${fA} × ${fmt(s3)})<br>= ${fmt(num)} / ${fmt(den)}<br>= ${trunc12(rnd)} &nbsp;<small>(full: ${fmt(res)})</small>`,
-        type, Q:Q.toString(), W:W.toString(), A:A.toString(), result:rnd, isFinal:true
+        type,Q:Q.toString(),W:W.toString(),A:A.toString(),result:rnd,isFinal:true
       };
     }
-
     if(type==='F2'){
-      const s1  = H.sub(W);
-      const num = Q.mul(A).mul(s1);
-      const den = H.mul(H);
-      const res = num.div(den);
-      const rnd = res.toFixed(3);
-      return {
+      const s1=H.sub(W),num=Q.mul(A).mul(s1),den=H.mul(H);
+      const res=num.div(den),rnd=res.toFixed(3);
+      return{
         mathJax:`$$F_2=\\frac{${fQ}\\times${fA}\\times(100-${fW})}{100\\times100}$$<br>$$=\\frac{${fQ}\\times${fA}\\times${fmt(s1)}}{${fmt(den)}}$$<br>$$=\\frac{${fmt(num)}}{${fmt(den)}}$$<br>$$=${trunc12(rnd)}\\text{ (full: }${fmt(res)}\\text{)}$$`,
         plain:`F2 = (${fQ} × ${fA} × (100 − ${fW})) / (100 × 100)<br>= (${fQ} × ${fA} × ${fmt(s1)}) / ${fmt(den)}<br>= ${fmt(num)} / ${fmt(den)}<br>= ${trunc12(rnd)} &nbsp;<small>(full: ${fmt(res)})</small>`,
-        type, Q:Q.toString(), W:W.toString(), A:A.toString(), result:rnd, isFinal:false
+        type,Q:Q.toString(),W:W.toString(),A:A.toString(),result:rnd,isFinal:false
       };
     }
-    throw new Error(`Unknown formula type: ${type}`);
+    throw new Error(`Unknown type: ${type}`);
   }
 
-  /* ══════════════════════════════════
-     QUANTITY TRACKER
-  ══════════════════════════════════ */
+  /* ── Quantity tracker ── */
   function updateQtyTracker(){
-    const stdVal = D.stdQty.value.trim();
-    const std    = new Decimal(stdVal||0);
-    let dispensed = new Decimal(0);
-    let remCalc   = new Decimal(0);
-    let hasFinal  = false;
-
-    calculations.forEach(c => {
-      if(c.type==='F2'){
-        dispensed = dispensed.plus(c.Q);
-        remCalc   = remCalc.plus(c.result);
-      } else {
-        dispensed = dispensed.plus(c.result);
-        remCalc   = remCalc.plus(c.Q);
-        hasFinal  = true;
-      }
+    const stdVal=D.stdQty.value.trim();
+    const std=new Decimal(stdVal||0);
+    let dispensed=new Decimal(0),remCalc=new Decimal(0),hasFinal=false;
+    calculations.forEach(c=>{
+      if(c.type==='F2'){dispensed=dispensed.plus(c.Q);remCalc=remCalc.plus(c.result);}
+      else{dispensed=dispensed.plus(c.result);remCalc=remCalc.plus(c.Q);hasFinal=true;}
     });
-
-    D.dispensedQty.textContent = fmt(dispensed);
-
-    if(!stdVal || std.isZero()){
-      D.remainingQty.textContent = '—';
+    D.dispensedQty.textContent=fmt(dispensed);
+    if(!stdVal||std.isZero()){
+      D.remainingQty.textContent='—';
       D.qtyWarning.classList.remove('active');
-      D.lotSelectGrp.style.display = 'none';
-    } else {
-      const rem = std.minus(remCalc);
-      D.remainingQty.textContent = fmt(rem);
-      // FIX: Show lot select when remaining = 0, but NEVER hide the whole tracker
-      D.lotSelectGrp.style.display = rem.eq(0) ? 'block' : 'none';
-      const warn = (hasFinal && !rem.eq(0)) || rem.lt(0);
-      D.qtyWarning.classList.toggle('active', warn);
+      D.lotSelectGrp.style.display='none';
+    }else{
+      const rem=std.minus(remCalc);
+      D.remainingQty.textContent=fmt(rem);
+      D.lotSelectGrp.style.display=rem.eq(0)?'block':'none';
+      const warn=(hasFinal&&!rem.eq(0))||rem.lt(0);
+      D.qtyWarning.classList.toggle('active',warn);
     }
-    // IMPORTANT: Never hide the qty tracker group from here.
-    // It is only hidden/shown by showCalculator() based on active tab.
   }
-
-  function updateQuantityTracker(){ updateQtyTracker(); }
+  function updateQuantityTracker(){updateQtyTracker();}
 
   function updateLotDispensed(){
-    const idx = parseInt(D.lotSelect.value) - 1;
-    if(idx >= 0 && idx < D.acb.b.length){
-      const inp = D.acb.b[idx];
-      inp.value = D.dispensedQty.textContent;
+    const idx=parseInt(D.lotSelect.value)-1;
+    if(idx>=0&&idx<D.acb.b.length){
+      const inp=D.acb.b[idx];
+      inp.value=D.dispensedQty.textContent;
       inp.classList.add('acb-manual-input');
-      updateACB(inp, idx, 'b');
-      showCalculator('acb');
-      inp.focus();
-      D.lotSelect.value = '';
-      D.lotSelectGrp.style.display = 'none';
+      updateACB(inp,idx,'b');
+      showCalculator('acb');inp.focus();
+      D.lotSelect.value='';D.lotSelectGrp.style.display='none';
     }
   }
 
   function copyRemToQ(){
-    const txt = D.remainingQty.textContent.trim();
-    if(!txt || txt==='—' || txt==='-' || parseFloat(txt)<=0) return;
-    if(!confirm(`Copy ${txt} to Quantity (Q) field?`)) return;
-    D.Q.value = txt;
-    D.water.value = '';
-    D.assay.value = '';
-    D.progressBar.style.width = '33%';
-    // Show W, hide A — using visibility class
-    D.waterGrp.classList.remove('field-hidden');
-    D.waterGrp.style.pointerEvents = '';
-    D.assayGrp.classList.add('field-hidden');
-    D.assayGrp.style.pointerEvents = 'none';
-    D.buttons.style.display = 'none';
+    const txt=D.remainingQty.textContent.trim();
+    if(!txt||txt==='—'||txt==='-'||parseFloat(txt)<=0)return;
+    if(!confirm(`Copy ${txt} to Quantity (Q) field?`))return;
+    D.Q.value=txt;
+    D.water.value='';D.assay.value='';
+    D.progressBar.style.width='33%';
+    showField(D.grpW,true); showField(D.grpA,false);
+    D.buttons.style.display='none';
     D.water.focus();
   }
 
-  /* ══════════════════════════════════
-     ACB CALCULATOR
-  ══════════════════════════════════ */
-  function toggleEdit(){
-    acbEditEnabled = !acbEditEnabled;
-    D.toggleEditBtn.textContent = acbEditEnabled ? 'Disable Edit' : 'Enable Editing Std qty';
-    D.acb.a.concat(D.acb.c).forEach(inp => { inp.readOnly = !acbEditEnabled; });
-    if(acbEditEnabled) showACBNotice();
+  /* ── Field visibility (growing card) ── */
+  function showField(grp,show){
+    if(show){grp.classList.remove('field-hidden');grp.style.pointerEvents='';}
+    else{grp.classList.add('field-hidden');grp.style.pointerEvents='none';}
   }
 
-  function showACBNotice(){
-    D.acbNotice.style.display = 'block';
-    clearTimeout(acbNoticeTimer);
-    acbNoticeTimer = setTimeout(() => { D.acbNotice.style.display='none'; }, 3000);
+  /* ── Progress + field reveal ── */
+  function updateProgress(){
+    const f=[D.Q,D.water,D.assay].filter(i=>i.value.trim()).length;
+    D.progressBar.style.width=(f/3*100)+'%';
+    showField(D.grpW,!!D.Q.value.trim());
+    showField(D.grpA,!!D.water.value.trim());
+    D.buttons.style.display=f===3?'flex':'none';
   }
 
-  function updateACB(input, lotIdx, type){
-    try{
-      const val = new Decimal(input.value||0);
-      if(type==='a'||type==='c'){
-        const orig = new Decimal(type==='a' ? C.ACB_DEF_A : C.ACB_DEF_C);
-        input.classList.toggle('edited', !val.eq(orig));
-        input.classList.remove('acb-prefilled');
-        input.classList.add('acb-manual-input');
-        // Sync all lots if editing lot 1
-        if(lotIdx===0){
-          D.acb[type].slice(1).forEach(o => {
-            o.value = fmt(val);
-            o.classList.toggle('edited', !val.eq(orig));
-            o.classList.remove('acb-manual-input');
-            o.classList.add('acb-prefilled');
-          });
-        }
-      } else {
-        input.classList.add('acb-manual-input');
-      }
-    } catch{ input.value=''; }
-
-    let tA=new Decimal(0), tB=new Decimal(0), tC=new Decimal(0), tR=new Decimal(0);
-    D.acb.a.forEach((aInp,i) => {
-      const a = new Decimal(aInp.value||0);
-      const b = new Decimal(D.acb.b[i].value||0);
-      const c = new Decimal(D.acb.c[i].value||0);
-      const re = D.acb.res[i];
-      if(b.isZero()||!D.acb.b[i].value.trim()){
-        re.textContent='−'; re.classList.remove('acb-output','acb-prefilled');
-      } else {
-        const r = a.plus(c).minus(b);
-        re.textContent = fmt(r);
-        re.classList.add('acb-output');
-        re.classList.remove('acb-prefilled');
-        tR = tR.plus(r);
-      }
-      tA=tA.plus(a); tB=tB.plus(b); tC=tC.plus(c);
-    });
-    D.acb.tot.a.textContent = fmt(tA);
-    D.acb.tot.b.textContent = fmt(tB);
-    D.acb.tot.c.textContent = fmt(tC);
-    D.acb.tot.r.textContent = fmt(tR);
-    [D.acb.tot.a, D.acb.tot.b, D.acb.tot.c].forEach(el => {
-      el.classList.add('acb-output'); el.classList.remove('acb-prefilled');
-    });
-    D.acb.tot.r.classList.toggle('acb-prefilled', tR.isZero());
-    D.acb.tot.r.classList.toggle('acb-output', !tR.isZero());
-  }
-
-  function resetACBCalculator(){
-    if(!confirm('Reset the (A+C)-B calculator? All entered values will be cleared.')) return;
-    D.acb.a.forEach(inp => { inp.value=C.ACB_DEF_A.toFixed(3); inp.classList.remove('edited','acb-manual-input'); inp.classList.add('acb-prefilled'); });
-    D.acb.c.forEach(inp => { inp.value=C.ACB_DEF_C.toFixed(3); inp.classList.remove('edited','acb-manual-input'); inp.classList.add('acb-prefilled'); });
-    D.acb.b.forEach(inp => { inp.value=''; inp.classList.remove('acb-manual-input'); });
-    D.acb.tot.a.textContent = C.ACB_TOT_A.toFixed(3);
-    D.acb.tot.b.textContent = '0.000';
-    D.acb.tot.c.textContent = C.ACB_TOT_C.toFixed(3);
-    D.acb.tot.r.textContent = '0.000';
-    D.acb.res.forEach(r => { r.textContent='−'; r.classList.remove('acb-output','acb-prefilled'); });
-    if(acbEditEnabled) toggleEdit();
-  }
-
-  /* ══════════════════════════════════
-     INPUT HANDLING
-  ══════════════════════════════════ */
+  /* ── Input handling (validation + progress only) ── */
   function handleInput(e){
-    const inp = e.target;
-    const val = inp.value.trim();
-    const num = parseFloat(val);
-
-    if(!val){ clearErr(inp); updateProgress(); return; }
-
-    // Validation warnings
-    if(inp.id==='assay' && num>0 && num<10)
-      showErr(inp,'Assay value seems low — should be >80%');
-    else if(inp.id==='water' && num>80 && num<=100)
-      showErr(inp,'Water content seems high — should be <10%');
-    else
-      clearErr(inp);
-
-    // Strip >2 decimal places on W and A
-    if((inp.id==='water'||inp.id==='assay') && !/^\d*\.?\d{0,2}$/.test(val)){
-      inp.value = val.slice(0,-1); return;
-    }
-
+    const inp=e.target,val=inp.value.trim(),num=parseFloat(val);
+    if(!val){clearErr(inp);updateProgress();return;}
+    if(inp.id==='assay'&&num>0&&num<10)showErr(inp,'Assay seems low — should be >80%');
+    else if(inp.id==='water'&&num>80&&num<=100)showErr(inp,'Water seems high — should be <10%');
+    else clearErr(inp);
+    if((inp.id==='water'||inp.id==='assay')&&!/^\d*\.?\d{0,2}$/.test(val)){inp.value=val.slice(0,-1);return;}
     updateProgress();
   }
 
-  // Separate function for Enter key navigation — only called on keydown
+  /* ── Enter key navigation (separate from input handler) ── */
   function handleEnterNav(e){
-    if(e.key !== 'Enter') return;
-    const inp = e.target;
-    const val = inp.value.trim();
-    if(!val) return; // Don't navigate if field is empty
+    if(e.key!=='Enter')return;
+    const inp=e.target,val=inp.value.trim();
+    if(!val)return;
     e.preventDefault();
-    if(inp.id==='Q'){
-      // Q → reveal and focus W
-      D.waterGrp.classList.remove('field-hidden');
-      D.waterGrp.style.pointerEvents = '';
-      D.water.focus();
-    } else if(inp.id==='water'){
-      // W → reveal and focus A
-      D.assayGrp.classList.remove('field-hidden');
-      D.assayGrp.style.pointerEvents = '';
-      D.assay.focus();
-    } else if(inp.id==='assay'){
-      // A → blur, buttons are visible, user picks F1/F2/F3
-      inp.blur();
-    }
+    if(inp.id==='Q'){showField(D.grpW,true);D.water.focus();}
+    else if(inp.id==='water'){showField(D.grpA,true);D.assay.focus();}
+    else if(inp.id==='assay'){inp.blur();}
   }
 
-  function showErr(inp, msg){
+  function showErr(inp,msg){
     clearErr(inp);
-    const d = document.createElement('div');
-    d.className='error-message'; d.id=`${inp.id}-err`; d.textContent=msg;
+    const d=document.createElement('div');
+    d.className='error-message';d.id=`${inp.id}-err`;d.textContent=msg;
     inp.closest('.input-group').appendChild(d);
-    inp.setAttribute('aria-describedby', d.id);
+    inp.setAttribute('aria-describedby',d.id);
     inp.setCustomValidity(msg);
   }
   function clearErr(inp){
-    const e = $(`${inp.id}-err`);
-    if(e) e.remove();
-    inp.removeAttribute('aria-describedby');
-    inp.setCustomValidity('');
-  }
-
-  function updateProgress(){
-    const f = [D.Q,D.water,D.assay].filter(i => i.value.trim()).length;
-    D.progressBar.style.width = (f/3*100)+'%';
-    // Use field-hidden (visibility:hidden) instead of display:none
-    // This keeps layout stable — no reflow, no left shift
-    if(D.waterGrp){
-      const showW = !!D.Q.value.trim();
-      D.waterGrp.classList.toggle('field-hidden', !showW);
-      D.waterGrp.style.pointerEvents = showW ? '' : 'none';
-    }
-    if(D.assayGrp){
-      const showA = !!D.water.value.trim();
-      D.assayGrp.classList.toggle('field-hidden', !showA);
-      D.assayGrp.style.pointerEvents = showA ? '' : 'none';
-    }
-    if(D.buttons) D.buttons.style.display = f===3 ? 'flex' : 'none';
+    const e=$(`${inp.id}-err`);if(e)e.remove();
+    inp.removeAttribute('aria-describedby');inp.setCustomValidity('');
   }
 
   function validateInput(inp){
-    if(inp.id==='stdQty'||inp.id.includes('-b')||inp.id.includes('-a')||inp.id.includes('-c')){
-      if(!/^\d*\.?\d{0,3}$/.test(inp.value)&&inp.value!=='') inp.value=inp.value.slice(0,-1);
-    }
+    if(!/^\d*\.?\d{0,3}$/.test(inp.value)&&inp.value!=='')inp.value=inp.value.slice(0,-1);
   }
 
-  /* ══════════════════════════════════
-     SHOW CALCULATOR
-  ══════════════════════════════════ */
+  /* ── Show calculator ── */
   function showCalculator(which){
-    const isFormula = which==='formula';
-    D.formulaCalc.classList.toggle('active', isFormula);
-    D.acbCalc.classList.toggle('active', !isFormula);
-    D.menuFormula.classList.toggle('active', isFormula);
-    D.menuFormula.setAttribute('aria-selected', String(isFormula));
-    D.menuAcb.classList.toggle('active', !isFormula);
-    D.menuAcb.setAttribute('aria-selected', String(!isFormula));
-    // FIX: Use visibility so tracker space is preserved, keeping hamburger at far right
-    // display:none collapses it and shifts hamburger left
-    D.menuQtyTracker.style.visibility = isFormula ? 'visible' : 'hidden';
-    D.menuQtyTracker.style.pointerEvents = isFormula ? '' : 'none';
-    D.calcSteps.classList.toggle('hidden', !isFormula || calcCount===0);
-    requestAnimationFrame(() => {
-      if(isFormula) D.Q.focus();
-      else D.acb.b[0].focus();
+    const isF=which==='formula';
+    D.formulaCalc.classList.toggle('active',isF);
+    D.acbCalc.classList.toggle('active',!isF);
+    D.menuFormula.classList.toggle('active',isF);
+    D.menuFormula.setAttribute('aria-selected',String(isF));
+    D.menuAcb.classList.toggle('active',!isF);
+    D.menuAcb.setAttribute('aria-selected',String(!isF));
+    // Use visibility — preserves layout, qty tracker stays in place
+    D.menuQtyTracker.style.visibility=isF?'visible':'hidden';
+    D.menuQtyTracker.style.pointerEvents=isF?'':'none';
+    D.calcSteps.classList.toggle('hidden',!isF||calcCount===0);
+    requestAnimationFrame(()=>{
+      if(isF)D.Q.focus(); else D.acb.b[0].focus();
     });
   }
 
-  /* ══════════════════════════════════
-     MODALS
-  ══════════════════════════════════ */
+  /* ── ACB ── */
+  function toggleEdit(){
+    acbEditEnabled=!acbEditEnabled;
+    D.toggleEditBtn.textContent=acbEditEnabled?'Disable Edit':'Enable Editing Std qty';
+    D.acb.a.concat(D.acb.c).forEach(inp=>{inp.readOnly=!acbEditEnabled;});
+    if(acbEditEnabled)showACBNotice();
+  }
+  function showACBNotice(){
+    D.acbNotice.style.display='block';clearTimeout(acbNoticeTimer);
+    acbNoticeTimer=setTimeout(()=>{D.acbNotice.style.display='none';},3000);
+  }
+  function updateACB(input,lotIdx,type){
+    try{
+      const val=new Decimal(input.value||0);
+      if(type==='a'||type==='c'){
+        const orig=new Decimal(type==='a'?C.ACB_DEF_A:C.ACB_DEF_C);
+        input.classList.toggle('edited',!val.eq(orig));
+        input.classList.remove('acb-prefilled');input.classList.add('acb-manual-input');
+        if(lotIdx===0){
+          D.acb[type].slice(1).forEach(o=>{
+            o.value=fmt(val);o.classList.toggle('edited',!val.eq(orig));
+            o.classList.remove('acb-manual-input');o.classList.add('acb-prefilled');
+          });
+        }
+      }else{input.classList.add('acb-manual-input');}
+    }catch{input.value='';}
+    let tA=new Decimal(0),tB=new Decimal(0),tC=new Decimal(0),tR=new Decimal(0);
+    D.acb.a.forEach((aInp,i)=>{
+      const a=new Decimal(aInp.value||0);
+      const b=new Decimal(D.acb.b[i].value||0);
+      const c=new Decimal(D.acb.c[i].value||0);
+      const re=D.acb.res[i];
+      if(b.isZero()||!D.acb.b[i].value.trim()){re.textContent='−';re.classList.remove('acb-output','acb-prefilled');}
+      else{const r=a.plus(c).minus(b);re.textContent=fmt(r);re.classList.add('acb-output');re.classList.remove('acb-prefilled');tR=tR.plus(r);}
+      tA=tA.plus(a);tB=tB.plus(b);tC=tC.plus(c);
+    });
+    D.acb.tot.a.textContent=fmt(tA);D.acb.tot.b.textContent=fmt(tB);
+    D.acb.tot.c.textContent=fmt(tC);D.acb.tot.r.textContent=fmt(tR);
+    [D.acb.tot.a,D.acb.tot.b,D.acb.tot.c].forEach(el=>{el.classList.add('acb-output');el.classList.remove('acb-prefilled');});
+    D.acb.tot.r.classList.toggle('acb-prefilled',tR.isZero());
+    D.acb.tot.r.classList.toggle('acb-output',!tR.isZero());
+  }
+  function resetACBCalculator(){
+    if(!confirm('Reset the (A+C)-B calculator? All entered values will be cleared.'))return;
+    D.acb.a.forEach(inp=>{inp.value=C.ACB_DEF_A.toFixed(3);inp.classList.remove('edited','acb-manual-input');inp.classList.add('acb-prefilled');});
+    D.acb.c.forEach(inp=>{inp.value=C.ACB_DEF_C.toFixed(3);inp.classList.remove('edited','acb-manual-input');inp.classList.add('acb-prefilled');});
+    D.acb.b.forEach(inp=>{inp.value='';inp.classList.remove('acb-manual-input');});
+    D.acb.tot.a.textContent=C.ACB_TOT_A.toFixed(3);D.acb.tot.b.textContent='0.000';
+    D.acb.tot.c.textContent=C.ACB_TOT_C.toFixed(3);D.acb.tot.r.textContent='0.000';
+    D.acb.res.forEach(r=>{r.textContent='−';r.classList.remove('acb-output','acb-prefilled');});
+    if(acbEditEnabled)toggleEdit();
+  }
+
+  /* ── Modals ── */
   function showInfo(){
-    const modal = $('infoModal');
-    $('formulaInfo').style.display = D.formulaCalc.classList.contains('active') ? 'block' : 'none';
-    $('acbInfo').style.display     = D.formulaCalc.classList.contains('active') ? 'none'  : 'block';
-    modal.classList.add('open');
-    modal.querySelector('.modal-close').focus();
+    $('formulaInfo').style.display=D.formulaCalc.classList.contains('active')?'block':'none';
+    $('acbInfo').style.display=D.formulaCalc.classList.contains('active')?'none':'block';
+    $('infoModal').classList.add('open');
+    $('infoModal').querySelector('.modal-close').focus();
   }
   function closeModal(){
     $('infoModal').classList.remove('open');
-    (D.formulaCalc.classList.contains('active') ? D.Q : D.acb.b[0]).focus();
+    (D.formulaCalc.classList.contains('active')?D.Q:D.acb.b[0]).focus();
   }
   function closeVerifyModal(){
     $('verifyModal').classList.remove('open');
-    if(typeof window._verifyResolve==='function'){ window._verifyResolve(false); window._verifyResolve=null; }
+    if(typeof window._verifyResolve==='function'){window._verifyResolve(false);window._verifyResolve=null;}
   }
-
-  function verifyCalc(calc, Q, W, A){
+  function verifyCalc(calc,Q,W,A){
     $('verifyDetails').innerHTML=`
       <h3 id="verifyTitle" style="text-align:center;margin-bottom:16px;">Verify before calculating</h3>
       <div class="verify-row"><span class="verify-label">Quantity (Q):</span><span class="verify-value">${Q}</span></div>
@@ -1545,363 +1350,309 @@
       <div class="verify-row"><span class="verify-label">Assay Content (A):</span><span class="verify-value">${A}%</span></div>
       <div class="verify-row"><span class="verify-label">Formula:</span><span class="verify-value">F${calc.type.replace('F','')}</span></div>
     `;
-    $('verifyModal').classList.add('open');
-    $('confirmBtn').focus();
-    return new Promise(resolve => {
-      window._verifyResolve = resolve;
-      window.confirmVerification = confirmed => {
+    $('verifyModal').classList.add('open');$('confirmBtn').focus();
+    return new Promise(resolve=>{
+      window._verifyResolve=resolve;
+      window.confirmVerification=confirmed=>{
         $('verifyModal').classList.remove('open');
-        window._verifyResolve = null;
+        window._verifyResolve=null;
         if(!confirmed){
-          D.Q.value=Q.toString(); D.water.value=W.toString(); D.assay.value=A.toString();
-          D.progressBar.style.width='100%';
-          D.buttons.style.display='flex';
-          D.waterGrp.classList.remove('field-hidden'); D.waterGrp.style.pointerEvents='';
-          D.assayGrp.classList.remove('field-hidden'); D.assayGrp.style.pointerEvents='';
-          D.Q.focus();
+          D.Q.value=Q.toString();D.water.value=W.toString();D.assay.value=A.toString();
+          D.progressBar.style.width='100%';D.buttons.style.display='flex';
+          showField(D.grpW,true);showField(D.grpA,true);D.Q.focus();
         }
         resolve(confirmed);
       };
     });
   }
 
-  /* ══════════════════════════════════
-     DELETE / PAGE NUMBERS
-  ══════════════════════════════════ */
+  /* ── Delete / page numbers ── */
   function deleteCalculation(btn){
-    if(!confirm('Delete this calculation?')) return;
-    const entry   = btn.closest('.calculation-entry');
-    const entries = [...D.stepsContainer.children];
-    const domIdx  = entries.indexOf(entry);
-    const arrIdx  = calculations.length - 1 - domIdx;
-    if(arrIdx>=0 && arrIdx<calculations.length) calculations.splice(arrIdx,1);
-    entry.remove();
-    calcCount--;
-    if(calcCount===0) D.calcSteps.classList.add('hidden');
-    updatePageNumbers();
-    updateQtyTracker();
-    D.Q.focus();
+    if(!confirm('Delete this calculation?'))return;
+    const entry=btn.closest('.calculation-entry');
+    const entries=[...D.stepsContainer.children];
+    const arrIdx=calculations.length-1-entries.indexOf(entry);
+    if(arrIdx>=0&&arrIdx<calculations.length)calculations.splice(arrIdx,1);
+    entry.remove();calcCount--;
+    if(calcCount===0)D.calcSteps.classList.add('hidden');
+    updatePageNumbers();updateQtyTracker();D.Q.focus();
   }
-
   function updatePageNumbers(){
-    const all = D.stepsContainer.querySelectorAll('.calculation-entry');
-    const tot = all.length;
-    all.forEach((el,i) => {
-      const pn = el.querySelector('.page-number');
-      if(pn) pn.textContent = `${tot-i}/${tot}`;
-    });
+    const all=D.stepsContainer.querySelectorAll('.calculation-entry');
+    const tot=all.length;
+    all.forEach((el,i)=>{const pn=el.querySelector('.page-number');if(pn)pn.textContent=`${tot-i}/${tot}`;});
   }
 
-  /* ══════════════════════════════════
-     PRINT
-  ══════════════════════════════════ */
+  /* ── Print ── */
   function printWithCheck(){
-    if(window.innerWidth<=768 && !confirm('For best results, print from a desktop/larger screen. Continue anyway?')) return;
+    if(window.innerWidth<=768&&!confirm('For best results, print from a desktop. Continue?'))return;
     window.print();
   }
 
-  /* ══════════════════════════════════
-     CALCULATE (async — awaits verify)
-  ══════════════════════════════════ */
+  /* ── Calculate ── */
   async function calculate(type){
-    if(calcCount>=C.MAX_CALC){ alert(`Maximum ${C.MAX_CALC} calculations reached. Delete one or refresh.`); return; }
-
+    if(calcCount>=C.MAX_CALC){alert(`Maximum ${C.MAX_CALC} calculations reached. Delete one or refresh.`);return;}
     let Q,W,A;
     try{
-      Q = new Decimal(D.Q.value.trim()||'0');
-      W = new Decimal(D.water.value.trim()||'0');
-      A = new Decimal(D.assay.value.trim()||'0');
-    } catch{ alert('Invalid input. Please enter numeric values.'); return; }
-
-    if([Q,W,A].some(v=>v.isNaN()||v.lte(0))){ alert('All values (Q, W, A) must be numbers greater than 0.'); return; }
-    if(Q.gt(C.Q_MAX)){ alert(`Quantity must be ≤ ${C.Q_MAX}.`); return; }
-    if(A.gt(C.A_MAX)||W.gt(C.W_MAX)){ alert('Check values: A ≤ 100, W ≤ 99.99.'); return; }
-
-    hasCalc = true;
+      Q=new Decimal(D.Q.value.trim()||'0');
+      W=new Decimal(D.water.value.trim()||'0');
+      A=new Decimal(D.assay.value.trim()||'0');
+    }catch{alert('Invalid input values.');return;}
+    if([Q,W,A].some(v=>v.isNaN()||v.lte(0))){alert('All values (Q, W, A) must be numbers greater than 0.');return;}
+    if(Q.gt(C.Q_MAX)){alert(`Quantity must be ≤ ${C.Q_MAX}.`);return;}
+    if(A.gt(C.A_MAX)||W.gt(C.W_MAX)){alert('Check values: A ≤ 100, W ≤ 99.99.');return;}
+    hasCalc=true;
     let calc;
-    try{ calc = createCalc(type, Q, W, A); }
-    catch(e){ alert('Calculation error: '+e.message); return; }
-
-    const ok = await verifyCalc(calc, Q, W, A);
-    if(!ok) return;
-
-    calculations.push(calc);
-    calcCount++;
-
-    /* Build entry */
-    const entry = document.createElement('div');
+    try{calc=createCalc(type,Q,W,A);}
+    catch(e){alert('Calculation error: '+e.message);return;}
+    const ok=await verifyCalc(calc,Q,W,A);
+    if(!ok)return;
+    calculations.push(calc);calcCount++;
+    const entry=document.createElement('div');
     entry.className='calculation-entry';
     entry.setAttribute('tabindex','0');
     entry.setAttribute('role','region');
     entry.setAttribute('aria-label',`${type} Calculation`);
-
-    const wFmt = fmt(W,true), aFmt = fmt(A,true);
+    const wF=fmt(W,true),aF=fmt(A,true);
     entry.innerHTML=`
       <button type="button" class="delete-button" onclick="deleteCalculation(this)" title="Delete" aria-label="Delete this calculation">❌</button>
       <div class="lot-label" aria-hidden="true"></div>
-      <div class="reference-values" aria-label="Parameters">W="${wFmt}" A="${aFmt}"</div>
+      <div class="reference-values" aria-label="Parameters">W="${wF}" A="${aF}"</div>
       <div class="calculation-content">${calc.plain}</div>
       <div class="page-number" aria-hidden="true">${calcCount}/${calcCount}</div>
-      <span class="loading-indicator" aria-hidden="true">Rendering equations…</span>
+      <span class="loading-indicator" aria-hidden="true">Rendering…</span>
     `;
-
-    D.stepsContainer.insertBefore(entry, D.stepsContainer.firstChild);
+    D.stepsContainer.insertBefore(entry,D.stepsContainer.firstChild);
     D.calcSteps.classList.remove('hidden');
-    updatePageNumbers();
-    updateQtyTracker();
-
-    // Render MathJax
+    updatePageNumbers();updateQtyTracker();
     if(mjReady){
-      setTimeout(() => {
+      setTimeout(()=>{
         entry.innerHTML=`
           <button type="button" class="delete-button" onclick="deleteCalculation(this)" title="Delete" aria-label="Delete this calculation">❌</button>
           <div class="lot-label" aria-hidden="true"></div>
-          <div class="reference-values">W="${wFmt}" A="${aFmt}"</div>
+          <div class="reference-values">W="${wF}" A="${aF}"</div>
           <div class="calculation-content">${calc.mathJax}</div>
           <div class="page-number" aria-hidden="true">${calcCount}/${calcCount}</div>
         `;
         queueMJ(entry);
-      }, 50);
-    } else {
-      entry.querySelector('.loading-indicator').style.display = 'block';
-      setTimeout(() => { if(!mjReady) retryMJ(); }, C.MJ_TIMEOUT);
+      },50);
+    }else{
+      entry.querySelector('.loading-indicator').style.display='block';
+      setTimeout(()=>{if(!mjReady)retryMJ();},C.MJ_TIMEOUT);
     }
-
-    // Reset inputs — use field-hidden to avoid layout reflow
-    setTimeout(() => {
-      D.Q.value=''; D.water.value=''; D.assay.value='';
+    // Reset inputs
+    setTimeout(()=>{
+      D.Q.value='';D.water.value='';D.assay.value='';
       D.progressBar.style.width='0%';
       D.buttons.style.display='none';
-      D.waterGrp.classList.add('field-hidden');
-      D.waterGrp.style.pointerEvents='none';
-      D.assayGrp.classList.add('field-hidden');
-      D.assayGrp.style.pointerEvents='none';
-      clearErr(D.Q); clearErr(D.water); clearErr(D.assay);
+      showField(D.grpW,false);showField(D.grpA,false);
+      clearErr(D.Q);clearErr(D.water);clearErr(D.assay);
       updateQtyTracker();
-      // Scroll new entry into view with snap
-      D.stepsContainer.firstElementChild?.scrollIntoView({behavior:'smooth', block:'start'});
+      D.stepsContainer.firstElementChild?.scrollIntoView({behavior:'smooth',block:'start'});
       D.Q.focus();
-    }, 80);
-
+    },80);
     entry.focus();
   }
 
-  /* ══════════════════════════════════
-     STD QTY → ACB SYNC
-  ══════════════════════════════════ */
+  /* ── Sync std qty → ACB ── */
   function syncStdToACB(val){
-    const v = new Decimal(val||0).toFixed(3);
-    D.acb.a.forEach(inp => {
-      inp.value = v;
-      inp.classList.remove('acb-manual-input','edited');
-      inp.classList.add('acb-prefilled');
-    });
-    D.acb.tot.a.textContent = new Decimal(v).times(4).toFixed(3);
+    const v=new Decimal(val||0).toFixed(3);
+    D.acb.a.forEach(inp=>{inp.value=v;inp.classList.remove('acb-manual-input','edited');inp.classList.add('acb-prefilled');});
+    D.acb.tot.a.textContent=new Decimal(v).times(4).toFixed(3);
   }
 
-  /* ══════════════════════════════════
-     LEFT RAIL + WRITE US PANEL
-  ══════════════════════════════════ */
+  /* ── Left Rail + Write Us ── */
   (function initRail(){
-    const overlay  = $('sidenavOverlay');
-    const openWU   = $('openWriteUs');
-    const wuPanel  = $('writeusPanel');
-    const wpBack   = $('wpBack');
-    const wpMsg    = $('wpMsg');
-    const wpChar   = $('wpChar');
-    const wpSend   = $('wpSend');
-    const wpErr    = $('wpErr');
-    const wpForm   = $('wpFormArea');
-    const wpSucc   = $('wpSuccess');
-    const wuForm   = $('writeusForm');
+    const overlay=$('sidenavOverlay');
+    const openWU=$('openWriteUs');
+    const wuPanel=$('writeusPanel');
+    const wpBack=$('wpBack');
+    const wpMsg=$('wpMsg');
+    const wpChar=$('wpChar');
+    const wpSend=$('wpSend');
+    const wpErr=$('wpErr');
+    const wpForm=$('wpFormArea');
+    const wpSucc=$('wpSuccess');
+    const wuForm=$('writeusForm');
 
     function openPanel(){
-      wuPanel.classList.add('open');
-      wuPanel.setAttribute('aria-hidden','false');
-      overlay.classList.add('open');
-      openWU.classList.add('rail-active');
-      setTimeout(() => wpMsg.focus(), 320);
+      wuPanel.classList.add('open');wuPanel.setAttribute('aria-hidden','false');
+      overlay.classList.add('open');openWU.classList.add('rail-active');
+      setTimeout(()=>wpMsg.focus(),320);
     }
     function closePanel(){
-      wuPanel.classList.remove('open');
-      wuPanel.setAttribute('aria-hidden','true');
-      overlay.classList.remove('open');
-      openWU.classList.remove('rail-active');
+      wuPanel.classList.remove('open');wuPanel.setAttribute('aria-hidden','true');
+      overlay.classList.remove('open');openWU.classList.remove('rail-active');
       openWU.focus();
     }
-
-    openWU.addEventListener('click', openPanel);
-    wpBack.addEventListener('click', closePanel);
-    overlay.addEventListener('click', closePanel);
-    document.addEventListener('keydown', e => {
-      if(e.key==='Escape' && wuPanel.classList.contains('open')) closePanel();
+    openWU.addEventListener('click',openPanel);
+    wpBack.addEventListener('click',closePanel);
+    overlay.addEventListener('click',closePanel);
+    // Escape closes panel but NOT modals (handled separately)
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape'&&wuPanel.classList.contains('open'))closePanel();
     });
-
-    wpMsg.addEventListener('input', () => {
-      const l = wpMsg.value.length;
-      wpChar.textContent = `${l} / 1000`;
-      wpChar.classList.toggle('warn', l>900);
+    wpMsg.addEventListener('input',()=>{
+      const l=wpMsg.value.length;
+      wpChar.textContent=`${l} / 1000`;
+      wpChar.classList.toggle('warn',l>900);
     });
-
-    wuForm.addEventListener('submit', async e => {
+    wuForm.addEventListener('submit',async e=>{
       e.preventDefault();
-      if(!wpMsg.value.trim()){
-        wpErr.textContent='Please write something first.';
-        wpErr.classList.add('show'); return;
-      }
-      wpSend.disabled=true; wpSend.textContent='Sending…';
-      wpErr.classList.remove('show');
+      if(!wpMsg.value.trim()){wpErr.textContent='Please write something first.';wpErr.classList.add('show');return;}
+      wpSend.disabled=true;wpSend.textContent='Sending…';wpErr.classList.remove('show');
       try{
-        const r    = await fetch('https://api.web3forms.com/submit',{ method:'POST', body:new FormData(wuForm) });
-        const data = await r.json();
+        const r=await fetch('https://api.web3forms.com/submit',{method:'POST',body:new FormData(wuForm)});
+        const data=await r.json();
         if(data.success){
-          wpForm.style.display='none';
-          wpSucc.style.display='block';
-          setTimeout(() => { closePanel(); setTimeout(resetWU, 400); }, 3000);
-        } else { showWUErr('Something went wrong. Try again.'); resetWUBtn(); }
-      } catch { showWUErr('Network error. Check your connection.'); resetWUBtn(); }
+          wpForm.style.display='none';wpSucc.style.display='block';
+          setTimeout(()=>{closePanel();setTimeout(resetWU,400);},3000);
+        }else{showWUErr('Something went wrong. Try again.');resetWUBtn();}
+      }catch{showWUErr('Network error. Check your connection.');resetWUBtn();}
     });
-
-    function showWUErr(t){ wpErr.textContent=t; wpErr.classList.add('show'); }
-    function resetWUBtn(){ wpSend.disabled=false; wpSend.textContent='Send →'; }
+    function showWUErr(t){wpErr.textContent=t;wpErr.classList.add('show');}
+    function resetWUBtn(){wpSend.disabled=false;wpSend.textContent='Send →';}
     function resetWU(){
-      wpForm.style.display='block'; wpSucc.style.display='none';
-      wpMsg.value=''; wpChar.textContent='0 / 1000';
-      wpErr.classList.remove('show'); resetWUBtn();
+      wpForm.style.display='block';wpSucc.style.display='none';
+      wpMsg.value='';wpChar.textContent='0 / 1000';
+      wpErr.classList.remove('show');resetWUBtn();
     }
   })();
 
-  /* ══════════════════════════════════
-     DOM READY INIT
-  ══════════════════════════════════ */
-  document.addEventListener('DOMContentLoaded', () => {
-    // Complete DOM cache
-    D.waterGrp = D.water.closest('.input-group');
-    D.assayGrp = D.assay.closest('.input-group');
-    D.buttons  = document.querySelector('.button-row');
-
-    // Initial UI state — use field-hidden not display:none
-    D.waterGrp.classList.add('field-hidden');
-    D.waterGrp.style.pointerEvents = 'none';
-    D.assayGrp.classList.add('field-hidden');
-    D.assayGrp.style.pointerEvents = 'none';
-    D.buttons.style.display = 'none';
+  /* ── DOM Ready ── */
+  document.addEventListener('DOMContentLoaded',()=>{
+    // Initial state — card starts compact (only Q visible)
+    showField(D.grpW,false);
+    showField(D.grpA,false);
+    D.buttons.style.display='none';
     D.calcSteps.classList.add('hidden');
 
     // Default std qty
-    D.stdQty.value = C.ACB_DEF_A.toFixed(3);
+    D.stdQty.value=C.ACB_DEF_A.toFixed(3);
     syncStdToACB(C.ACB_DEF_A);
     updateQtyTracker();
 
-    // Focus Q
-    requestAnimationFrame(() => D.Q.focus());
+    requestAnimationFrame(()=>D.Q.focus());
 
-    // Auto-show help on first load, auto-close after 4s
-    setTimeout(() => { showInfo(); setTimeout(closeModal, 4000); }, 600);
+    // Auto-show help briefly
+    setTimeout(()=>{showInfo();setTimeout(closeModal,4000);},600);
 
-    /* ── Main input listeners ── */
-    [D.Q, D.water, D.assay].forEach(inp => {
-      // input event: validation + progress only
-      inp.addEventListener('input', e => { validateInput(inp); handleInput(e); });
-      // keydown: Enter navigation (separate from input) + block arrow keys
-      inp.addEventListener('keydown', e => {
-        if(e.key==='ArrowUp'||e.key==='ArrowDown') e.preventDefault();
-        if(e.key==='Enter') handleEnterNav(e);
+    /* Main input listeners */
+    [D.Q,D.water,D.assay].forEach(inp=>{
+      // input → validation + progress
+      inp.addEventListener('input',e=>{validateInput(inp);handleInput(e);});
+      // keydown → Enter navigation + block arrow keys
+      inp.addEventListener('keydown',e=>{
+        if(e.key==='ArrowUp'||e.key==='ArrowDown')e.preventDefault();
+        if(e.key==='Enter')handleEnterNav(e);
       });
-      inp.addEventListener('contextmenu', e => e.preventDefault());
-      inp.addEventListener('wheel', e => { if(document.activeElement===inp) e.preventDefault(); }, {passive:false});
+      inp.addEventListener('contextmenu',e=>e.preventDefault());
+      inp.addEventListener('wheel',e=>{if(document.activeElement===inp)e.preventDefault();},{passive:false});
     });
 
-    /* ── ACB delegation ── */
-    $('acbCalculator').addEventListener('input', e => {
-      const inp = e.target;
-      const m   = inp.id.match(/lot(\d+)-([abc])/);
-      if(m){
-        const [,i,t] = m;
-        validateInput(inp);
-        updateACB(inp, parseInt(i)-1, t);
-        if((t==='a'||t==='c') && acbEditEnabled) showACBNotice();
-      }
+    /* ACB input delegation */
+    $('acbCalculator').addEventListener('input',e=>{
+      const inp=e.target,m=inp.id.match(/lot(\d+)-([abc])/);
+      if(m){const[,i,t]=m;validateInput(inp);updateACB(inp,parseInt(i)-1,t);if((t==='a'||t==='c')&&acbEditEnabled)showACBNotice();}
     });
 
-    /* ── ACB keyboard navigation ── */
-    const acbFields = ['a','b','c'].flatMap(t => [1,2,3,4].map(i => `lot${i}-${t}`));
-    acbFields.forEach((id, idx) => {
-      const inp = $(id);
-      if(!inp) return;
-      inp.addEventListener('keydown', e => {
-        if(e.key!=='Enter') return;
+    /* ACB Enter navigation */
+    const acbFields=['a','b','c'].flatMap(t=>[1,2,3,4].map(i=>`lot${i}-${t}`));
+    acbFields.forEach((id,idx)=>{
+      const inp=$(id);if(!inp)return;
+      inp.addEventListener('keydown',e=>{
+        if(e.key!=='Enter')return;
         e.preventDefault();
-        for(let n=idx+1; n<acbFields.length; n++){
-          const ni = $(acbFields[n]);
-          if(ni && !ni.readOnly){ ni.focus(); break; }
+        for(let n=idx+1;n<acbFields.length;n++){
+          const ni=$(acbFields[n]);if(ni&&!ni.readOnly){ni.focus();break;}
         }
       });
     });
 
-    /* ── Modal backdrop close ── */
-    document.addEventListener('click', e => {
-      if(e.target===$('infoModal'))  closeModal();
-      if(e.target===$('verifyModal')) closeVerifyModal();
+    /* Modal backdrop click */
+    document.addEventListener('click',e=>{
+      if(e.target===$('infoModal'))closeModal();
+      if(e.target===$('verifyModal'))closeVerifyModal();
     });
 
-    /* ── Keyboard shortcuts ── */
-    document.addEventListener('keydown', e => {
-      // Avoid firing during text input
-      const tag = document.activeElement?.tagName;
-      if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+    /* ── KEYBOARD SHORTCUTS ──
+       FIX: F-keys work even when an input is focused.
+       Only block character shortcuts (none here) when typing.
+       F1–F3 are function keys, not character keys — always safe to intercept. */
+    document.addEventListener('keydown',e=>{
       switch(e.key){
-        case 'F1': e.preventDefault(); calculate('F1'); break;
-        case 'F2': e.preventDefault(); calculate('F2'); break;
-        case 'F3': e.preventDefault(); calculate('F3'); break;
-        case 'F8': e.preventDefault(); if(calcCount>0) printWithCheck(); break;
+        case 'F1':
+          e.preventDefault();
+          // Only calculate if formula calculator is active and all fields filled
+          if(D.formulaCalc.classList.contains('active')&&
+             D.Q.value.trim()&&D.water.value.trim()&&D.assay.value.trim()){
+            calculate('F1');
+          }
+          break;
+        case 'F2':
+          e.preventDefault();
+          if(D.formulaCalc.classList.contains('active')&&
+             D.Q.value.trim()&&D.water.value.trim()&&D.assay.value.trim()){
+            calculate('F2');
+          }
+          break;
+        case 'F3':
+          e.preventDefault();
+          if(D.formulaCalc.classList.contains('active')&&
+             D.Q.value.trim()&&D.water.value.trim()&&D.assay.value.trim()){
+            calculate('F3');
+          }
+          break;
+        case 'F8':
+          e.preventDefault();
+          if(calcCount>0)printWithCheck();
+          break;
       }
     });
 
-    /* ── Std qty listeners ── */
-    D.stdQty.addEventListener('input', () => { validateInput(D.stdQty); updateQtyTracker(); });
-    D.stdQty.addEventListener('change', () => {
-      const v = parseFloat(D.stdQty.value||0);
-      if(!isNaN(v) && v>0) syncStdToACB(v);
+    /* Std qty */
+    D.stdQty.addEventListener('input',()=>{validateInput(D.stdQty);updateQtyTracker();});
+    D.stdQty.addEventListener('change',()=>{
+      const v=parseFloat(D.stdQty.value||0);
+      if(!isNaN(v)&&v>0)syncStdToACB(v);
     });
 
-    /* ── Remaining qty click ── */
-    D.remainingQty.addEventListener('click', copyRemToQ);
-    D.remainingQty.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); copyRemToQ(); } });
+    /* Remaining qty click */
+    D.remainingQty.addEventListener('click',copyRemToQ);
+    D.remainingQty.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyRemToQ();}});
 
-    /* ── Lot select ── */
-    D.lotSelect.addEventListener('change', updateLotDispensed);
+    /* Lot select */
+    D.lotSelect.addEventListener('change',updateLotDispensed);
 
-    /* ── MathJax timeout fallback ── */
+    /* MathJax fallback */
     if(!mjReady){
-      D.mjLoading.style.display = 'block';
-      setTimeout(() => { if(!mjReady) retryMJ(); }, C.MJ_TIMEOUT);
+      D.mjLoading.style.display='block';
+      setTimeout(()=>{if(!mjReady)retryMJ();},C.MJ_TIMEOUT);
     }
 
-    /* ── Warn on accidental unload ── */
-    window.addEventListener('beforeunload', e => {
-      if(calcCount>0){ e.preventDefault(); e.returnValue='You have unsaved calculations.'; }
+    /* Unload warning */
+    window.addEventListener('beforeunload',e=>{
+      if(calcCount>0){e.preventDefault();e.returnValue='You have unsaved calculations.';}
     });
 
-    /* ── Resize ── */
-    window.addEventListener('resize', updatePageNumbers);
+    window.addEventListener('resize',updatePageNumbers);
   });
   </script>
 
-  <!-- MathJax — deferred, loaded after main content, reduces TBT -->
+  <!-- MathJax deferred -->
   <script defer src="assets/mathjax/es5/tex-mml-chtml.js" onerror="loadMathJaxFallback()"></script>
   <script>
     function loadMathJaxFallback(attempt=1,max=2){
       var s=document.createElement('script');
       s.src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
       s.async=true;
-      s.onerror=function(){ if(attempt<max)loadMathJaxFallback(attempt+1,max); else { document.getElementById('mjLoading').textContent='Equations unavailable.'; document.dispatchEvent(new Event('MathJaxReady')); } };
-      s.onload=function(){ document.getElementById('mjLoading').style.display='none'; MathJax.startup.getComponents(); };
+      s.onerror=function(){if(attempt<max)loadMathJaxFallback(attempt+1,max);else{document.getElementById('mjLoading').textContent='Equations unavailable.';document.dispatchEvent(new Event('MathJaxReady'));}};
+      s.onload=function(){document.getElementById('mjLoading').style.display='none';MathJax.startup.getComponents();};
       document.head.appendChild(s);
     }
   </script>
 
-  <!-- Google Analytics — async, last -->
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HMNB6B1Q8B"></script>
   <script>
     window.dataLayer=window.dataLayer||[];
