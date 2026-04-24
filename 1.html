@@ -54,32 +54,100 @@
     /* ═══════════════════════════════
        CSS VARIABLES
     ═══════════════════════════════ */
-    :root{
-      --clr-primary:#4facfe;
-      --clr-success:#28a745;
-      --clr-success-dark:#218838;
-      --clr-danger:#ff4444;
-      --clr-text:#1a1a1a;
-      --clr-border:#ddd;
-      --clr-white:#fff;
-      --clr-purple:#c9b8f0;
-      --radius-sm:6px;
-      --radius-md:12px;
-      --radius-lg:16px;
-      --transition-fast:0.2s ease;
-      --transition-panel:0.3s cubic-bezier(0.4,0,0.2,1);
-      --font:Poppins,system-ui,sans-serif;
-      --menu-h:56px;
-      --footer-h:44px;
-      /* Frosted glass tokens */
-      --glass-bg:rgba(255,255,255,.18);
-      --glass-bg-strong:rgba(255,255,255,.28);
-      --glass-border:rgba(255,255,255,.32);
-      --glass-shadow:0 8px 32px rgba(0,0,0,.12);
-      --glass-blur:blur(16px);
-    }
+   
+     <!-- Only showing modified CSS + instructions to replace in your file --><!-- STEP 1: Replace your :root with this --><style>
+:root{
+  --bg-main:#f4f6f8;
+  --bg-card:#ffffff;
+  --bg-header:#e9edf2;
 
-    /* ═══════════════════════════════
+  --text-primary:#0f172a;
+  --text-secondary:#475569;
+  --text-muted:#94a3b8;
+
+  --border-light:#d6dbe1;
+  --border-strong:#9aa4b2;
+
+  --clr-success:#16a34a;
+  --clr-warning:#f59e0b;
+  --clr-danger:#dc2626;
+
+  --result-bg:#111827;
+  --result-text:#ffffff;
+
+  --focus-ring:0 0 0 3px rgba(37,99,235,0.35);
+}
+
+/* STEP 2: Replace body background */
+body{
+  background:var(--bg-main) !important;
+}
+
+/* STEP 3: Calculator card */
+.calculator-container{
+  background:var(--bg-card) !important;
+  border:1px solid var(--border-light);
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+
+.calculator-container h2{
+  color:var(--text-primary);
+  text-shadow:none;
+}
+
+/* STEP 4: Table */
+.acb-th{
+  background:var(--bg-header);
+  color:var(--text-primary);
+  font-weight:700;
+}
+
+.acb-td{
+  color:var(--text-secondary);
+  background:#fff;
+}
+
+.acb-highlight-row{
+  background:#f8fafc;
+}
+
+/* STEP 5: Inputs */
+.acb-input{
+  background:#ffffff;
+  color:var(--text-primary);
+  border:1.5px solid var(--border-light);
+  font-weight:600;
+}
+
+.acb-input:focus{
+  border-color:#2563eb;
+  box-shadow:var(--focus-ring);
+}
+
+/* STEP 6: RESULTS (MAIN FIX) */
+.acb-output,
+.acb-manual-input{
+  background:var(--result-bg);
+  color:var(--result-text) !important;
+  font-weight:800;
+  border-radius:4px;
+  padding:4px 6px;
+  letter-spacing:0.3px;
+}
+
+/* STEP 7: Empty */
+.acb-empty{
+  color:var(--text-muted)!important;
+  font-style:italic;
+}
+
+/* STEP 8: TOTAL column */
+#acbCalculator td:last-child,
+#acbCalculator th:last-child{
+  border-left:2px solid var(--border-strong);
+  font-weight:700;
+}
+</style><!-- INSTRUCTIONS --><!-- 1. Open your original HTML file --><!-- 2. Find the <style> section --><!-- 3. Replace ONLY the matching parts OR paste this at the END of style --><!-- 4. Save and upload --><!-- OPTIONAL: Remove gradient completely for full pharma look --><!-- delete background:linear-gradient(...) from body in your original CSS --> ═══════════════════════════════
        RESET
     ═══════════════════════════════ */
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
