@@ -361,8 +361,20 @@
     .acb-input[readonly]{background:rgba(255,255,255,.5);cursor:not-allowed;color:#555;}
     .acb-span{display:block;padding:6px;font-size:13px;}
     .acb-prefilled{color:rgba(255,255,255,.9);}
-    .acb-manual-input,.acb-output{color:#00e5ff;font-weight:700;text-shadow:0 0 8px rgba(0,229,255,.4);}
-    .acb-td .acb-output{color:#00e5ff;}
+    /* Output values: bright white with dark shadow — readable on any teal/glass bg */
+    .acb-manual-input,.acb-output{
+      color:#fff;font-weight:700;
+      text-shadow:0 1px 4px rgba(0,0,0,.8),0 0 10px rgba(0,0,0,.5);
+    }
+    .acb-td .acb-output{
+      color:#fff;font-weight:700;
+      text-shadow:0 1px 4px rgba(0,0,0,.8),0 0 10px rgba(0,0,0,.5);
+    }
+    /* (A+C)-B result row & total result — golden yellow so the answer stands out */
+    span[id$="-result"].acb-output,span[id="total-result"].acb-output{
+      color:#ffe066;font-weight:700;
+      text-shadow:0 1px 5px rgba(0,0,0,.85);
+    }
     .acb-highlight-row{background:rgba(255,255,255,.08);}
     .acb-notice{
       display:none;text-align:center;
@@ -1339,15 +1351,24 @@
   }
 
   /* ── Modals ── */
-  function showInfo(){
+  function _showInfoNoFocus(){
     $('formulaInfo').style.display=D.formulaCalc.classList.contains('active')?'block':'none';
     $('acbInfo').style.display=D.formulaCalc.classList.contains('active')?'none':'block';
     $('infoModal').classList.add('open');
+    // Do NOT move focus — called during auto-show on load
+  }
+  function showInfo(){
+    _showInfoNoFocus();
     $('infoModal').querySelector('.modal-close').focus();
   }
   function closeModal(){
     $('infoModal').classList.remove('open');
-    (D.formulaCalc.classList.contains('active')?D.Q:D.acb.b[0]).focus();
+    // Only refocus if no input already has focus
+    const active=document.activeElement;
+    const isInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT');
+    if(!isInput){
+      (D.formulaCalc.classList.contains('active')?D.Q:D.acb.b[0]).focus();
+    }
   }
   function closeVerifyModal(){
     $('verifyModal').classList.remove('open');
@@ -1560,8 +1581,14 @@
     document.addEventListener('pointerdown',_markInteraction,{once:true,capture:true});
     requestAnimationFrame(()=>{if(!_userHasInteracted)D.Q.focus();});
 
-    // Auto-show help briefly
-    setTimeout(()=>{showInfo();setTimeout(closeModal,4000);},600);
+    // Auto-show help briefly — don't steal focus while user may be typing
+    setTimeout(()=>{
+      // Only show if user hasn't started interacting
+      if(!_userHasInteracted){
+        _showInfoNoFocus();
+        setTimeout(()=>{$('infoModal').classList.remove('open');},4000);
+      }
+    },600);
 
     /* Main input listeners */
     [D.Q,D.water,D.assay].forEach(inp=>{
