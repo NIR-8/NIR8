@@ -92,13 +92,14 @@
       min-height:100vh;
       display:flex;flex-direction:column;align-items:center;
       justify-content:flex-start;
-      padding:calc(var(--menu-h) + 24px) 20px calc(var(--footer-h) + 24px);
+      padding:calc(var(--menu-h) + 24px) 12px calc(var(--footer-h) + 24px);
       text-align:center;
       scrollbar-gutter:stable;
+      overflow-x:hidden;
     }
     #mainContent{
       display:flex;flex-direction:column;
-      align-items:center;width:100%;
+      align-items:center;width:100%;max-width:980px;
     }
     .CtxtMenu_Info{border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);}
 
@@ -237,8 +238,12 @@
       overflow:hidden;
     }
     .calculator-container.active{display:block;}
-    /* ACB wider */
-    #acbCalculator{width:min(96vw,920px);}
+    /* ACB: full-width responsive, max-capped, never overflows viewport */
+    #acbCalculator{
+      width:100%;
+      max-width:960px;
+      overflow:visible; /* card itself doesn't clip — inner wrapper handles it */
+    }
 
     .calculator-container h2{
       font-size:18px;font-weight:700;
@@ -359,7 +364,7 @@
     .acb-span{display:block;padding:6px;font-size:13px;}
     .acb-prefilled{color:rgba(255,255,255,.9);}
     .acb-manual-input{color:#a8d8ff;font-weight:700;}
-    .acb-output{color:#c084fc;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.35);}
+    .acb-output{color:#1a1a1a;font-weight:700;}
     .acb-highlight-row{background:rgba(255,255,255,.08);}
     .acb-notice{
       display:none;text-align:center;
@@ -400,10 +405,26 @@
     .reset-acb-btn:hover{background:rgba(255,107,107,.15);transform:rotate(90deg);}
 
     /* ═══════════════════════════════
+       ACB TABLE WRAPPER — horizontal scroll on small screens
+    ═══════════════════════════════ */
+    .acb-table-wrapper{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      border-radius:var(--radius-sm);
+      /* subtle scrollbar */
+      scrollbar-width:thin;
+      scrollbar-color:rgba(255,255,255,.3) transparent;
+    }
+    .acb-table-wrapper::-webkit-scrollbar{height:4px;}
+    .acb-table-wrapper::-webkit-scrollbar-track{background:transparent;}
+    .acb-table-wrapper::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:2px;}
+
+    /* ═══════════════════════════════
        CALCULATION STEPS — frosted glass
     ═══════════════════════════════ */
     .calculation-steps{
-      width:min(96vw,920px);
+      width:100%;
+      max-width:960px;
       background:rgba(255,255,255,.15);
       backdrop-filter:var(--glass-blur);
       -webkit-backdrop-filter:var(--glass-blur);
@@ -423,20 +444,28 @@
     .calculation-steps::-webkit-scrollbar-track{background:transparent;}
     .calculation-steps::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:2px;}
 
-    /* Print button — frosted */
+    /* Print button — sticky so it stays visible while scrolling through entries */
     .print-btn{
       display:none;
-      background:rgba(25,118,210,.8);
-      backdrop-filter:blur(4px);
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:rgba(21,101,192,.96);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
       border:1px solid rgba(255,255,255,.2);
+      border-radius:var(--radius-sm);
       color:#fff;
-      padding:10px 22px;border-radius:var(--radius-sm);
+      padding:10px 22px;
       font-size:14px;font-weight:600;cursor:pointer;
       margin-bottom:12px;
+      width:100%;
       transition:background var(--transition-fast);
+      box-shadow:0 2px 8px rgba(0,0,0,.18);
     }
-    .print-btn:hover{background:rgba(21,101,192,.95);}
-    .calculation-steps:not(.hidden) .print-btn{display:inline-flex;align-items:center;gap:6px;}
+    .print-btn:hover{background:rgba(13,71,161,.98);}
+    .print-btn:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+    .calculation-steps:not(.hidden) .print-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;}
 
     /* Calculation entries remain white for print clarity */
     .calculation-entry{
@@ -858,6 +887,7 @@
           onclick="toggleEdit()">Enable Editing Std qty</button>
       </div>
       <div style="padding:0 10px 10px;">
+        <div class="acb-table-wrapper">
         <table class="acb-table">
           <caption class="sr-only">(A+C)-B lot quantity calculator</caption>
           <thead>
@@ -905,6 +935,7 @@
             </tr>
           </tbody>
         </table>
+        </div><!-- /.acb-table-wrapper -->
         <div id="acb-notice" class="acb-notice" role="status" aria-live="polite">You are editing standard values.</div>
       </div>
       <button type="button" class="reset-acb-btn"
@@ -1346,9 +1377,13 @@
     }
   }
   function closeVerifyModal(){
-    $('verifyModal').classList.remove('open');
-    if(typeof window._verifyResolve==='function'){window._verifyResolve(false);window._verifyResolve=null;}
+    /* Called from backdrop-click or programmatic close.
+       confirmVerification(false) handles the real teardown; we just
+       forward through it so the abort controller is cleaned up too. */
+    if(typeof window.confirmVerification==='function'){window.confirmVerification(false);}
   }
+  /* Module-level abort handle so any stale dialog is cancelled cleanly. */
+  let _verifyAbort=null;
   function verifyCalc(calc,Q,W,A){
     $('verifyDetails').innerHTML=`
       <h3 id="verifyTitle" style="text-align:center;margin-bottom:16px;">Verify before calculating</h3>
@@ -1357,19 +1392,37 @@
       <div class="verify-row"><span class="verify-label">Assay Content (A):</span><span class="verify-value">${A}%</span></div>
       <div class="verify-row"><span class="verify-label">Formula:</span><span class="verify-value">F${calc.type.replace('F','')}</span></div>
     `;
-    $('verifyModal').classList.add('open');$('confirmBtn').focus();
+    /* Cancel any leftover listener from a previous (abandoned) dialog */
+    if(_verifyAbort){_verifyAbort.abort();}
+    _verifyAbort=new AbortController();
+    $('verifyModal').classList.add('open');
+    /* Focus after a frame so the modal animation has started and the
+       button is rendered/interactive before we focus it */
+    requestAnimationFrame(()=>$('confirmBtn').focus());
     return new Promise(resolve=>{
-      window._verifyResolve=resolve;
-      window.confirmVerification=confirmed=>{
+      function finish(confirmed){
+        /* Tear down: remove keyboard listener, close modal */
+        if(_verifyAbort){_verifyAbort.abort();_verifyAbort=null;}
+        window.confirmVerification=null;
         $('verifyModal').classList.remove('open');
-        window._verifyResolve=null;
         if(!confirmed){
           D.Q.value=Q.toString();D.water.value=W.toString();D.assay.value=A.toString();
           D.progressBar.style.width='100%';D.buttons.style.display='flex';
-          showField(D.grpW,true);showField(D.grpA,true);D.Q.focus();
+          showField(D.grpW,true);showField(D.grpA,true);
+          requestAnimationFrame(()=>D.Q.focus());
         }
         resolve(confirmed);
-      };
+      }
+      /* Expose for onclick attributes on the modal buttons */
+      window.confirmVerification=finish;
+      /* Keyboard: Enter → confirm, Escape → cancel.
+         Listener is tied to this dialog instance via AbortController signal
+         and is automatically removed when finish() is called. */
+      document.addEventListener('keydown',e=>{
+        if(!$('verifyModal').classList.contains('open'))return;
+        if(e.key==='Enter'){e.preventDefault();finish(true);}
+        else if(e.key==='Escape'){e.preventDefault();finish(false);}
+      },{signal:_verifyAbort.signal});
     });
   }
 
@@ -1580,12 +1633,6 @@
     document.addEventListener('click',e=>{
       if(e.target===$('infoModal'))closeModal();
       if(e.target===$('verifyModal'))closeVerifyModal();
-    });
-
-    /* Verify modal keyboard: Enter = Confirm, Escape = Cancel */
-    $('verifyModal').addEventListener('keydown',e=>{
-      if(e.key==='Enter'){e.preventDefault();if(typeof confirmVerification==='function')confirmVerification(true);}
-      if(e.key==='Escape'){e.preventDefault();closeVerifyModal();}
     });
 
     /* ── KEYBOARD SHORTCUTS ──
