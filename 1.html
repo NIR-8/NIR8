@@ -192,7 +192,6 @@
         max-width .32s cubic-bezier(0.4,0,0.2,1),
         gap .32s cubic-bezier(0.4,0,0.2,1),
         background .2s ease,box-shadow .2s ease;
-      border:none;
     }
     .rail-item:hover,.rail-item:focus-visible{
       max-width:200px;gap:10px;
@@ -435,7 +434,7 @@
       text-align:left;margin:0 auto;
       overflow-y:auto;
       max-height:calc(100vh - var(--menu-h) - var(--footer-h) - 40px);
-      scroll-snap-type:y mandatory;
+      scroll-snap-type:y proximity;
       scroll-behavior:smooth;
       scrollbar-width:thin;
       scrollbar-color:rgba(255,255,255,.3) transparent;
@@ -815,7 +814,7 @@
           <span id="dispensedQty" class="menu-qty-value" aria-live="polite">0.000</span>
         </div>
         <div class="menu-qty-group">
-          <label for="remainingQtyDisplay" class="menu-qty-label">Remaining</label>
+          <span class="menu-qty-label" aria-hidden="true">Remaining</span>
           <span id="remainingQty" class="menu-qty-value"
             role="button" tabindex="0"
             aria-label="Click to copy remaining quantity to Q field"
@@ -967,7 +966,7 @@
         <div class="info-item"><span class="info-key">Lot Select:</span> Assign dispensed qty to lot</div>
       </div>
       <div id="acbInfo" class="info-section" style="display:none">
-        <h3>(A+C)-B Calculator — Features</h3>
+        <h3 id="acbInfoTitle">(A+C)-B Calculator — Features</h3>
         <div class="info-item"><span class="info-key">Edit Button:</span> Toggle editing of standard quantities</div>
         <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
         <div class="info-item"><span class="info-key">Auto-update:</span> Totals update instantly</div>
@@ -1105,23 +1104,46 @@
   let acbEditEnabled=false, acbNoticeTimer=null;
   let calculations=[], mjQueue=[], mjPending=false;
 
+  /* Guard: if Decimal.js never loaded, show a clear error instead of a silent crash */
+  if(typeof Decimal==='undefined'){
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#4facfe;"><div style="background:#fff;padding:32px 40px;border-radius:12px;text-align:center;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.2)"><h2 style="color:#e53935;margin:0 0 12px">Unable to load calculator</h2><p style="color:#555;margin:0">A required library failed to load. Please check your connection and refresh.</p></div></div>';
+    throw new Error('Decimal.js not loaded');
+  }
   Decimal.set({precision:20,toExpNeg:-9,toExpPos:20});
 
   /* ── MathJax ── */
   document.addEventListener('MathJaxReady',()=>{
-    mjReady=true; D.mjLoading.style.display='none';
-    MathJax.typesetPromise().catch(e=>console.warn('MathJax:',e));
+    mjReady=true;
+    if(D.mjLoading)D.mjLoading.style.display='none';
+    if(typeof MathJax!=='undefined'&&MathJax.typesetPromise){
+      MathJax.typesetPromise().catch(e=>console.warn('MathJax:',e));
+    }
   });
   function retryMJ(attempt=1,max=2){
-    if(attempt>max){mjReady=true;D.mjLoading.style.display='none';return;}
+    if(attempt>max){
+      mjReady=true;
+      if(D.mjLoading)D.mjLoading.style.display='none';
+      document.dispatchEvent(new Event('MathJaxReady'));
+      return;
+    }
     const s=document.createElement('script');
     s.src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
     s.async=true;
-    s.onload=()=>{MathJax.startup.getComponents();mjReady=true;D.mjLoading.style.display='none';};
+    s.onload=()=>{
+      try{if(MathJax.startup&&MathJax.startup.getComponents)MathJax.startup.getComponents();}catch(e){console.warn('retryMJ getComponents:',e);}
+      mjReady=true;
+      if(D.mjLoading)D.mjLoading.style.display='none';
+      try{MathJax.typesetPromise();}catch(e){console.warn('retryMJ typeset:',e);}
+      document.dispatchEvent(new Event('MathJaxReady'));
+    };
     s.onerror=()=>retryMJ(attempt+1,max);
     document.head.appendChild(s);
   }
   function queueMJ(el){
+    if(typeof MathJax==='undefined'||!MathJax.typesetPromise){
+      /* MathJax not available — entries already show plain text, nothing to do */
+      return;
+    }
     mjQueue.push(el);
     if(!mjPending){
       mjPending=true;
@@ -1171,7 +1193,7 @@
       return{
         mathJax:`$$F_${fn}=\\frac{${fQ}\\times100\\times100}{${fA}\\times(100-${fW})}$$<br>$$=\\frac{${fQ}\\times100\\times100}{${fA}\\times${fmt(s3)}}$$<br>$$=\\frac{${fmt(num)}}{${fmt(den)}}$$<br>$$=${trunc12(rnd)}\\text{ (full: }${fmt(res)}\\text{)}$$`,
         plain:`F${fn} = (${fQ} × 100 × 100) / (${fA} × (100 − ${fW}))<br>= (${fQ} × 100 × 100) / (${fA} × ${fmt(s3)})<br>= ${fmt(num)} / ${fmt(den)}<br>= ${trunc12(rnd)} &nbsp;<small>(full: ${fmt(res)})</small>`,
-        type,Q:Q.toString(),W:W.toString(),A:A.toString(),result:rnd,isFinal:true
+        type,Q:Q.toString(),W:W.toString(),A:A.toString(),result:rnd
       };
     }
     if(type==='F2'){
@@ -1180,7 +1202,7 @@
       return{
         mathJax:`$$F_2=\\frac{${fQ}\\times${fA}\\times(100-${fW})}{100\\times100}$$<br>$$=\\frac{${fQ}\\times${fA}\\times${fmt(s1)}}{${fmt(den)}}$$<br>$$=\\frac{${fmt(num)}}{${fmt(den)}}$$<br>$$=${trunc12(rnd)}\\text{ (full: }${fmt(res)}\\text{)}$$`,
         plain:`F2 = (${fQ} × ${fA} × (100 − ${fW})) / (100 × 100)<br>= (${fQ} × ${fA} × ${fmt(s1)}) / ${fmt(den)}<br>= ${fmt(num)} / ${fmt(den)}<br>= ${trunc12(rnd)} &nbsp;<small>(full: ${fmt(res)})</small>`,
-        type,Q:Q.toString(),W:W.toString(),A:A.toString(),result:rnd,isFinal:false
+        type,Q:Q.toString(),W:W.toString(),A:A.toString(),result:rnd
       };
     }
     throw new Error(`Unknown type: ${type}`);
@@ -1256,7 +1278,7 @@
     if(inp.id==='assay'&&num>0&&num<10)showErr(inp,'Assay seems low — should be >80%');
     else if(inp.id==='water'&&num>80&&num<=100)showErr(inp,'Water seems high — should be <10%');
     else clearErr(inp);
-    if((inp.id==='water'||inp.id==='assay')&&!/^\d*\.?\d{0,2}$/.test(val)){inp.value=val.slice(0,-1);return;}
+    /* 2dp enforcement is already handled by validateInput — no duplicate check needed */
     updateProgress();
   }
 
@@ -1285,7 +1307,10 @@
   }
 
   function validateInput(inp){
-    if(!/^\d*\.?\d{0,3}$/.test(inp.value)&&inp.value!=='')inp.value=inp.value.slice(0,-1);
+    /* Q allows up to 3dp; water and assay are limited to 2dp */
+    const maxDp=(inp.id==='Q')?3:2;
+    const re=new RegExp(`^\\d*\\.?\\d{0,${maxDp}}$`);
+    if(!re.test(inp.value)&&inp.value!=='')inp.value=inp.value.slice(0,-1);
   }
 
   /* ── Show calculator ── */
@@ -1344,7 +1369,16 @@
     });
     D.acb.tot.a.textContent=fmt(tA);D.acb.tot.b.textContent=fmt(tB);
     D.acb.tot.c.textContent=fmt(tC);D.acb.tot.r.textContent=fmt(tR);
-    [D.acb.tot.a,D.acb.tot.b,D.acb.tot.c].forEach(el=>{el.classList.add('acb-output');el.classList.remove('acb-prefilled');});
+    /* Total A and C keep their prefilled (white) style unless the user has changed the value */
+    const defA=new Decimal(C.ACB_TOT_A),defC=new Decimal(C.ACB_TOT_C);
+    D.acb.tot.a.classList.toggle('acb-output',!tA.eq(defA));
+    D.acb.tot.a.classList.toggle('acb-prefilled',tA.eq(defA));
+    D.acb.tot.c.classList.toggle('acb-output',!tC.eq(defC));
+    D.acb.tot.c.classList.toggle('acb-prefilled',tC.eq(defC));
+    /* Total B is output style when any B has been entered */
+    D.acb.tot.b.classList.toggle('acb-output',!tB.isZero());
+    D.acb.tot.b.classList.toggle('acb-prefilled',tB.isZero());
+    /* Result total */
     D.acb.tot.r.classList.toggle('acb-prefilled',tR.isZero());
     D.acb.tot.r.classList.toggle('acb-output',!tR.isZero());
   }
@@ -1361,8 +1395,11 @@
 
   /* ── Modals ── */
   function showInfo(){
-    $('formulaInfo').style.display=D.formulaCalc.classList.contains('active')?'block':'none';
-    $('acbInfo').style.display=D.formulaCalc.classList.contains('active')?'none':'block';
+    const isF=D.formulaCalc.classList.contains('active');
+    $('formulaInfo').style.display=isF?'block':'none';
+    $('acbInfo').style.display=isF?'none':'block';
+    /* Keep aria-labelledby pointing to the visible heading */
+    $('infoModal').setAttribute('aria-labelledby',isF?'infoTitle':'acbInfoTitle');
     $('infoModal').classList.add('open');
     $('infoModal').querySelector('.modal-close').focus();
   }
@@ -1400,7 +1437,10 @@
        button is rendered/interactive before we focus it */
     requestAnimationFrame(()=>$('confirmBtn').focus());
     return new Promise(resolve=>{
+      let _finished=false;
       function finish(confirmed){
+        /* Guard against double-invocation (e.g. Enter + click at same time) */
+        if(_finished)return; _finished=true;
         /* Tear down: remove keyboard listener, close modal */
         if(_verifyAbort){_verifyAbort.abort();_verifyAbort=null;}
         window.confirmVerification=null;
@@ -1430,12 +1470,15 @@
   function deleteCalculation(btn){
     if(!confirm('Delete this calculation?'))return;
     const entry=btn.closest('.calculation-entry');
+    if(!entry)return;
     const entries=[...D.stepsContainer.children];
     const arrIdx=calculations.length-1-entries.indexOf(entry);
     if(arrIdx>=0&&arrIdx<calculations.length)calculations.splice(arrIdx,1);
-    entry.remove();calcCount--;
+    entry.remove();
+    calcCount=Math.max(0,calcCount-1);
     if(calcCount===0)D.calcSteps.classList.add('hidden');
-    updatePageNumbers();updateQtyTracker();D.Q.focus();
+    updatePageNumbers();updateQtyTracker();
+    try{D.Q.focus();}catch(e){}
   }
   function updatePageNumbers(){
     const all=D.stepsContainer.querySelectorAll('.calculation-entry');
@@ -1486,14 +1529,18 @@
     D.calcSteps.classList.remove('hidden');
     updatePageNumbers();updateQtyTracker();
     if(mjReady){
+      /* Capture entry index NOW (before any new calculations can change calcCount) */
+      const _snapCount=calcCount;
       setTimeout(()=>{
         entry.innerHTML=`
           <button type="button" class="delete-button" onclick="deleteCalculation(this)" title="Delete" aria-label="Delete this calculation">❌</button>
           <div class="lot-label" aria-hidden="true"></div>
           <div class="reference-values">W="${wF}" A="${aF}"</div>
           <div class="calculation-content">${calc.mathJax}</div>
-          <div class="page-number" aria-hidden="true">${calcCount}/${calcCount}</div>
+          <div class="page-number" aria-hidden="true"></div>
         `;
+        /* Re-run page numbering because innerHTML replacement wiped the previous numbers */
+        updatePageNumbers();
         queueMJ(entry);
       },50);
     }else{
@@ -1516,9 +1563,11 @@
 
   /* ── Sync std qty → ACB ── */
   function syncStdToACB(val){
-    const v=new Decimal(val||0).toFixed(3);
-    D.acb.a.forEach(inp=>{inp.value=v;inp.classList.remove('acb-manual-input','edited');inp.classList.add('acb-prefilled');});
-    D.acb.tot.a.textContent=new Decimal(v).times(4).toFixed(3);
+    try{
+      const v=new Decimal(val||0).toFixed(3);
+      D.acb.a.forEach(inp=>{inp.value=v;inp.classList.remove('acb-manual-input','edited');inp.classList.add('acb-prefilled');});
+      D.acb.tot.a.textContent=new Decimal(v).times(4).toFixed(3);
+    }catch(e){console.warn('syncStdToACB:',e);}
   }
 
   /* ── Left Rail + Write Us ── */
@@ -1640,10 +1689,11 @@
        Only block character shortcuts (none here) when typing.
        F1–F3 are function keys, not character keys — always safe to intercept. */
     document.addEventListener('keydown',e=>{
+      /* Never intercept F-keys while a modal dialog is open */
+      if($('verifyModal').classList.contains('open')||$('infoModal').classList.contains('open'))return;
       switch(e.key){
         case 'F1':
           e.preventDefault();
-          // Only calculate if formula calculator is active and all fields filled
           if(D.formulaCalc.classList.contains('active')&&
              D.Q.value.trim()&&D.water.value.trim()&&D.assay.value.trim()){
             calculate('F1');
@@ -1706,8 +1756,28 @@
       var s=document.createElement('script');
       s.src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
       s.async=true;
-      s.onerror=function(){if(attempt<max)loadMathJaxFallback(attempt+1,max);else{document.getElementById('mjLoading').textContent='Equations unavailable.';document.dispatchEvent(new Event('MathJaxReady'));}};
-      s.onload=function(){document.getElementById('mjLoading').style.display='none';MathJax.startup.getComponents();};
+      s.onerror=function(){
+        if(attempt<max){
+          loadMathJaxFallback(attempt+1,max);
+        }else{
+          /* All fallbacks exhausted — mark ready so plain-text results still work */
+          var ldr=document.getElementById('mjLoading');
+          if(ldr){ldr.textContent='Equations unavailable (plain text shown).';setTimeout(()=>{ldr.style.display='none';},3000);}
+          window.mjReady=true;
+          document.dispatchEvent(new Event('MathJaxReady'));
+        }
+      };
+      s.onload=function(){
+        try{
+          if(MathJax.startup&&MathJax.startup.getComponents)MathJax.startup.getComponents();
+        }catch(e){console.warn('MathJax getComponents:',e);}
+        window.mjReady=true;
+        var ldr=document.getElementById('mjLoading');
+        if(ldr)ldr.style.display='none';
+        /* Typeset any entries already on the page */
+        try{MathJax.typesetPromise();}catch(e){console.warn('MathJax typeset:',e);}
+        document.dispatchEvent(new Event('MathJaxReady'));
+      };
       document.head.appendChild(s);
     }
   </script>
