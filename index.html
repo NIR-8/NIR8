@@ -136,6 +136,33 @@
             padding: 3px 8px; border-radius: 3px; font-weight: 600;
         }
 
+        /* ── DRUG SELECTOR ── */
+        .drug-selector-wrap {
+            display: flex; align-items: center;
+        }
+        .drug-selector {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 5px;
+            padding: 7px 10px;
+            font-size: 13px;
+            font-family: Poppins, sans-serif;
+            cursor: pointer;
+            min-height: 38px;
+            outline: none;
+            transition: background 0.2s, border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 9px center;
+            padding-right: 26px;
+        }
+        .drug-selector:hover { background-color: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5); }
+        .drug-selector:focus { border-color: #4facfe; box-shadow: 0 0 0 2px rgba(79,172,254,0.35); }
+        .drug-selector option { background: #222; color: #fff; }
+
         /* ── HAMBURGER ── */
         .hamburger-btn {
             background: transparent; border: none; color: #fff;
@@ -548,6 +575,12 @@
                 onclick='showCalculator("formula")'
                 onkeydown='if(event.key==="Enter"||event.key===" ")showCalculator("formula")'
                 aria-label="Show Formula Calculator">Formula Calculator</div>
+            <div class="drug-selector-wrap">
+                <select id="drugSelector" class="drug-selector" aria-label="Select drug preset" onchange="applyDrugPreset(this.value)">
+                    <option value="valacyclovir" selected>Valacyclovir</option>
+                    <option value="default">Default</option>
+                </select>
+            </div>
             <div class="menu-item" id="menuAcb" role="button" tabindex="0"
                 onclick='showCalculator("acb")'
                 onkeydown='if(event.key==="Enter"||event.key===" ")showCalculator("acb")'
@@ -965,12 +998,20 @@
 
         function resetACBCalculator() {
             if (!confirm("Reset the (A+C)-B calculator? This will clear all entered values.")) return;
-            domCache.acbInputs.a.forEach(input => { input.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
-            domCache.acbInputs.c.forEach(input => { input.value = CONSTANTS.ACB_DEFAULT_C.toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
+            const isDefaultMode = document.getElementById('drugSelector')?.value === 'default';
+            if (isDefaultMode) {
+                domCache.acbInputs.a.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std Qty A'; });
+                domCache.acbInputs.c.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std Qty C'; });
+                domCache.acbInputs.totals.a.textContent = '0.000';
+                domCache.acbInputs.totals.c.textContent = '0.000';
+            } else {
+                domCache.acbInputs.a.forEach(input => { input.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
+                domCache.acbInputs.c.forEach(input => { input.value = CONSTANTS.ACB_DEFAULT_C.toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
+                domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
+                domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
+            }
             domCache.acbInputs.b.forEach(input => { input.value = ''; input.classList.remove('acb-manual-input'); });
-            domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
             domCache.acbInputs.totals.b.textContent = '0.000';
-            domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
             domCache.acbInputs.totals.result.textContent = '0.000';
             domCache.acbInputs.results.forEach(r => { r.textContent = '-'; r.classList.remove('acb-output','acb-prefilled'); });
             if (isACBEditingEnabled) toggleEdit();
@@ -1077,14 +1118,25 @@
         function updateACB(input, lotIndex, type) {
             try {
                 const value = new Decimal(input.value || 0);
+                const isDefaultMode = document.getElementById('drugSelector')?.value === 'default';
                 if (type === 'a' || type === 'c') {
-                    const original = new Decimal(type === 'a' ? CONSTANTS.ACB_DEFAULT_A : CONSTANTS.ACB_DEFAULT_C);
-                    input.classList.toggle('edited', !value.eq(original)); input.classList.remove('acb-prefilled'); input.classList.add('acb-manual-input');
-                    if (lotIndex === 0) {
-                        domCache.acbInputs[type].slice(1).forEach(other => {
-                            other.value = formatNumber(value); other.classList.toggle('edited', !value.eq(original));
-                            other.classList.remove('acb-manual-input'); other.classList.add('acb-prefilled');
-                        });
+                    if (isDefaultMode) {
+                        input.classList.remove('acb-prefilled'); input.classList.add('acb-manual-input');
+                        if (lotIndex === 0) {
+                            domCache.acbInputs[type].slice(1).forEach(other => {
+                                other.value = input.value || '';
+                                other.classList.remove('acb-prefilled', 'edited'); other.classList.add('acb-manual-input');
+                            });
+                        }
+                    } else {
+                        const original = new Decimal(type === 'a' ? CONSTANTS.ACB_DEFAULT_A : CONSTANTS.ACB_DEFAULT_C);
+                        input.classList.toggle('edited', !value.eq(original)); input.classList.remove('acb-prefilled'); input.classList.add('acb-manual-input');
+                        if (lotIndex === 0) {
+                            domCache.acbInputs[type].slice(1).forEach(other => {
+                                other.value = formatNumber(value); other.classList.toggle('edited', !value.eq(original));
+                                other.classList.remove('acb-manual-input'); other.classList.add('acb-prefilled');
+                            });
+                        }
                     }
                 } else { input.classList.add('acb-manual-input'); }
             } catch { input.value = ""; }
@@ -1202,6 +1254,60 @@
             domCache.acbInputs.totals.a.textContent = new Decimal(stdVal).times(domCache.acbInputs.a.length).toFixed(3);
         }
 
+        function applyDrugPreset(preset) {
+            const isValacyclovir = preset === 'valacyclovir';
+
+            if (isValacyclovir) {
+                // Restore Valacyclovir prefilled values
+                domCache.acbInputs.a.forEach(input => {
+                    input.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
+                    input.classList.remove('acb-manual-input'); input.classList.add('acb-prefilled');
+                    input.readOnly = !isACBEditingEnabled;
+                });
+                domCache.acbInputs.c.forEach(input => {
+                    input.value = CONSTANTS.ACB_DEFAULT_C.toFixed(3);
+                    input.classList.remove('acb-manual-input'); input.classList.add('acb-prefilled');
+                    input.readOnly = !isACBEditingEnabled;
+                });
+                domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
+                domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
+                // Also restore stdQty tracker
+                domCache.stdQtyInput.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
+                updateQuantityTracker();
+                // Show edit toggle button
+                domCache.toggleEditBtn.style.display = '';
+            } else {
+                // Default mode: clear A and C rows so user can enter manually
+                domCache.acbInputs.a.forEach(input => {
+                    input.value = '';
+                    input.readOnly = false;
+                    input.classList.remove('acb-prefilled', 'acb-manual-input');
+                    input.placeholder = 'Std Qty A';
+                });
+                domCache.acbInputs.c.forEach(input => {
+                    input.value = '';
+                    input.readOnly = false;
+                    input.classList.remove('acb-prefilled', 'acb-manual-input');
+                    input.placeholder = 'Std Qty C';
+                });
+                domCache.acbInputs.totals.a.textContent = '0.000';
+                domCache.acbInputs.totals.c.textContent = '0.000';
+                // Clear result row
+                domCache.acbInputs.results.forEach(span => { span.textContent = '-'; });
+                domCache.acbInputs.totals.result.textContent = '0.000';
+                // Clear stdQty tracker
+                domCache.stdQtyInput.value = '';
+                updateQuantityTracker();
+                // Hide edit toggle button (not needed in default mode)
+                domCache.toggleEditBtn.style.display = 'none';
+                // Also disable editing mode if active
+                if (isACBEditingEnabled) toggleEdit();
+            }
+
+            // Recalculate all ACB results with new values
+            domCache.acbInputs.b.forEach((input, i) => { updateACB(input, i, 'b'); });
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             domCache.buttons.style.display = "none"; domCache.calculationSteps.classList.add("hidden");
@@ -1217,7 +1323,12 @@
 
             domCache.acbCalculator.addEventListener("input", e => {
                 const input = e.target, match = input.id.match(/lot(\d+)-([abc])/);
-                if (match) { const [, lotIndex, type] = match; validateInput(input); updateACB(input, parseInt(lotIndex) - 1, type); if ((type === 'a' || type === 'c') && isACBEditingEnabled) showACBNotice(); }
+                if (match) {
+                    const [, lotIndex, type] = match;
+                    const isDefaultMode = document.getElementById('drugSelector')?.value === 'default';
+                    validateInput(input); updateACB(input, parseInt(lotIndex) - 1, type);
+                    if ((type === 'a' || type === 'c') && isACBEditingEnabled && !isDefaultMode) showACBNotice();
+                }
             });
 
             const inputFields = ['a','b','c'].flatMap(type => [1,2,3,4].map(i => `lot${i}-${type}`));
