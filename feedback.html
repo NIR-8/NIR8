@@ -14,6 +14,18 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        :root {
+            --accent: #c9b8f0;
+            --accent-bg: rgba(201,184,240,0.14);
+            --accent-ring: rgba(201,184,240,0.22);
+            --surface: #ffffff;
+            --border: #ebebeb;
+            --text: #1a1a1a;
+            --muted: #999;
+            --faint: #ccc;
+            --radius: 12px;
+        }
+
         body {
             font-family: Poppins, sans-serif;
             background: #f7f8fa;
@@ -22,11 +34,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px 16px;
-            color: #1a1a1a;
+            padding: 32px 16px;
+            color: var(--text);
         }
 
-        .wrap { width: 100%; max-width: 420px; }
+        .wrap { width: 100%; max-width: 440px; }
 
         /* Back */
         .back {
@@ -37,19 +49,19 @@
             font-weight: 500;
             color: #aaa;
             text-decoration: none;
-            margin-bottom: 44px;
+            margin-bottom: 40px;
             transition: color 0.2s;
         }
         .back:hover { color: #555; }
         .back svg { width: 13px; height: 13px; }
 
-        /* Heading block */
+        /* Heading */
         .eyebrow {
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            color: #c9b8f0;
+            color: var(--accent);
             margin-bottom: 10px;
         }
         h1 {
@@ -62,44 +74,98 @@
         }
         .sub {
             font-size: 14px;
-            color: #999;
+            color: var(--muted);
             line-height: 1.65;
-            margin-bottom: 36px;
+            margin-bottom: 30px;
         }
 
-        /* Textarea */
+        /* Field label */
+        .field { margin-bottom: 18px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        /* Category chips */
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .chips input[type="radio"] { display: none; }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            font-family: Poppins, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: #777;
+            cursor: pointer;
+            transition: border-color 0.18s, background 0.18s, color 0.18s, box-shadow 0.18s;
+            user-select: none;
+        }
+        .chip .icon { font-size: 14px; line-height: 1; }
+        .chips input[type="radio"]:checked + .chip {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+            color: #5c3faa;
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+        .chip:hover {
+            border-color: #d0d0d0;
+            color: #444;
+        }
+
+        /* Text inputs */
+        input[type="email"],
         textarea {
             width: 100%;
-            min-height: 150px;
-            padding: 16px;
+            padding: 13px 16px;
             font-family: Poppins, sans-serif;
             font-size: 14px;
-            color: #1a1a1a;
-            background: #fff;
-            border: 1.5px solid #ebebeb;
-            border-radius: 12px;
-            resize: vertical;
+            color: var(--text);
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
             line-height: 1.65;
         }
-        textarea::placeholder { color: #ccc; }
+        input[type="email"]::placeholder,
+        textarea::placeholder { color: var(--faint); }
+        input[type="email"]:focus,
         textarea:focus {
-            border-color: #c9b8f0;
-            box-shadow: 0 0 0 3px rgba(201,184,240,0.18);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+        input[type="email"].invalid {
+            border-color: #e53935;
+            box-shadow: 0 0 0 3px rgba(229,57,53,0.1);
+        }
+        textarea {
+            min-height: 140px;
+            resize: vertical;
         }
 
-        /* Meta row */
+        /* Char count */
         .meta {
             display: flex;
             justify-content: flex-end;
-            margin-top: 8px;
-            margin-bottom: 22px;
+            margin-top: 6px;
         }
-        .char { font-size: 12px; color: #ccc; }
+        .char { font-size: 12px; color: var(--faint); }
         .char.warn { color: #e53935; }
 
-        /* Send button */
+        /* Submit */
         button[type="submit"] {
             width: 100%;
             padding: 13px;
@@ -112,9 +178,11 @@
             font-weight: 600;
             cursor: pointer;
             letter-spacing: 0.2px;
-            transition: background 0.2s, opacity 0.2s;
+            transition: background 0.2s, opacity 0.2s, transform 0.1s;
+            margin-top: 6px;
         }
-        button[type="submit"]:hover { background: #333; }
+        button[type="submit"]:hover:not(:disabled) { background: #333; }
+        button[type="submit"]:active:not(:disabled) { transform: scale(0.99); }
         button[type="submit"]:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* Error */
@@ -127,6 +195,15 @@
         }
         .err.show { display: block; }
 
+        /* Field-level hint */
+        .hint {
+            font-size: 12px;
+            color: #e53935;
+            margin-top: 5px;
+            display: none;
+        }
+        .hint.show { display: block; }
+
         /* Success */
         .success {
             display: none;
@@ -134,12 +211,12 @@
             animation: up 0.4s ease both;
         }
         .success .tick {
-            width: 40px; height: 40px;
+            width: 44px; height: 44px;
             background: #ede9fb;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            margin-bottom: 20px;
+            font-size: 20px;
+            margin-bottom: 22px;
         }
         .success h2 {
             font-size: 20px;
@@ -150,7 +227,7 @@
         }
         .success p {
             font-size: 14px;
-            color: #999;
+            color: var(--muted);
             line-height: 1.65;
             margin-bottom: 32px;
         }
@@ -178,6 +255,13 @@
             to   { opacity: 1; transform: translateY(0); }
         }
         .form-area { animation: up 0.4s ease both; }
+
+        /* Divider between sections */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0 18px;
+        }
     </style>
 </head>
 <body>
@@ -203,17 +287,58 @@
             <input type="hidden" name="access_key" value="d745079a-5836-41cd-959c-b7bacc1be074">
             <input type="hidden" name="subject" value="NIR8 — Write Us">
             <input type="checkbox" name="botcheck" style="display:none">
+            <!-- Category is injected dynamically below -->
 
-            <textarea
-                id="msg"
-                name="message"
-                placeholder="Say anything…"
-                maxlength="2000"
-                autofocus
-            ></textarea>
+            <!-- Category -->
+            <div class="field">
+                <label>What's this about?</label>
+                <div class="chips">
+                    <input type="radio" name="category" id="cat-bug" value="Bug Report">
+                    <label class="chip" for="cat-bug"><span class="icon">🐛</span> Bug Report</label>
 
-            <div class="meta">
-                <span class="char" id="charCount">0 / 2000</span>
+                    <input type="radio" name="category" id="cat-suggestion" value="Suggestion">
+                    <label class="chip" for="cat-suggestion"><span class="icon">💡</span> Suggestion</label>
+
+                    <input type="radio" name="category" id="cat-error" value="Calculation Error">
+                    <label class="chip" for="cat-error"><span class="icon">⚠️</span> Calculation Error</label>
+
+                    <input type="radio" name="category" id="cat-ui" value="UI / Design">
+                    <label class="chip" for="cat-ui"><span class="icon">🎨</span> UI / Design</label>
+
+                    <input type="radio" name="category" id="cat-other" value="Other">
+                    <label class="chip" for="cat-other"><span class="icon">💬</span> Other</label>
+                </div>
+                <div class="hint" id="catHint">Please pick a category.</div>
+            </div>
+
+            <!-- Email -->
+            <div class="field">
+                <label for="replyEmail">Your email <span style="color:#ccc;font-weight:400">(so we can reply)</span></label>
+                <input
+                    type="email"
+                    id="replyEmail"
+                    name="reply_to"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                >
+                <div class="hint" id="emailHint">Please enter a valid email address.</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Message -->
+            <div class="field">
+                <label for="msg">Your message</label>
+                <textarea
+                    id="msg"
+                    name="message"
+                    placeholder="Say anything…"
+                    maxlength="2000"
+                ></textarea>
+                <div class="meta">
+                    <span class="char" id="charCount">0 / 2000</span>
+                </div>
+                <div class="hint" id="msgHint">Please write something before sending.</div>
             </div>
 
             <button type="submit" id="submitBtn">Send →</button>
@@ -225,7 +350,7 @@
     <div class="success" id="successArea">
         <div class="tick">✓</div>
         <h2>Got it. Thank you.</h2>
-        <p>
+        <p id="successMsg">
             Your message is with us.<br>
             We genuinely appreciate you taking the time —<br>
             it helps us build something better.
@@ -237,31 +362,88 @@
 </div>
 
 <script>
-    const msg         = document.getElementById('msg');
+    const msgEl       = document.getElementById('msg');
     const charCount   = document.getElementById('charCount');
     const submitBtn   = document.getElementById('submitBtn');
     const errMsg      = document.getElementById('errMsg');
     const formArea    = document.getElementById('formArea');
     const successArea = document.getElementById('successArea');
+    const successMsg  = document.getElementById('successMsg');
+    const emailEl     = document.getElementById('replyEmail');
+    const catHint     = document.getElementById('catHint');
+    const emailHint   = document.getElementById('emailHint');
+    const msgHint     = document.getElementById('msgHint');
 
-    msg.addEventListener('input', () => {
-        const len = msg.value.length;
+    /* Char counter */
+    msgEl.addEventListener('input', () => {
+        const len = msgEl.value.length;
         charCount.textContent = `${len} / 2000`;
         charCount.classList.toggle('warn', len > 1800);
+        if (len > 0) msgHint.classList.remove('show');
     });
+
+    /* Clear email hint on input */
+    emailEl.addEventListener('input', () => {
+        emailEl.classList.remove('invalid');
+        emailHint.classList.remove('show');
+    });
+
+    /* Clear category hint on pick */
+    document.querySelectorAll('input[name="category"]').forEach(r => {
+        r.addEventListener('change', () => catHint.classList.remove('show'));
+    });
+
+    /* Validate email format */
+    function isValidEmail(v) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    }
 
     document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!msg.value.trim()) { showErr('Please write something before sending.'); return; }
 
+        /* --- Validation --- */
+        let valid = true;
+
+        const category = document.querySelector('input[name="category"]:checked');
+        if (!category) {
+            catHint.classList.add('show');
+            valid = false;
+        }
+
+        const email = emailEl.value.trim();
+        if (!email || !isValidEmail(email)) {
+            emailEl.classList.add('invalid');
+            emailHint.classList.add('show');
+            valid = false;
+        }
+
+        if (!msgEl.value.trim()) {
+            msgHint.classList.add('show');
+            valid = false;
+        }
+
+        if (!valid) return;
+
+        /* --- Submit --- */
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending…';
         errMsg.classList.remove('show');
 
+        /* Build form data (include category hidden field) */
+        const formData = new FormData(e.target);
+        formData.set('subject', `NIR8 — ${category.value}`);
+        formData.set('message', `[${category.value}]\n\n${msgEl.value.trim()}`);
+
         try {
-            const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(e.target) });
+            const res  = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                body: formData
+            });
             const data = await res.json();
+
             if (data.success) {
+                /* Personalise success message if email given */
+                successMsg.innerHTML = `Your message is with us${email ? ' — we\'ll reply to <strong>' + escHtml(email) + '</strong>' : ''}.<br>We genuinely appreciate you taking the time —<br>it helps us build something better.`;
                 formArea.style.display = 'none';
                 successArea.style.display = 'block';
             } else {
@@ -269,13 +451,14 @@
                 reset();
             }
         } catch {
-            showErr('Network error. Please check your connection.');
+            showErr('Network error. Please check your connection and try again.');
             reset();
         }
     });
 
     function showErr(t) { errMsg.textContent = t; errMsg.classList.add('show'); }
-    function reset() { submitBtn.disabled = false; submitBtn.textContent = 'Send →'; }
+    function reset()    { submitBtn.disabled = false; submitBtn.textContent = 'Send →'; }
+    function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>
 </body>
 </html>
