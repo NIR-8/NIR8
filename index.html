@@ -432,7 +432,7 @@
 
         /* ── WRITE US PANEL ── */
         .writeus-panel {
-            position: fixed; top: 0; right: 0; width: 280px; max-width: 85vw;
+            position: fixed; top: 0; right: 0; width: 300px; max-width: 90vw;
             height: 100%; background: #fff; z-index: 600;
             display: flex; flex-direction: column;
             padding: 24px 20px 20px;
@@ -453,9 +453,57 @@
             text-transform: uppercase; color: #c9b8f0; margin-bottom: 6px;
         }
         .wp-title { font-size: 18px; font-weight: 600; color: #111; margin-bottom: 6px; letter-spacing: -0.2px; }
-        .wp-sub { font-size: 12px; color: #aaa; line-height: 1.6; margin-bottom: 20px; }
+        .wp-sub { font-size: 12px; color: #aaa; line-height: 1.6; margin-bottom: 18px; }
+
+        /* Category chips */
+        .wp-field { margin-bottom: 14px; }
+        .wp-field-label {
+            display: block; font-size: 11px; font-weight: 600;
+            letter-spacing: 0.3px; color: #555; margin-bottom: 8px;
+        }
+        .wp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .wp-chips input[type="radio"] { display: none; }
+        .wp-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 11px; border-radius: 999px;
+            border: 1.5px solid #ebebeb; background: #f7f8fa;
+            font-family: Poppins, sans-serif; font-size: 11px; font-weight: 500;
+            color: #777; cursor: pointer; transition: border-color 0.18s, background 0.18s, color 0.18s, box-shadow 0.18s;
+            user-select: none;
+        }
+        .wp-chip .wpc-icon { font-size: 12px; line-height: 1; }
+        .wp-chips input[type="radio"]:checked + .wp-chip {
+            border-color: #c9b8f0; background: rgba(201,184,240,0.14);
+            color: #5c3faa; box-shadow: 0 0 0 2px rgba(201,184,240,0.22);
+        }
+        .wp-chip:hover { border-color: #d0d0d0; color: #444; }
+
+        /* Email input inside panel */
+        .writeus-panel input[type="email"] {
+            width: 100%; padding: 10px 12px;
+            font-family: Poppins, sans-serif; font-size: 13px; color: #1a1a1a;
+            background: #f7f8fa; border: 1.5px solid #ebebeb;
+            border-radius: 10px; outline: none; line-height: 1.6;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin: 0;
+        }
+        .writeus-panel input[type="email"]::placeholder { color: #ccc; }
+        .writeus-panel input[type="email"]:focus {
+            border-color: #c9b8f0; box-shadow: 0 0 0 3px rgba(201,184,240,0.15); background: #fff;
+        }
+        .writeus-panel input[type="email"].wp-invalid {
+            border-color: #e53935; box-shadow: 0 0 0 2px rgba(229,57,53,0.1);
+        }
+
+        /* Field hint */
+        .wp-hint { font-size: 11px; color: #e53935; margin-top: 4px; display: none; }
+        .wp-hint.show { display: block; }
+
+        /* Divider */
+        .wp-divider { height: 1px; background: #f0f0f0; margin: 4px 0 14px; }
+
         .writeus-panel textarea {
-            width: 100%; min-height: 130px; padding: 12px;
+            width: 100%; min-height: 110px; padding: 12px;
             font-family: Poppins, sans-serif; font-size: 13px; color: #1a1a1a;
             background: #f7f8fa; border: 1.5px solid #ebebeb;
             border-radius: 10px; resize: none; outline: none; line-height: 1.6;
@@ -465,7 +513,7 @@
         .writeus-panel textarea:focus {
             border-color: #c9b8f0; box-shadow: 0 0 0 3px rgba(201,184,240,0.15); background: #fff;
         }
-        .wp-meta { display: flex; justify-content: flex-end; margin-top: 6px; margin-bottom: 16px; }
+        .wp-meta { display: flex; justify-content: flex-end; margin-top: 4px; margin-bottom: 14px; }
         .wp-char { font-size: 11px; color: #ccc; }
         .wp-char.warn { color: #e53935; }
         .wp-send {
@@ -807,8 +855,46 @@
                 <input type="hidden" name="access_key" value="d745079a-5836-41cd-959c-b7bacc1be074">
                 <input type="hidden" name="subject" value="NIR8 — Write Us">
                 <input type="checkbox" name="botcheck" style="display:none">
-                <textarea id="wpMsg" name="message" placeholder="Say anything…" maxlength="1000"></textarea>
-                <div class="wp-meta"><span class="wp-char" id="wpChar">0 / 1000</span></div>
+
+                <!-- Category -->
+                <div class="wp-field">
+                    <span class="wp-field-label">What's this about?</span>
+                    <div class="wp-chips">
+                        <input type="radio" name="category" id="wpc-bug" value="Bug Report">
+                        <label class="wp-chip" for="wpc-bug"><span class="wpc-icon">🐛</span> Bug Report</label>
+
+                        <input type="radio" name="category" id="wpc-suggest" value="Suggestion">
+                        <label class="wp-chip" for="wpc-suggest"><span class="wpc-icon">💡</span> Suggestion</label>
+
+                        <input type="radio" name="category" id="wpc-error" value="Calculation Error">
+                        <label class="wp-chip" for="wpc-error"><span class="wpc-icon">⚠️</span> Calc Error</label>
+
+                        <input type="radio" name="category" id="wpc-ui" value="UI / Design">
+                        <label class="wp-chip" for="wpc-ui"><span class="wpc-icon">🎨</span> UI / Design</label>
+
+                        <input type="radio" name="category" id="wpc-other" value="Other">
+                        <label class="wp-chip" for="wpc-other"><span class="wpc-icon">💬</span> Other</label>
+                    </div>
+                    <div class="wp-hint" id="wpCatHint">Please pick a category.</div>
+                </div>
+
+                <!-- Email -->
+                <div class="wp-field">
+                    <span class="wp-field-label">Your email <span style="color:#ccc;font-weight:400">(so we can reply)</span></span>
+                    <input type="email" id="wpEmail" name="reply_to" placeholder="you@example.com" autocomplete="email">
+                    <div class="wp-hint" id="wpEmailHint">Please enter a valid email address.</div>
+                </div>
+
+                <div class="wp-divider"></div>
+
+                <!-- Message -->
+                <div class="wp-field">
+                    <span class="wp-field-label">Your message</span>
+                    <textarea id="wpMsg" name="message" placeholder="Say anything…" maxlength="1000"></textarea>
+                    <div class="wp-meta"><span class="wp-char" id="wpChar">0 / 1000</span></div>
+                    <div class="wp-hint" id="wpMsgHint">Please write something first.</div>
+                </div>
+
                 <button type="submit" class="wp-send" id="wpSend">Send →</button>
                 <div class="wp-err" id="wpErr"></div>
             </form>
@@ -816,7 +902,7 @@
         <div class="wp-success" id="wpSuccess">
             <div class="wp-tick">✓</div>
             <h3>Got it. Thank you.</h3>
-            <p>Your message is with us.<br>We appreciate you taking the time.</p>
+            <p id="wpSuccessMsg">Your message is with us.<br>We appreciate you taking the time.</p>
         </div>
     </div>
 
@@ -1389,7 +1475,12 @@
         const wpErr        = document.getElementById('wpErr');
         const wpFormArea   = document.getElementById('wpFormArea');
         const wpSuccess    = document.getElementById('wpSuccess');
+        const wpSuccessMsg = document.getElementById('wpSuccessMsg');
         const writeusForm  = document.getElementById('writeusForm');
+        const wpEmail      = document.getElementById('wpEmail');
+        const wpCatHint    = document.getElementById('wpCatHint');
+        const wpEmailHint  = document.getElementById('wpEmailHint');
+        const wpMsgHint    = document.getElementById('wpMsgHint');
 
         function openNav() { sidenav.classList.add('open'); overlay.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); sidenavClose.focus(); }
         function closeNav() { sidenav.classList.remove('open'); overlay.classList.remove('open'); writeusPanel.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.focus(); }
@@ -1406,18 +1497,50 @@
             const len = wpMsg.value.length;
             wpChar.textContent = `${len} / 1000`;
             wpChar.classList.toggle('warn', len > 900);
+            if (len > 0) wpMsgHint.classList.remove('show');
         });
+
+        wpEmail.addEventListener('input', () => {
+            wpEmail.classList.remove('wp-invalid');
+            wpEmailHint.classList.remove('show');
+        });
+
+        document.querySelectorAll('input[name="category"]').forEach(r => {
+            r.addEventListener('change', () => wpCatHint.classList.remove('show'));
+        });
+
+        function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
+        function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
         writeusForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!wpMsg.value.trim()) { showErr('Please write something first.'); return; }
+
+            // Validate
+            let valid = true;
+            const category = document.querySelector('input[name="category"]:checked');
+            if (!category) { wpCatHint.classList.add('show'); valid = false; }
+
+            const email = wpEmail.value.trim();
+            if (!email || !isValidEmail(email)) {
+                wpEmail.classList.add('wp-invalid'); wpEmailHint.classList.add('show'); valid = false;
+            }
+
+            if (!wpMsg.value.trim()) { wpMsgHint.classList.add('show'); valid = false; }
+            if (!valid) return;
+
             wpSend.disabled = true; wpSend.textContent = 'Sending…'; wpErr.classList.remove('show');
+
+            const formData = new FormData(writeusForm);
+            formData.set('subject', `NIR8 — ${category.value}`);
+            formData.set('message', `[${category.value}]\n\n${wpMsg.value.trim()}`);
+
             try {
-                const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(writeusForm) });
+                const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
+                    wpSuccessMsg.innerHTML = `Your message is with us${email ? ' — we\'ll reply to <strong>' + escHtml(email) + '</strong>' : ''}.<br>We appreciate you taking the time.`;
                     wpFormArea.style.display = 'none'; wpSuccess.style.display = 'block';
-                    setTimeout(() => { closeNav(); setTimeout(resetForm, 400); }, 3000);
+                    setTimeout(() => { closeNav(); setTimeout(resetForm, 400); }, 3500);
                 } else { showErr('Something went wrong. Try again.'); resetBtn(); }
             } catch { showErr('Network error. Check your connection.'); resetBtn(); }
         });
@@ -1426,7 +1549,10 @@
         function resetBtn() { wpSend.disabled = false; wpSend.textContent = 'Send →'; }
         function resetForm() {
             wpFormArea.style.display = 'block'; wpSuccess.style.display = 'none';
-            wpMsg.value = ''; wpChar.textContent = '0 / 1000';
+            wpMsg.value = ''; wpEmail.value = ''; wpChar.textContent = '0 / 1000';
+            wpEmail.classList.remove('wp-invalid');
+            [wpCatHint, wpEmailHint, wpMsgHint].forEach(h => h.classList.remove('show'));
+            document.querySelectorAll('input[name="category"]').forEach(r => r.checked = false);
             wpErr.classList.remove('show'); resetBtn();
         }
     })();
