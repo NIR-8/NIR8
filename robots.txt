@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://nir8.pages.dev/sitemap.xml
