@@ -31,42 +31,42 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-    <!-- Poppins — self-hosted locally, no external font request -->
-    <link rel="preload" href="/assets/fonts/poppins-v24-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/poppins-v24-latin-500.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/poppins-v24-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/poppins-v24-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- IBM Plex Sans — self-hosted locally, no external font request -->
+    <link rel="preload" href="/assets/fonts/ibm-plex-sans-v19-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-sans-v19-latin-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-sans-v19-latin-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-sans-v19-latin-700.woff2" as="font" type="font/woff2" crossorigin>
     <!-- CMU Serif (Computer Modern) — self-hosted, used only for equation text to match the classic math-typeset look without MathJax -->
     <link rel="preload" href="/assets/fonts/cmu-serif-roman.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/cmu-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face {
-            font-family: 'Poppins';
+            font-family: 'IBM Plex Sans';
             font-style: normal;
             font-weight: 400;
             font-display: swap;
-            src: url('/assets/fonts/poppins-v24-latin-regular.woff2') format('woff2');
+            src: url('/assets/fonts/ibm-plex-sans-v19-latin-regular.woff2') format('woff2');
         }
         @font-face {
-            font-family: 'Poppins';
+            font-family: 'IBM Plex Sans';
             font-style: normal;
             font-weight: 500;
             font-display: swap;
-            src: url('/assets/fonts/poppins-v24-latin-500.woff2') format('woff2');
+            src: url('/assets/fonts/ibm-plex-sans-v19-latin-500.woff2') format('woff2');
         }
         @font-face {
-            font-family: 'Poppins';
+            font-family: 'IBM Plex Sans';
             font-style: normal;
             font-weight: 600;
             font-display: swap;
-            src: url('/assets/fonts/poppins-v24-latin-600.woff2') format('woff2');
+            src: url('/assets/fonts/ibm-plex-sans-v19-latin-600.woff2') format('woff2');
         }
         @font-face {
-            font-family: 'Poppins';
+            font-family: 'IBM Plex Sans';
             font-style: normal;
             font-weight: 700;
             font-display: swap;
-            src: url('/assets/fonts/poppins-v24-latin-700.woff2') format('woff2');
+            src: url('/assets/fonts/ibm-plex-sans-v19-latin-700.woff2') format('woff2');
         }
         @font-face {
             font-family: 'CMU Serif';
@@ -180,7 +180,7 @@
 
         /* ── BODY ── */
         body {
-            font-family: Poppins, sans-serif;
+            font-family: "IBM Plex Sans", sans-serif;
             background: linear-gradient(to right, #4facfe, #00f2fe);
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; flex-direction: column;
@@ -275,7 +275,7 @@
         /* ── ACB TABLE ── */
         .acb-table {
             border-collapse: collapse; width: 100%; margin: 10px 0;
-            font-family: Poppins, sans-serif; table-layout: auto;
+            font-family: "IBM Plex Sans", sans-serif; table-layout: auto;
         }
         .acb-td, .acb-th {
             border: 1px solid #ddd; padding: 8px; text-align: center;
@@ -421,7 +421,7 @@
             display: flex; align-items: center; gap: 14px; padding: 13px 20px;
             text-decoration: none; color: #222; font-size: 14px; font-weight: 500;
             transition: background 0.15s; cursor: pointer; border: none;
-            background: none; width: 100%; text-align: left; font-family: Poppins, sans-serif;
+            background: none; width: 100%; text-align: left; font-family: "IBM Plex Sans", sans-serif;
         }
         .sidenav-item:hover { background: #f7f8fa; }
         .sn-icon {
@@ -453,7 +453,7 @@
             display: inline-flex; align-items: center; gap: 4px;
             font-size: 12px; font-weight: 500; color: #767676;
             background: none; border: none; cursor: pointer; padding: 2px 6px;
-            font-family: Poppins, sans-serif; margin-bottom: 16px; transition: color 0.2s;
+            font-family: "IBM Plex Sans", sans-serif; margin-bottom: 16px; transition: color 0.2s;
             border-radius: 4px; line-height: 1.4;
         }
         .wp-back:hover { color: #333; background: #f0f0f0; }
@@ -465,7 +465,7 @@
         .wp-sub { font-size: 12px; color: #767676; line-height: 1.6; margin-bottom: 20px; }
         .writeus-panel textarea {
             width: 100%; min-height: 130px; padding: 12px;
-            font-family: Poppins, sans-serif; font-size: 13px; color: #1a1a1a;
+            font-family: "IBM Plex Sans", sans-serif; font-size: 13px; color: #1a1a1a;
             background: #f7f8fa; border: 1.5px solid #ebebeb;
             border-radius: 10px; resize: none; outline: none; line-height: 1.6;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -479,7 +479,7 @@
         .wp-char.warn { color: #e53935; }
         .wp-send {
             width: 100%; padding: 12px; background: #1a1a1a; color: #fff; border: none;
-            border-radius: 8px; font-family: Poppins, sans-serif; font-size: 13px;
+            border-radius: 8px; font-family: "IBM Plex Sans", sans-serif; font-size: 13px;
             font-weight: 600; cursor: pointer; transition: background 0.2s, opacity 0.2s;
         }
         .wp-send:hover { background: #333; }
