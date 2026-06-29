@@ -417,7 +417,6 @@
         .sn-text small { font-size: 11px; color: #767676; font-weight: 400; }
         .sn-arrow { font-size: 14px; color: #999; }
         .sn-icon.purple { background: #ede9fb; }
-        .sn-icon.green  { background: #e8f5e9; }
         .sidenav-divider { height: 1px; background: #f0f0f0; margin: 6px 20px; }
         .sidenav-footer { padding: 16px 20px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #999; text-align: center; }
 
@@ -548,8 +547,9 @@
             .calculation-content { margin-top: 30mm; margin-bottom: 30mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
             #stepsContainer { display: flex; flex-direction: column-reverse; }
-            .calc-step { margin-bottom: 14px; }
-            .calc-result { margin-top: 12px; padding-top: 10px; }
+            .calc-step { margin-bottom: 5mm; }
+            .frac .frac-num, .frac .frac-den { padding: 1.5mm 2mm; }
+            .calc-result { margin-top: 4mm; padding-top: 3mm; }
         }
     </style>
 </head>
@@ -742,13 +742,6 @@
         <button type="button" class="info-btn" onclick="showInfo()" aria-label="Help and shortcuts">ℹ️ Help &amp; Shortcuts</button>
     </footer>
 
-    <!-- SEO block -->
-    <section aria-hidden="true" class="sr-only">
-        <h2>About NIR8 Calculators – Free Online Pharmaceutical Calculator</h2>
-        <p>NIR8 Calculators is a free online tool for pharmaceutical dispensing and batch calculation. Formula Calculator supports F1, F2, F3 assay-based formulas. The (A+C)−B Calculator tracks standard quantities across up to four lots.</p>
-        <p>Keywords: nir8 calculator online, assay based calculation, pharmaceutical formula calculator, F1 F2 F3 formula, lot quantity calculator, dispensing calculator</p>
-    </section>
-
     <!-- SIDENAV OVERLAY -->
     <div class="sidenav-overlay" id="sidenavOverlay"></div>
 
@@ -759,15 +752,6 @@
             <button class="sidenav-close" id="sidenavClose" aria-label="Close menu">×</button>
         </div>
         <div class="sidenav-nav">
-            <a class="sidenav-item" href="/about.html" target="_blank" rel="noopener">
-                <div class="sn-icon green">ℹ️</div>
-                <div class="sn-text">
-                    <strong>About</strong>
-                    <small>What is NIR8 Calculators?</small>
-                </div>
-                <span class="sn-arrow">›</span>
-            </a>
-            <div class="sidenav-divider"></div>
             <button class="sidenav-item" id="openWriteUs">
                 <div class="sn-icon purple">✍️</div>
                 <div class="sn-text">
