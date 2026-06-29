@@ -33,8 +33,12 @@
 
     <!-- Poppins — self-hosted locally, no external font request -->
     <link rel="preload" href="/assets/fonts/poppins-v24-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/poppins-v24-latin-500.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/poppins-v24-latin-600.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/poppins-v24-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- CMU Serif (Computer Modern) — self-hosted, used only for equation text to match the classic math-typeset look without MathJax -->
+    <link rel="preload" href="/assets/fonts/cmu-serif-roman.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/cmu-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face {
             font-family: 'Poppins';
@@ -42,6 +46,13 @@
             font-weight: 400;
             font-display: swap;
             src: url('/assets/fonts/poppins-v24-latin-regular.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('/assets/fonts/poppins-v24-latin-500.woff2') format('woff2');
         }
         @font-face {
             font-family: 'Poppins';
@@ -56,6 +67,20 @@
             font-weight: 700;
             font-display: swap;
             src: url('/assets/fonts/poppins-v24-latin-700.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'CMU Serif';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/assets/fonts/cmu-serif-roman.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'CMU Serif';
+            font-style: italic;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/assets/fonts/cmu-serif-italic.woff2') format('woff2');
         }
     </style>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -99,7 +124,6 @@
     <style>
         /* ── GLOBAL ── */
         *, *::before, *::after { box-sizing: border-box; }
-        .CtxtMenu_Info { border-radius: 15px; box-shadow: 0px 10px 20px #808080; }
 
         /* ── MENU BAR ── */
         .menu-bar {
@@ -187,6 +211,10 @@
         }
         button:hover { background: #218838; }
         .hidden { display: none !important; }
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+        }
         .hidden[aria-hidden=true] {
             position: absolute; width: 1px; height: 1px; padding: 0;
             margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;
@@ -292,11 +320,11 @@
             padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,.1); position: relative;
         }
         .verify-label {
-            font-weight: bold; color: #000; display: inline-block;
+            font-weight: 700; color: #000; display: inline-block;
             width: 140px; flex-shrink: 0; text-align: right; margin-right: 10px;
         }
         .verify-value {
-            font-weight: bold; background-color: #d4edda; color: #155724; padding: 3px 6px; border-radius: 5px;
+            font-weight: 700; background-color: #d4edda; color: #155724; padding: 3px 6px; border-radius: 5px;
         }
         .verify-row { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 10px; }
         .verify-rows { display: inline-flex; flex-direction: column; margin: 0 auto; }
@@ -323,21 +351,24 @@
         .info-key { font-weight: 700; color: #157347; }
         .info-footer { text-align: center; margin-top: 20px; font-size: 12px; color: #686868; }
 
-        /* ── FORMULA FRACTIONS (plain CSS, no MathJax) ── */
+        /* ── FORMULA FRACTIONS (plain CSS, no MathJax — styled to look like classic math typesetting) ── */
         .calc-step {
             margin-bottom: 40px; display: flex; align-items: center;
             justify-content: center; flex-wrap: wrap; gap: 6px; text-align: center;
+            font-family: 'CMU Serif', serif;
         }
-        .calc-eq { margin-right: 2px; }
+        .calc-eq { margin-right: 2px; font-style: italic; }
         .frac {
             display: inline-flex; flex-direction: column; align-items: center;
             vertical-align: middle; margin: 0 5px; font-size: 1.05em; line-height: 1.6;
+            font-family: 'CMU Serif', serif;
         }
         .frac .frac-num, .frac .frac-den { padding: 4px 6px; white-space: nowrap; }
         .frac .frac-num { border-bottom: 1.5px solid #333; }
         .calc-result {
             margin-top: 30px; padding-top: 16px; border-top: 1px solid #ccc;
             text-align: center; font-size: 1.1em; font-weight: 400; color: #000;
+            font-family: 'CMU Serif', serif;
         }
         .calc-result-original { font-weight: 400; color: #000; }
 
@@ -403,7 +434,6 @@
         .sn-text small { font-size: 11px; color: #767676; font-weight: 400; }
         .sn-arrow { font-size: 14px; color: #999; }
         .sn-icon.purple { background: #ede9fb; }
-        .sn-icon.blue   { background: #e0f3ff; }
         .sn-icon.green  { background: #e8f5e9; }
         .sidenav-divider { height: 1px; background: #f0f0f0; margin: 6px 20px; }
         .sidenav-footer { padding: 16px 20px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #999; text-align: center; }
@@ -541,7 +571,7 @@
     </style>
 </head>
 <body>
-    <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">NIR8 Calculators – Pharmaceutical Assay &amp; Formula Calculator</h1>
+    <h1 class="sr-only">NIR8 Calculators – Pharmaceutical Assay &amp; Formula Calculator</h1>
     <noscript>
         <div style="background:#ff6b6b;color:#fff;padding:10px;text-align:center">
             JavaScript is required. Please enable JavaScript in your browser settings.
@@ -730,7 +760,7 @@
     </footer>
 
     <!-- SEO block -->
-    <section aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+    <section aria-hidden="true" class="sr-only">
         <h2>About NIR8 Calculators – Free Online Pharmaceutical Calculator</h2>
         <p>NIR8 Calculators is a free online tool for pharmaceutical dispensing and batch calculation. Formula Calculator supports F1, F2, F3 assay-based formulas. The (A+C)−B Calculator tracks standard quantities across up to four lots.</p>
         <p>Keywords: nir8 calculator online, assay based calculation, pharmaceutical formula calculator, F1 F2 F3 formula, lot quantity calculator, dispensing calculator</p>
@@ -808,7 +838,7 @@
             ACB_DEFAULT_A: 417.000, ACB_DEFAULT_C: 84.375,
             ACB_TOTAL_A: 1668.000, ACB_TOTAL_C: 337.500,
             // Levetiracetam preset (from BMR: A=268.750 x4, C=14.674 x3 + 14.673 x1)
-            LEVA_A: 268.750, LEVA_C: 14.674,
+            LEVA_A: 268.750,
             LEVA_TOTAL_A: 1075.000, LEVA_TOTAL_C: 58.695,
             Q_MAX: 9999999, W_MAX: 99.99, A_MAX: 100.00
         };
