@@ -32,38 +32,38 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <!-- Inter — self-hosted locally, no external font request. Used everywhere, including equations, for maximum legibility when hand-copying numbers. -->
-    <link rel="preload" href="/assets/fonts/inter-v20-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/inter-v20-latin-500.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/inter-v20-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/inter-v20-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/inter-v19-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/inter-v19-latin-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/inter-v19-latin-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/inter-v19-latin-700.woff2" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face {
             font-family: 'Inter';
             font-style: normal;
             font-weight: 400;
             font-display: swap;
-            src: url('/assets/fonts/inter-v20-latin-regular.woff2') format('woff2');
+            src: url('/assets/fonts/inter-v19-latin-regular.woff2') format('woff2');
         }
         @font-face {
             font-family: 'Inter';
             font-style: normal;
             font-weight: 500;
             font-display: swap;
-            src: url('/assets/fonts/inter-v20-latin-500.woff2') format('woff2');
+            src: url('/assets/fonts/inter-v19-latin-500.woff2') format('woff2');
         }
         @font-face {
             font-family: 'Inter';
             font-style: normal;
             font-weight: 600;
             font-display: swap;
-            src: url('/assets/fonts/inter-v20-latin-600.woff2') format('woff2');
+            src: url('/assets/fonts/inter-v19-latin-600.woff2') format('woff2');
         }
         @font-face {
             font-family: 'Inter';
             font-style: normal;
             font-weight: 700;
             font-display: swap;
-            src: url('/assets/fonts/inter-v20-latin-700.woff2') format('woff2');
+            src: url('/assets/fonts/inter-v19-latin-700.woff2') format('woff2');
         }
     </style>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -175,6 +175,7 @@
             display: none; background: #fff; padding: 25px;
             width: 90%; max-width: 400px; border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,.2); margin-bottom: 20px; position: relative;
+            scroll-margin-top: 60px;
         }
         #acbCalculator { max-width: 900px; }
         .calculator-container.active { display: block; }
@@ -213,6 +214,7 @@
             margin-bottom: 15px; border: 1px solid #000; padding: 15px;
             position: relative; width: 100%; min-height: 200px; font-size: 14pt;
             border-radius: 0; box-sizing: border-box; contain: content; overflow: hidden;
+            scroll-margin-top: 60px;
         }
         .calculation-entry::before {
             content: "Assay Based Calculation"; position: absolute; top: 0; left: 0;
@@ -339,21 +341,23 @@
             margin-bottom: 40px; display: flex; align-items: center;
             justify-content: center; flex-wrap: wrap; gap: 6px; text-align: center;
             font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums;
+            font-weight: 500; color: #111;
         }
-        .calc-eq { margin-right: 2px; }
+        .calc-eq { margin-right: 2px; font-weight: 500; color: #111; }
         .frac {
             display: inline-flex; flex-direction: column; align-items: center;
             vertical-align: middle; margin: 0 5px; font-size: 1.05em; line-height: 1.6;
             font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums;
+            font-weight: 500; color: #111;
         }
         .frac .frac-num, .frac .frac-den { padding: 4px 6px; white-space: nowrap; }
-        .frac .frac-num { border-bottom: 1.5px solid #333; }
+        .frac .frac-num { border-bottom: 1.5px solid #111; }
         .calc-result {
-            margin-top: 30px; padding-top: 16px; border-top: 1px solid #ccc;
-            text-align: center; font-size: 1.1em; font-weight: 400; color: #000;
+            margin-top: 30px; padding-top: 16px;
+            text-align: center; font-size: 1.15em; font-weight: 600; color: #111;
             font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums;
         }
-        .calc-result-original { font-weight: 400; color: #000; }
+        .calc-result-original { font-weight: 500; color: #333; }
 
         /* ── FOOTER ── */
         footer {
@@ -549,7 +553,7 @@
             #stepsContainer { display: flex; flex-direction: column-reverse; }
             .calc-step { margin-bottom: 5mm; }
             .frac .frac-num, .frac .frac-den { padding: 1.5mm 2mm; }
-            .calc-result { margin-top: 4mm; padding-top: 3mm; }
+            .calc-result { margin-top: 3mm; padding-top: 0; }
         }
     </style>
 </head>
@@ -1203,13 +1207,17 @@
             calculationCount++; domCache.calculationSteps.classList.remove("hidden");
             updatePageNumbers(); updateQuantityTracker();
 
-            setTimeout(() => {
-                domCache.QInput.value = ""; domCache.waterInput.value = ""; domCache.assayInput.value = "";
-                domCache.progressBar.style.width = "0%"; domCache.buttons.style.display = "none";
-                domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
-                updateQuantityTracker(); domCache.QInput.focus();
-            }, 100);
-            newEntry.focus();
+            // Clear inputs immediately so they're ready for the next entry
+            domCache.QInput.value = ""; domCache.waterInput.value = ""; domCache.assayInput.value = "";
+            domCache.progressBar.style.width = "0%"; domCache.buttons.style.display = "none";
+            domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
+            updateQuantityTracker();
+
+            // Scroll the new card so it fills the screen, then focus it for keyboard users
+            requestAnimationFrame(() => {
+                newEntry.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                newEntry.focus({ preventScroll: true });
+            });
         }
 
         function syncStdQtyToACB(value) {
@@ -1300,6 +1308,9 @@
                 input.addEventListener("input", e => { validateInput(input); handleInput(e); });
                 input.addEventListener("keydown", e => { if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault(); if (e.key === "Enter") handleInput(e); });
                 input.addEventListener("contextmenu", e => e.preventDefault());
+            });
+            domCache.QInput.addEventListener("focus", () => {
+                requestAnimationFrame(() => domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' }));
             });
 
             domCache.acbCalculator.addEventListener("input", e => {
