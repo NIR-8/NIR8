@@ -1,0 +1,36 @@
+{
+  "name": "NIR8 Calculators",
+  "short_name": "NIR8",
+  "description": "Pharmaceutical assay and formula calculator for dispensing calculations. Supports F1, F2, F3 and (A+C)-B lot quantity tracking.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#4facfe",
+  "theme_color": "#0d1117",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["medical", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Formula Calculator",
+      "short_name": "Formula",
+      "description": "Open the formula calculator directly",
+      "url": "/?tab=formula",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

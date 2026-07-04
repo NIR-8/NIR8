@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=1024, initial-scale=1, minimum-scale=0.5">
     <meta name="color-scheme" content="light only">
     <meta name="theme-color" content="#4facfe">
     <title>NIR8 Calculators – Assay &amp; Formula Calculator for Pharmaceutical Dispensing</title>
@@ -20,16 +20,21 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://nir8.pages.dev/">
     <meta property="og:site_name" content="NIR8 Calculators">
+    <meta property="og:image" content="https://nir8.pages.dev/icons/icon-512.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="NIR8 Calculators – Assay &amp; Formula Calculator">
     <meta name="twitter:description" content="Free online pharmaceutical assay calculator. F1, F2, F3 formulas and (A+C)-B lot quantities. Instant results, printable.">
+    <meta name="twitter:image" content="https://nir8.pages.dev/icons/icon-512.png">
 
-    <!-- Favicon -->
+    <!-- Favicon + PWA -->
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
 
     <!-- Inter — self-hosted locally, no external font request. Used everywhere, including equations, for maximum legibility when hand-copying numbers. -->
     <link rel="preload" href="/assets/fonts/inter-v19-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -285,6 +290,16 @@
         }
         .print-btn:hover { background: #0056b3; }
         .calculation-steps:not(.hidden) .print-btn { display: block; }
+        .new-calc-btn {
+            display: none; position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+            background: #157347; color: #fff; border: none; border-radius: 30px;
+            padding: 14px 32px; font-size: 16px; font-weight: 600; font-family: 'Inter', sans-serif;
+            cursor: pointer; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            transition: background 0.2s, transform 0.15s; white-space: nowrap;
+        }
+        .new-calc-btn:hover { background: #125c3b; }
+        .new-calc-btn:active { transform: translateX(-50%) scale(0.96); }
+        .new-calc-btn.visible { display: block; }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
         .reset-acb-btn {
             position: absolute; bottom: 10px; right: 10px; background: transparent; border: none;
@@ -524,7 +539,7 @@
             @page { size: A4 landscape; margin: 8mm; }
             body { background: transparent; padding: 0; margin: 0; }
             .calculator-container,
-            .delete-button, .info-btn, .menu-bar, .print-btn,
+            .delete-button, .info-btn, .menu-bar, .print-btn, .new-calc-btn,
             .progress-container, footer, .reset-acb-btn,
             .sidenav, .sidenav-overlay, .writeus-panel { display: none !important; }
             .calculation-steps {
@@ -739,6 +754,11 @@
             </div>
         </div>
     </div>
+
+    <!-- FLOATING NEW CALCULATION BUTTON -->
+    <button type="button" class="new-calc-btn" id="newCalcBtn" aria-label="Start new calculation">
+        ＋ New Calculation
+    </button>
 
     <!-- FOOTER -->
     <footer>
@@ -1217,6 +1237,7 @@
             requestAnimationFrame(() => {
                 newEntry.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 newEntry.focus({ preventScroll: true });
+                document.getElementById('newCalcBtn').classList.add('visible');
             });
         }
 
@@ -1311,6 +1332,7 @@
             });
             domCache.QInput.addEventListener("focus", () => {
                 requestAnimationFrame(() => domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                document.getElementById('newCalcBtn').classList.remove('visible');
             });
 
             domCache.acbCalculator.addEventListener("input", e => {
@@ -1358,6 +1380,17 @@
             applyDrugPreset('valacyclovir');
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
+
+            // Floating new calculation button
+            document.getElementById('newCalcBtn').addEventListener('click', () => {
+                domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                requestAnimationFrame(() => setTimeout(() => domCache.QInput.focus(), 400));
+            });
+
+            // PWA — register service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
         });
 
         window.addEventListener('resize', updatePageNumbers);
