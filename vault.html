@@ -49,6 +49,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);-webkit-font
 
 /* ══ ANIMATIONS ══ */
 @keyframes glow{0%,100%{box-shadow:0 0 6px var(--accent)}50%{box-shadow:0 0 22px var(--accent),0 0 44px var(--aglow)}}
+@keyframes heartbeat{
+  0%{transform:scale(1);box-shadow:0 0 6px var(--accent)}
+  14%{transform:scale(1.5);box-shadow:0 0 22px var(--accent),0 0 44px var(--aglow)}
+  28%{transform:scale(1);box-shadow:0 0 6px var(--accent)}
+  42%{transform:scale(1.35);box-shadow:0 0 18px var(--accent),0 0 36px var(--aglow)}
+  56%,100%{transform:scale(1);box-shadow:0 0 6px var(--accent)}
+}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes pop{from{transform:scale(.94) translateY(8px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
@@ -179,11 +186,19 @@ select.sel option{background:#0e0e1c}
 .tb-logo{font-family:var(--sans);font-weight:800;font-size:11px;letter-spacing:.34em;color:var(--accent);text-transform:uppercase;display:flex;align-items:center;gap:9px}
 .tb-r{display:flex;align-items:center;gap:6px}
 .pill{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);padding:3px 9px;border:1px solid var(--b);border-radius:20px;background:rgba(255,255,255,.03)}
-.sdot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;transition:background .3s;animation:glow 1.8s ease-in-out infinite}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;transition:background .3s;animation:heartbeat .833s ease-in-out infinite}
 .sdot.sy{background:var(--warn);animation:none}.sdot.er{background:var(--danger);animation:none}
 .ltimer{font-size:10px;color:var(--muted);padding:3px 9px;border:1px solid var(--b);border-radius:20px;background:rgba(255,255,255,.03);white-space:nowrap;transition:color .25s,border-color .25s}
 .ltimer.warn{color:var(--warn);border-color:rgba(255,211,42,.28)}
-.utag{font-size:11px;color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 9px;border:1px solid var(--b);border-radius:20px;background:rgba(255,255,255,.03)}
+.utag{font-size:11px;color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 9px;border:1px solid var(--b);border-radius:20px;background:rgba(255,255,255,.03);cursor:pointer;transition:border-color .2s,color .2s}
+.utag:hover{border-color:var(--accent);color:var(--text)}
+.uwrap{position:relative}
+.umenu{position:absolute;top:calc(100% + 8px);right:0;background:var(--card,#14141c);border:1px solid var(--b);border-radius:var(--rs);min-width:180px;padding:6px;display:none;flex-direction:column;gap:2px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.umenu.on{display:flex}
+.umenu button{width:100%;text-align:left;background:transparent;border:none;color:var(--text);font-family:var(--sans);font-size:12.5px;font-weight:600;padding:9px 11px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.umenu button:hover{background:rgba(255,255,255,.06)}
+.umenu button.danger{color:var(--danger)}
+.umenu button.danger:hover{background:rgba(255,77,106,.1)}
 
 /* ── BODY LAYOUT ── */
 .vbody{flex:1;display:flex;overflow:hidden;min-height:0}
@@ -434,9 +449,14 @@ select.sel option{background:#0e0e1c}
     <div class="tb-logo"><span class="ldot"></span>VAULT</div>
     <div class="tb-r">
       <div class="pill"><span class="sdot" id="sdot"></span><span id="slbl">synced</span></div>
-      <div class="ltimer" id="ltimer">🔒 5:00</div>
-      <span class="utag" id="utag"></span>
-      <button class="ib" onclick="openChangePw()" title="Change vault password">🔑</button>
+      <div class="ltimer" id="ltimer">🔒 1:12</div>
+      <div class="uwrap">
+        <span class="utag" id="utag" onclick="toggleUMenu()" title="Account menu"></span>
+        <div class="umenu" id="umenu">
+          <button onclick="closeUMenu();openChangePw()">🔑 Change Password</button>
+          <button class="danger" onclick="closeUMenu();openDelAcct()">🗑 Delete Account</button>
+        </div>
+      </div>
       <button class="ib" onclick="logout()" title="Lock vault">🔒</button>
     </div>
   </div>
@@ -490,7 +510,6 @@ select.sel option{background:#0e0e1c}
       <div class="mfooter">
         <span class="cnt" id="cnt">0 entries</span>
         <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-sm" style="background:transparent;border:1px solid rgba(255,77,106,.3);color:var(--danger);font-family:var(--sans);font-weight:600;font-size:11px;padding:7px 13px;border-radius:var(--rs);cursor:pointer" onclick="openDelAcct()">🗑 Delete Account</button>
           <button class="btn btn-p btn-sm" onclick="openAdd()">+ Add Entry</button>
         </div>
       </div>
@@ -687,6 +706,14 @@ window.$  = $; // expose for inline onclick
 // ── STATE ────────────────────────────────────────────────
 let U=null, KEY=null, unsub=null, cached=[], activeCat='all', editId=null, editOrigPw=null, delId=null;
 
+// ── ACCOUNT MENU (Change Password / Delete Account) ──────
+window.toggleUMenu=()=>{ $('umenu').classList.toggle('on'); };
+window.closeUMenu=()=>{ $('umenu').classList.remove('on'); };
+document.addEventListener('click',e=>{
+  const wrap=e.target.closest('.uwrap');
+  if(!wrap) closeUMenu();
+});
+
 // ── SYNC INDICATOR ───────────────────────────────────────
 function sync(state){
   const d=$('sdot'),l=$('slbl'); if(!d)return;
@@ -695,7 +722,7 @@ function sync(state){
 }
 
 // ── AUTO-LOCK ────────────────────────────────────────────
-const LOCK_S=300; let lockLeft=LOCK_S, lockIv=null;
+const LOCK_S=72; let lockLeft=LOCK_S, lockIv=null;
 function resetIdle(){ lockLeft=LOCK_S; }
 function startLock(){
   stopLock(); lockLeft=LOCK_S;
@@ -737,17 +764,20 @@ window.register=async()=>{
     const key=await deriveKey(p,salt);
     const token=await enc('VAULT_OK',key);
     // Build seeded entries: name is encrypted, user/pass/url/notes left blank for the user to fill in.
-    const seedEntries=await Promise.all(DEFAULT_SEED_ENTRIES.map(async name=>({
-      id:crypto.randomUUID(),
-      name:await enc(name,key),
-      user:await enc('',key),
-      pass:await enc('',key),
-      url:DEFAULT_SEED_URLS[name]||'',
-      notes:'',
-      category:'work',
-      favorite:false,
-      created:Date.now(),pwUpdated:Date.now(),pwHistory:[]
-    })));
+    const seedEntries=await Promise.all(DEFAULT_SEED_ENTRIES.map(async name=>{
+      const rawUrl=DEFAULT_SEED_URLS[name]||'';
+      return{
+        id:crypto.randomUUID(),
+        name:await enc(name,key),
+        user:await enc('',key),
+        pass:await enc('',key),
+        url:rawUrl?await enc(rawUrl,key):'',
+        notes:'',
+        category:'work',
+        favorite:false,
+        created:Date.now(),pwUpdated:Date.now(),pwHistory:[]
+      };
+    }));
     const vDoc=doc(db,'vaults',u);
     await runTransaction(db,async tx=>{
       const snap=await tx.get(vDoc);
