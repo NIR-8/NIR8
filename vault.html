@@ -716,6 +716,14 @@ async function fsGet(u){ const s=await getDoc(doc(db,'vaults',u)); return s.exis
 async function fsSet(u,data){ await setDoc(doc(db,'vaults',u),data); }
 
 // ── REGISTER ─────────────────────────────────────────────
+// Default entries seeded into every newly created vault (name + category only —
+// no usernames or passwords are pre-filled; the user adds those themselves).
+const DEFAULT_SEED_ENTRIES=['ASRS','DARWIN BOX','DMS','ELMS','EMS','EPIQ','SAP','UMS','DOMAIN','EHS'];
+const DEFAULT_SEED_URLS={
+  'DARWIN BOX':'https://hetero.darwinbox.in/user/login',
+  'ELMS':'http://10.125.132.2/elmsprod'
+};
+
 window.register=async()=>{
   const u=$('rUser').value.trim().toLowerCase();
   const p=$('rPass').value, c=$('rConf').value;
@@ -728,11 +736,23 @@ window.register=async()=>{
     const salt=crypto.getRandomValues(new Uint8Array(16));
     const key=await deriveKey(p,salt);
     const token=await enc('VAULT_OK',key);
+    // Build seeded entries: name is encrypted, user/pass/url/notes left blank for the user to fill in.
+    const seedEntries=await Promise.all(DEFAULT_SEED_ENTRIES.map(async name=>({
+      id:crypto.randomUUID(),
+      name:await enc(name,key),
+      user:await enc('',key),
+      pass:await enc('',key),
+      url:DEFAULT_SEED_URLS[name]||'',
+      notes:'',
+      category:'work',
+      favorite:false,
+      created:Date.now(),pwUpdated:Date.now(),pwHistory:[]
+    })));
     const vDoc=doc(db,'vaults',u);
     await runTransaction(db,async tx=>{
       const snap=await tx.get(vDoc);
       if(snap.exists())throw new Error('Username already taken');
-      tx.set(vDoc,{salt:toB64(salt),verifyToken:token,entries:[],updatedAt:Date.now()});
+      tx.set(vDoc,{salt:toB64(salt),verifyToken:token,entries:seedEntries,updatedAt:Date.now()});
     });
     toast('Vault created! Log in now.');
     $('lUser').value=u; go('loginScreen');
