@@ -347,6 +347,28 @@ select.sel option{background:#0e0e1c}
 
 .erow{cursor:pointer}
 
+/* per-row overflow menu — keeps action icons to a minimum on every row */
+.emenu-wrap{position:relative}
+.emenu{
+  position:absolute;top:calc(100% + 6px);right:0;
+  background:var(--card,#14141c);border:1px solid var(--b);border-radius:var(--rs);
+  min-width:170px;padding:6px;display:none;flex-direction:column;gap:2px;
+  z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.4);backdrop-filter:var(--blur);
+}
+.emenu.on{display:flex}
+.emenu button{
+  width:100%;text-align:left;background:transparent;border:none;color:var(--text);
+  font-family:var(--sans);font-size:12.5px;font-weight:600;padding:9px 11px;
+  border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;
+}
+.emenu button:hover{background:rgba(255,255,255,.06)}
+.emenu button.danger{color:var(--danger)}
+.emenu button.danger:hover{background:rgba(255,77,106,.1)}
+
+/* inline link indicator, sits beside the entry name instead of in the action row */
+.elink{margin-left:6px;font-size:10px;opacity:.75;cursor:pointer;vertical-align:middle}
+.elink:hover{opacity:1}
+
 /* ── FOOTER ── */
 .mfooter{
   padding:8px 20px;border-top:1px solid var(--b);
@@ -422,7 +444,10 @@ select.sel option{background:#0e0e1c}
 }
 @media(max-width:480px){
   .stitle{font-size:26px}
-  .tb-r .pill,.tb-r .utag{display:none}
+  .tb-r .pill{display:none}
+  .erow{padding:9px 10px;gap:9px}
+  .eico{width:32px;height:32px;font-size:12px}
+  .eacts .ib{width:34px;height:34px}
 }
 </style>
 </head>
@@ -765,9 +790,20 @@ let U=null, KEY=null, unsub=null, cached=[], activeCat='all', editId=null, editO
 // ── ACCOUNT MENU (Change Password / Delete Account) ──────
 window.toggleUMenu=()=>{ $('umenu').classList.toggle('on'); };
 window.closeUMenu=()=>{ $('umenu').classList.remove('on'); };
+
+// ── PER-ROW ACTION MENU (peek / open / edit / delete) ─────
+window.closeEMenus=()=>{ document.querySelectorAll('.emenu.on').forEach(m=>m.classList.remove('on')); };
+window.toggleEMenu=(ev,id)=>{
+  ev.stopPropagation();
+  const el=$('emenu-'+id); if(!el)return;
+  const wasOn=el.classList.contains('on');
+  closeEMenus();
+  if(!wasOn)el.classList.add('on');
+};
+
 document.addEventListener('click',e=>{
-  const wrap=e.target.closest('.uwrap');
-  if(!wrap) closeUMenu();
+  if(!e.target.closest('.uwrap')) closeUMenu();
+  if(!e.target.closest('.emenu-wrap')) closeEMenus();
 });
 
 // ── SYNC INDICATOR ───────────────────────────────────────
@@ -996,7 +1032,7 @@ window.render=async()=>{
     row.innerHTML=`
       <div class="eico">${esc(e._n.charAt(0))}</div>
       <div class="eid">
-        <div class="ename">${esc(e._n)}</div>
+        <div class="ename">${esc(e._n)}${e.url?`<span class="elink" title="Open site" onclick="event.stopPropagation();openUrl('${e.id}')">🔗</span>`:''}</div>
         <div class="euser">${esc(e._u)}</div>
       </div>
       <div class="emeta">
@@ -1005,11 +1041,16 @@ window.render=async()=>{
       </div>
       <div class="eacts">
         <button class="ib star${e.favorite?' on':''}" title="${e.favorite?'Remove from favorites':'Add to favorites'}" onclick="toggleFav('${e.id}')">${e.favorite?'★':'☆'}</button>
-        <button class="ib" title="Peek password" onclick="peekPw('${e.id}')">👁</button>
-        <button class="ib" title="Copy password" onclick="copyPw('${e.id}')">📋</button>
-        ${e.url?`<button class="ib" title="Open site" onclick="openUrl('${e.id}')">🔗</button>`:''}
-        <button class="ib" title="Edit" onclick="editEntry('${e.id}')">✏️</button>
-        <button class="ib red" title="Delete" onclick="askDel('${e.id}','${esc(e._n)}')">🗑</button>
+        <div class="emenu-wrap">
+          <button class="ib" title="More actions" onclick="toggleEMenu(event,'${e.id}')">⋯</button>
+          <div class="emenu" id="emenu-${e.id}">
+            <button onclick="peekPw('${e.id}');closeEMenus()">👁 Peek password</button>
+            <button onclick="copyPw('${e.id}');closeEMenus()">📋 Copy password</button>
+            ${e.url?`<button onclick="openUrl('${e.id}');closeEMenus()">🔗 Open site</button>`:''}
+            <button onclick="editEntry('${e.id}');closeEMenus()">✏️ Edit</button>
+            <button class="danger" onclick="askDel('${e.id}','${esc(e._n)}');closeEMenus()">🗑 Delete</button>
+          </div>
+        </div>
       </div>
       <div class="epeek" id="peek-${e.id}"></div>`;
     frag.appendChild(row);
