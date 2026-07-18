@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>VAULT — OneKey</title>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('vaultTheme')||'dark';}catch(e){}</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ══ DESIGN TOKENS ══ */
@@ -30,6 +31,39 @@
   --sans:'Syne',sans-serif;
   --r:12px;--rs:7px;
 }
+
+/* ══ LIGHT THEME ══ */
+:root[data-theme="light"]{
+  --bg:#f4f4f8;
+  --glass:rgba(255,255,255,0.72);
+  --glass-hi:rgba(255,255,255,0.86);
+  --card:rgba(255,255,255,0.72);
+  --card-h:rgba(255,255,255,0.92);
+  --b:rgba(10,10,30,0.09);
+  --bhi:rgba(10,10,30,0.16);
+  --text:#15151f;
+  --sub:#55556b;
+  --muted:#8a8aa0;
+  --dim:#e4e4ee;
+  --accent:#7ea616;
+  --adim:rgba(126,166,22,0.10);
+  --aglow:rgba(126,166,22,0.30);
+  --danger:#d6304a;
+  --warn:#b8860b;
+  --safe:#4c7a1a;
+}
+:root[data-theme="light"] #bg{
+  background:
+    radial-gradient(ellipse 80% 60% at 8% 12%, rgba(126,166,22,0.07) 0%,transparent 58%),
+    radial-gradient(ellipse 65% 55% at 92% 88%, rgba(110,80,255,0.06) 0%,transparent 58%),
+    radial-gradient(ellipse 50% 70% at 50% 50%, rgba(214,48,74,0.03) 0%,transparent 65%),
+    linear-gradient(rgba(10,10,30,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(10,10,30,0.025) 1px,transparent 1px);
+  background-size:auto,auto,auto,44px 44px,44px 44px;
+}
+:root[data-theme="light"] .btn-p{color:#fff}
+html{transition:background .2s}
+body,.erow,.topbar,.sidebar,.toolbar,.mfooter,.modal,.umenu{transition:background .2s,border-color .2s,color .2s}
 
 /* ══ BASE ══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -166,6 +200,9 @@ select.sel option{background:#0e0e1c}
   transition:background .12s,color .12s;flex-shrink:0;
 }
 .ib:hover{background:rgba(255,255,255,.08);color:var(--text)}
+/* Larger icon buttons inside entry rows — bigger tap targets */
+.eacts .ib{width:36px;height:36px;font-size:16px;border-radius:8px}
+.eacts .ib.star{font-size:18px}
 .ib.red:hover{background:rgba(255,77,106,.14);color:var(--danger)}
 .ib.star{color:var(--muted);font-size:14px;transition:color .15s,transform .15s}
 .ib.star:hover{color:var(--warn)}
@@ -306,7 +343,9 @@ select.sel option{background:#0e0e1c}
 .erow.peeked .epeek{display:block;width:100%}
 
 /* actions */
-.eacts{display:flex;align-items:center;gap:1px;flex-shrink:0}
+.eacts{display:flex;align-items:center;gap:3px;flex-shrink:0}
+
+.erow{cursor:pointer}
 
 /* ── FOOTER ── */
 .mfooter{
@@ -389,6 +428,9 @@ select.sel option{background:#0e0e1c}
 </head>
 <body>
 <div id="bg" aria-hidden="true"></div>
+<button class="ib" id="authThemeBtn" onclick="toggleTheme()" title="Toggle dark / light mode"
+  style="position:fixed;top:16px;right:16px;z-index:100;width:36px;height:36px;font-size:16px;
+  background:var(--glass);border:1px solid var(--b);backdrop-filter:var(--blur)">🌙</button>
 
 <!-- ══════════════ AUTH ══════════════ -->
 <div class="auth-wrap" id="authWrap">
@@ -450,6 +492,7 @@ select.sel option{background:#0e0e1c}
     <div class="tb-r">
       <div class="pill"><span class="sdot" id="sdot"></span><span id="slbl">synced</span></div>
       <div class="ltimer" id="ltimer">🔒 1:12</div>
+      <button class="ib" id="themeBtn" onclick="toggleTheme()" title="Toggle dark / light mode">🌙</button>
       <div class="uwrap">
         <span class="utag" id="utag" onclick="toggleUMenu()" title="Account menu"></span>
         <div class="umenu" id="umenu">
@@ -697,6 +740,19 @@ window.strength = (inp,id) => {
   f.style.background=['#ff4d6a','#ff9f43','#ffd32a','#a3cb38','#c8fb4a'][s-1]||'transparent';
 };
 function busy(id,on,lbl){const b=$(id);if(!b)return;b.disabled=on;b.innerHTML=on?`<span class="spin"></span>${lbl}`:lbl;}
+
+// ── THEME (dark / light) ─────────────────────────────────
+function applyTheme(t){
+  document.documentElement.dataset.theme=t;
+  document.querySelectorAll('#themeBtn,#authThemeBtn').forEach(b=>b.textContent=t==='light'?'☀️':'🌙');
+}
+window.toggleTheme=()=>{
+  const cur=document.documentElement.dataset.theme==='light'?'light':'dark';
+  const next=cur==='light'?'dark':'light';
+  applyTheme(next);
+  try{ localStorage.setItem('vaultTheme',next); }catch{}
+};
+applyTheme((()=>{ try{ return localStorage.getItem('vaultTheme')||'dark'; }catch{ return 'dark'; } })());
 window.go = name => {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(name).classList.add('active');
@@ -738,9 +794,23 @@ function stopLock(){ if(lockIv){clearInterval(lockIv);lockIv=null;} }
 ['mousemove','keydown','click','touchstart'].forEach(e=>document.addEventListener(e,resetIdle,{passive:true}));
 
 // ── FIRESTORE ────────────────────────────────────────────
-async function fsGet(u){ const s=await getDoc(doc(db,'vaults',u)); return s.exists()?s.data():null; }
+// Wrap any promise with a timeout so a flaky/stalled connection fails fast
+// with a clear message instead of hanging the button forever.
+function withTimeout(promise,ms,label){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error(`NETWORK_TIMEOUT:${label}`)),ms))
+  ]);
+}
+async function fsGet(u){ const s=await withTimeout(getDoc(doc(db,'vaults',u)),12000,'load'); return s.exists()?s.data():null; }
 // No merge:true — always write the full document to avoid array corruption
-async function fsSet(u,data){ await setDoc(doc(db,'vaults',u),data); }
+async function fsSet(u,data){ await withTimeout(setDoc(doc(db,'vaults',u),data),12000,'save'); }
+function friendlyErr(e){
+  const m=e?.message||'';
+  if(m.startsWith('NETWORK_TIMEOUT'))return 'Network timeout — check your connection and try again';
+  if(e?.code==='unavailable'||m.includes('offline')||m.includes('network'))return 'Network error — check your connection and try again';
+  return m||'Unknown error';
+}
 
 // ── REGISTER ─────────────────────────────────────────────
 // Default entries seeded into every newly created vault (name + category only —
@@ -763,13 +833,14 @@ window.register=async()=>{
     const salt=crypto.getRandomValues(new Uint8Array(16));
     const key=await deriveKey(p,salt);
     const token=await enc('VAULT_OK',key);
-    // Build seeded entries: name is encrypted, user/pass/url/notes left blank for the user to fill in.
+    // Build seeded entries: name is encrypted, username is pre-filled with the account
+    // username (same login is used across all these systems), pass/notes left blank.
     const seedEntries=await Promise.all(DEFAULT_SEED_ENTRIES.map(async name=>{
       const rawUrl=DEFAULT_SEED_URLS[name]||'';
       return{
         id:crypto.randomUUID(),
         name:await enc(name,key),
-        user:await enc('',key),
+        user:await enc(u,key),
         pass:await enc('',key),
         url:rawUrl?await enc(rawUrl,key):'',
         notes:'',
@@ -779,14 +850,17 @@ window.register=async()=>{
       };
     }));
     const vDoc=doc(db,'vaults',u);
-    await runTransaction(db,async tx=>{
+    await withTimeout(runTransaction(db,async tx=>{
       const snap=await tx.get(vDoc);
       if(snap.exists())throw new Error('Username already taken');
       tx.set(vDoc,{salt:toB64(salt),verifyToken:token,entries:seedEntries,updatedAt:Date.now()});
-    });
+    }),15000,'register');
     toast('Vault created! Log in now.');
     $('lUser').value=u; go('loginScreen');
-  }catch(e){ toast(e.message.includes('already taken')?'Username already taken':'Error: '+e.message); }
+  }catch(e){
+    if(e.message.includes('already taken'))toast('Username already taken');
+    else toast(friendlyErr(e));
+  }
   finally{ busy('regBtn',false,'Create Vault'); }
 };
 
@@ -797,7 +871,9 @@ window.login=async()=>{
   if(!u||!p)return toast('Fill in all fields');
   busy('loginBtn',true,'Unlocking…');
   try{
-    const data=await fsGet(u);
+    let data;
+    try{ data=await fsGet(u); }
+    catch(netErr){ return toast(friendlyErr(netErr)); }
     if(!data)return toast('No vault found for this username');
     let key;
     try{
@@ -807,6 +883,7 @@ window.login=async()=>{
     U=u; KEY=key;
     $('utag').textContent=u;
     $('authWrap').style.display='none';
+    $('authThemeBtn').style.display='none';
     $('vault').classList.add('on');
     startLock();
     if(unsub)unsub();
@@ -815,7 +892,7 @@ window.login=async()=>{
       snap=>{ if(snap.exists()){cached=snap.data().entries||[];render();} sync('synced'); },
       err=>{ console.error(err); sync('error'); }
     );
-  }catch(e){ toast('Error: '+e.message); }
+  }catch(e){ toast(friendlyErr(e)); }
   finally{ busy('loginBtn',false,'Unlock Vault'); }
 };
 
@@ -826,6 +903,7 @@ window.logout=()=>{
   $('lPass').value='';
   $('vault').classList.remove('on');
   $('authWrap').style.display='';
+  $('authThemeBtn').style.display='';
   go('loginScreen'); toast('Vault locked 🔒');
 };
 
@@ -904,6 +982,17 @@ window.render=async()=>{
     const row=document.createElement('div');
     row.className='erow';
     row.id='row-'+e.id;
+    let clickTimer=null;
+    row.onclick=ev=>{
+      if(ev.target.closest('button'))return;
+      if(clickTimer){clearTimeout(clickTimer);clickTimer=null;return;}
+      clickTimer=setTimeout(()=>{clickTimer=null;copyPw(e.id);},260);
+    };
+    row.ondblclick=ev=>{
+      if(ev.target.closest('button'))return;
+      if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}
+      editEntry(e.id);
+    };
     row.innerHTML=`
       <div class="eico">${esc(e._n.charAt(0))}</div>
       <div class="eid">
