@@ -366,6 +366,35 @@ select.sel option{background:#0e0e1c}
 .emenu button.danger{color:var(--danger)}
 .emenu button.danger:hover{background:rgba(255,77,106,.1)}
 
+/* + / × overflow trigger — reacts to hover, open, and press for a tactile feel */
+.eplus{
+  font-size:19px;font-weight:600;
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1),
+             background-color .18s ease,color .18s ease;
+}
+.eplus:hover{
+  background:var(--adim);
+  color:var(--accent);
+  transform:rotate(90deg) scale(1.14);
+}
+.eplus:active{
+  transform:rotate(90deg) scale(.86);
+  transition-duration:.1s;
+}
+.eplus.open{
+  color:var(--text);
+  background:rgba(255,255,255,.09);
+  transform:rotate(45deg);
+}
+.eplus.open:hover{
+  background:rgba(255,255,255,.14);
+  transform:rotate(45deg) scale(1.14);
+}
+.eplus.open:active{
+  transform:rotate(45deg) scale(.86);
+  transition-duration:.1s;
+}
+
 /* inline link indicator, sits beside the entry name instead of in the action row */
 .elink{margin-left:6px;font-size:10px;opacity:.75;cursor:pointer;vertical-align:middle}
 .elink:hover{opacity:1}
@@ -799,13 +828,19 @@ window.closeUMenu=()=>{ $('umenu').classList.remove('on'); };
 // on demand, so it always paints above every row regardless of DOM order
 // (rows create their own stacking context via backdrop-filter, which would
 // otherwise trap a nested dropdown behind a later row).
-window.closeEMenus=()=>{ $('rowMenu').classList.remove('on'); $('rowMenu').dataset.forId=''; };
+window.closeEMenus=()=>{
+  $('rowMenu').classList.remove('on');
+  $('rowMenu').dataset.forId='';
+  if(activeEBtn){ activeEBtn.classList.remove('open'); activeEBtn=null; }
+};
+let activeEBtn=null;
 window.openRowMenu=(ev,id,hasUrl,name)=>{
   ev.stopPropagation();
   const menu=$('rowMenu');
+  const btn=ev.currentTarget;
   const wasOpenForThis=menu.classList.contains('on')&&menu.dataset.forId===id;
   closeEMenus();
-  if(wasOpenForThis)return; // clicking the same trigger again just closes it
+  if(wasOpenForThis)return; // pressing the same + again just closes it back down
   menu.innerHTML=`
     <button onclick="peekPw('${id}');closeEMenus()">👁 Peek password</button>
     <button onclick="copyPw('${id}');closeEMenus()">📋 Copy password</button>
@@ -814,6 +849,8 @@ window.openRowMenu=(ev,id,hasUrl,name)=>{
     <button class="danger" onclick="askDel('${id}','${name}');closeEMenus()">🗑 Delete</button>`;
   menu.dataset.forId=id;
   menu.classList.add('on');
+  btn.classList.add('open');
+  activeEBtn=btn;
   // position relative to the trigger button, flipping up/left if it would overflow the viewport
   const r=ev.currentTarget.getBoundingClientRect();
   const mw=menu.offsetWidth||170, mh=menu.offsetHeight||190;
@@ -1065,7 +1102,7 @@ window.render=async()=>{
       </div>
       <div class="eacts">
         <button class="ib star${e.favorite?' on':''}" title="${e.favorite?'Remove from favorites':'Add to favorites'}" onclick="toggleFav('${e.id}')">${e.favorite?'★':'☆'}</button>
-        <button class="ib" title="More actions" onclick="openRowMenu(event,'${e.id}',${e.url?'true':'false'},'${esc(e._n)}')">⋯</button>
+        <button class="ib eplus" title="More actions" onclick="openRowMenu(event,'${e.id}',${e.url?'true':'false'},'${esc(e._n)}')">+</button>
       </div>
       <div class="epeek" id="peek-${e.id}"></div>`;
     frag.appendChild(row);
