@@ -347,13 +347,14 @@ select.sel option{background:#0e0e1c}
 
 .erow{cursor:pointer}
 
-/* per-row overflow menu — keeps action icons to a minimum on every row */
-.emenu-wrap{position:relative}
+/* single shared floating action menu (fixed-position, appended to <body> —
+   avoids being trapped under a later row's own stacking context, which
+   .erow's backdrop-filter would otherwise create) */
 .emenu{
-  position:absolute;top:calc(100% + 6px);right:0;
+  position:fixed;
   background:var(--card,#14141c);border:1px solid var(--b);border-radius:var(--rs);
   min-width:170px;padding:6px;display:none;flex-direction:column;gap:2px;
-  z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.4);backdrop-filter:var(--blur);
+  z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4);backdrop-filter:var(--blur);
 }
 .emenu.on{display:flex}
 .emenu button{
@@ -456,6 +457,8 @@ select.sel option{background:#0e0e1c}
 <button class="ib" id="authThemeBtn" onclick="toggleTheme()" title="Toggle dark / light mode"
   style="position:fixed;top:16px;right:16px;z-index:100;width:36px;height:36px;font-size:16px;
   background:var(--glass);border:1px solid var(--b);backdrop-filter:var(--blur)">🌙</button>
+
+<div class="emenu" id="rowMenu"></div>
 
 <!-- ══════════════ AUTH ══════════════ -->
 <div class="auth-wrap" id="authWrap">
@@ -749,7 +752,7 @@ const fromB64= s => Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 
 // ── DOM HELPERS ──────────────────────────────────────────
 const $    = id => document.getElementById(id);
-const esc  = s  => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const esc  = s  => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 let toastT;
 window.toast = msg => {
   $('tmsg').textContent=msg; $('toast').classList.add('on');
@@ -792,19 +795,40 @@ window.toggleUMenu=()=>{ $('umenu').classList.toggle('on'); };
 window.closeUMenu=()=>{ $('umenu').classList.remove('on'); };
 
 // ── PER-ROW ACTION MENU (peek / open / edit / delete) ─────
-window.closeEMenus=()=>{ document.querySelectorAll('.emenu.on').forEach(m=>m.classList.remove('on')); };
-window.toggleEMenu=(ev,id)=>{
+// A single shared fixed-position menu is reused for every row and built
+// on demand, so it always paints above every row regardless of DOM order
+// (rows create their own stacking context via backdrop-filter, which would
+// otherwise trap a nested dropdown behind a later row).
+window.closeEMenus=()=>{ $('rowMenu').classList.remove('on'); $('rowMenu').dataset.forId=''; };
+window.openRowMenu=(ev,id,hasUrl,name)=>{
   ev.stopPropagation();
-  const el=$('emenu-'+id); if(!el)return;
-  const wasOn=el.classList.contains('on');
+  const menu=$('rowMenu');
+  const wasOpenForThis=menu.classList.contains('on')&&menu.dataset.forId===id;
   closeEMenus();
-  if(!wasOn)el.classList.add('on');
+  if(wasOpenForThis)return; // clicking the same trigger again just closes it
+  menu.innerHTML=`
+    <button onclick="peekPw('${id}');closeEMenus()">👁 Peek password</button>
+    <button onclick="copyPw('${id}');closeEMenus()">📋 Copy password</button>
+    ${hasUrl?`<button onclick="openUrl('${id}');closeEMenus()">🔗 Open site</button>`:''}
+    <button onclick="editEntry('${id}');closeEMenus()">✏️ Edit</button>
+    <button class="danger" onclick="askDel('${id}','${name}');closeEMenus()">🗑 Delete</button>`;
+  menu.dataset.forId=id;
+  menu.classList.add('on');
+  // position relative to the trigger button, flipping up/left if it would overflow the viewport
+  const r=ev.currentTarget.getBoundingClientRect();
+  const mw=menu.offsetWidth||170, mh=menu.offsetHeight||190;
+  let left=r.right-mw, top=r.bottom+6;
+  if(left<8)left=8;
+  if(top+mh>window.innerHeight-8)top=r.top-mh-6;
+  menu.style.left=left+'px';
+  menu.style.top=top+'px';
 };
-
 document.addEventListener('click',e=>{
   if(!e.target.closest('.uwrap')) closeUMenu();
-  if(!e.target.closest('.emenu-wrap')) closeEMenus();
+  if(!e.target.closest('#rowMenu')) closeEMenus();
 });
+document.addEventListener('scroll',closeEMenus,true);
+window.addEventListener('resize',closeEMenus);
 
 // ── SYNC INDICATOR ───────────────────────────────────────
 function sync(state){
@@ -1041,16 +1065,7 @@ window.render=async()=>{
       </div>
       <div class="eacts">
         <button class="ib star${e.favorite?' on':''}" title="${e.favorite?'Remove from favorites':'Add to favorites'}" onclick="toggleFav('${e.id}')">${e.favorite?'★':'☆'}</button>
-        <div class="emenu-wrap">
-          <button class="ib" title="More actions" onclick="toggleEMenu(event,'${e.id}')">⋯</button>
-          <div class="emenu" id="emenu-${e.id}">
-            <button onclick="peekPw('${e.id}');closeEMenus()">👁 Peek password</button>
-            <button onclick="copyPw('${e.id}');closeEMenus()">📋 Copy password</button>
-            ${e.url?`<button onclick="openUrl('${e.id}');closeEMenus()">🔗 Open site</button>`:''}
-            <button onclick="editEntry('${e.id}');closeEMenus()">✏️ Edit</button>
-            <button class="danger" onclick="askDel('${e.id}','${esc(e._n)}');closeEMenus()">🗑 Delete</button>
-          </div>
-        </div>
+        <button class="ib" title="More actions" onclick="openRowMenu(event,'${e.id}',${e.url?'true':'false'},'${esc(e._n)}')">⋯</button>
       </div>
       <div class="epeek" id="peek-${e.id}"></div>`;
     frag.appendChild(row);
