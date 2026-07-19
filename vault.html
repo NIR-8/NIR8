@@ -352,48 +352,55 @@ select.sel option{background:#0e0e1c}
    .erow's backdrop-filter would otherwise create) */
 .emenu{
   position:fixed;
-  background:var(--card,#14141c);border:1px solid var(--b);border-radius:var(--rs);
-  min-width:170px;padding:6px;display:none;flex-direction:column;gap:2px;
-  z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4);backdrop-filter:var(--blur);
+  background:var(--glass-hi,var(--card));border:1px solid var(--b);border-radius:14px;
+  min-width:176px;padding:6px;display:flex;flex-direction:column;gap:2px;
+  z-index:500;box-shadow:0 12px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:saturate(200%) blur(24px);-webkit-backdrop-filter:saturate(200%) blur(24px);
+  opacity:0;transform:scale(.90) translateY(-6px);
+  transform-origin:top right;
+  pointer-events:none;
+  transition:opacity .2s cubic-bezier(.25,.1,.25,1),
+             transform .34s cubic-bezier(.34,1.56,.64,1);
 }
-.emenu.on{display:flex}
+.emenu.on{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
 .emenu button{
   width:100%;text-align:left;background:transparent;border:none;color:var(--text);
   font-family:var(--sans);font-size:12.5px;font-weight:600;padding:9px 11px;
-  border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;
+  border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:8px;
+  transition:background-color .15s ease;
 }
-.emenu button:hover{background:rgba(255,255,255,.06)}
+.emenu button:hover{background:rgba(255,255,255,.07)}
 .emenu button.danger{color:var(--danger)}
 .emenu button.danger:hover{background:rgba(255,77,106,.1)}
 
-/* + / × overflow trigger — reacts to hover, open, and press for a tactile feel */
-.eplus{
-  font-size:19px;font-weight:600;
-  transition:transform .32s cubic-bezier(.34,1.56,.64,1),
-             background-color .18s ease,color .18s ease;
+/* ••• overflow trigger — round frosted-glass button, iOS-style spring feel */
+.eacts .edots{
+  font-size:15px;font-weight:700;letter-spacing:2px;
+  border-radius:50%;
+  background:rgba(255,255,255,.055);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+  backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);
+  transition:transform .36s cubic-bezier(.34,1.56,.64,1),
+             background-color .25s cubic-bezier(.25,.1,.25,1),
+             box-shadow .25s ease,color .25s ease;
 }
-.eplus:hover{
+:root[data-theme="light"] .eacts .edots{background:rgba(10,10,30,.045);box-shadow:inset 0 0 0 1px rgba(10,10,30,.06)}
+.eacts .edots:hover{
+  background:rgba(255,255,255,.11);
+  color:var(--accent);
+  transform:scale(1.14);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);
+}
+.eacts .edots:active{ transform:scale(.84); transition-duration:.12s; }
+.eacts .edots.open{
   background:var(--adim);
   color:var(--accent);
-  transform:rotate(90deg) scale(1.14);
+  transform:rotate(90deg) scale(1.05);
+  box-shadow:inset 0 0 0 1px var(--aglow),0 4px 16px rgba(200,251,74,.14);
 }
-.eplus:active{
-  transform:rotate(90deg) scale(.86);
-  transition-duration:.1s;
-}
-.eplus.open{
-  color:var(--text);
-  background:rgba(255,255,255,.09);
-  transform:rotate(45deg);
-}
-.eplus.open:hover{
-  background:rgba(255,255,255,.14);
-  transform:rotate(45deg) scale(1.14);
-}
-.eplus.open:active{
-  transform:rotate(45deg) scale(.86);
-  transition-duration:.1s;
-}
+.eacts .edots.open:hover{ transform:rotate(90deg) scale(1.14); }
+.eacts .edots.open:active{ transform:rotate(90deg) scale(.84); transition-duration:.12s; }
+
 
 /* inline link indicator, sits beside the entry name instead of in the action row */
 .elink{margin-left:6px;font-size:10px;opacity:.75;cursor:pointer;vertical-align:middle}
@@ -1102,7 +1109,7 @@ window.render=async()=>{
       </div>
       <div class="eacts">
         <button class="ib star${e.favorite?' on':''}" title="${e.favorite?'Remove from favorites':'Add to favorites'}" onclick="toggleFav('${e.id}')">${e.favorite?'★':'☆'}</button>
-        <button class="ib eplus" title="More actions" onclick="openRowMenu(event,'${e.id}',${e.url?'true':'false'},'${esc(e._n)}')">+</button>
+        <button class="ib edots" title="More actions" onclick="openRowMenu(event,'${e.id}',${e.url?'true':'false'},'${esc(e._n)}')">•••</button>
       </div>
       <div class="epeek" id="peek-${e.id}"></div>`;
     frag.appendChild(row);
