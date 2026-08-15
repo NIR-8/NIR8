@@ -1,6 +1,6 @@
 // NIR8 Calculators — Service Worker
 // Strategy: Cache-first for assets, network-first for HTML (so updates deploy quickly)
-const CACHE_NAME = 'nir8-v1';
+const CACHE_NAME = 'nir8-v2';
 
 const PRECACHE = [
   '/',
@@ -10,6 +10,9 @@ const PRECACHE = [
   '/manifest.json',
   '/favicon.svg',
   '/favicon.ico',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/assets/js/decimal.min.js',
   '/assets/fonts/inter-v19-latin-regular.woff2',
   '/assets/fonts/inter-v19-latin-500.woff2',
   '/assets/fonts/inter-v19-latin-600.woff2',
