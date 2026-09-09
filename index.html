@@ -1299,6 +1299,15 @@
             domCache.acbInputs.b.forEach((input, i) => { updateACB(input, i, 'b'); });
         }
 
+        // Prevent mouse-wheel scroll from incrementing/decrementing focused number inputs.
+        // Blurring on wheel stops the browser's native number-input scroll behavior while
+        // still letting the page itself scroll normally.
+        document.addEventListener("wheel", e => {
+            if (document.activeElement && document.activeElement.tagName === "INPUT" && document.activeElement.type === "number") {
+                document.activeElement.blur();
+            }
+        }, { passive: true });
+
         document.addEventListener("DOMContentLoaded", () => {
             domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             domCache.buttons.style.display = "none"; domCache.calculationSteps.classList.add("hidden");
