@@ -576,8 +576,20 @@
             width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
             border-radius: 6px; font-size: 12px; font-variant-numeric: tabular-nums;
             background: #eaf7ee; border: 1px solid #d9ecdf; color: #333;
+            cursor: pointer; user-select: none; -webkit-user-select: none;
+            /* Fade in/out as days enter or leave the \00b133-day window */
+            transition: opacity .5s ease, background-color .5s ease, color .5s ease,
+                        border-color .5s ease, transform .18s ease, font-weight .18s ease;
+            animation: dayFade .4s ease backwards;
         }
-        .hold-day.cal-out { background: #fff; border-color: transparent; color: #c9c9c9; }
+        .hold-day:hover { transform: scale(1.15); font-weight: 600; }
+        .hold-day.cal-out {
+            background: #fff; border-color: transparent; color: #c9c9c9;
+            opacity: .3; cursor: default;
+        }
+        .hold-day.cal-out:hover { transform: none; font-weight: 400; }
+        @keyframes dayFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes holdMonthIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         .hold-day.cal-today { background: #157347; border-color: #157347; color: #fff; font-weight: 700; }
         .hold-day.cal-hold { background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 700; }
 
@@ -1089,9 +1101,16 @@
         const parseISODate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
         const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
+        function dayClasses(cell, day, winStart, winEnd, start, end) {
+            cell.classList.toggle("cal-out", day < winStart || day > winEnd);
+            cell.classList.toggle("cal-today", sameDay(day, start));
+            cell.classList.toggle("cal-hold", sameDay(day, end));
+        }
+
         function buildMonthGrid(y, m, winStart, winEnd, start, end) {
             const dows = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
             const monthEl = document.createElement("div"); monthEl.className = "hold-month";
+            monthEl.dataset.month = `${y}-${m}`;
             const title = document.createElement("div"); title.className = "hold-month-title";
             title.textContent = new Date(y, m).toLocaleDateString("en-US", { month: "long", year: "numeric" });
             const grid = document.createElement("div"); grid.className = "hold-grid";
@@ -1102,9 +1121,9 @@
             for (let d = 1; d <= daysInMonth; d++) {
                 const day = new Date(y, m, d);
                 const cell = document.createElement("div"); cell.className = "hold-day"; cell.textContent = d;
-                if (day < winStart || day > winEnd) cell.classList.add("cal-out");
-                if (sameDay(day, start)) cell.classList.add("cal-today");
-                if (sameDay(day, end)) cell.classList.add("cal-hold");
+                cell.dataset.date = toISODate(day);
+                cell.style.animationDelay = `${Math.min(d * 18, 400)}ms`;
+                dayClasses(cell, day, winStart, winEnd, start, end);
                 grid.appendChild(cell);
             }
             monthEl.appendChild(title); monthEl.appendChild(grid);
@@ -1114,18 +1133,36 @@
         function renderHoldCalendar(start, end) {
             const wrap = document.getElementById("holdCalendar");
             if (!wrap) return;
-            wrap.innerHTML = "";
             // Window: 3 days before the current date through 3 days after the hold
             // due date (21 days total). Months outside the window are not rendered,
             // so a hold date falling in the next month just adds that month's grid.
             const winStart = new Date(start.getFullYear(), start.getMonth(), start.getDate() - 3);
             const winEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 3);
+            const needed = [];
             const month = new Date(winStart.getFullYear(), winStart.getMonth(), 1);
             const lastMonth = new Date(winEnd.getFullYear(), winEnd.getMonth(), 1);
-            while (month <= lastMonth) {
-                wrap.appendChild(buildMonthGrid(month.getFullYear(), month.getMonth(), winStart, winEnd, start, end));
-                month.setMonth(month.getMonth() + 1);
-            }
+            while (month <= lastMonth) { needed.push([month.getFullYear(), month.getMonth()]); month.setMonth(month.getMonth() + 1); }
+
+            // Drop grids for months that fell out of the window
+            Array.from(wrap.children).forEach(el => {
+                const [y, m] = el.dataset.month.split("-").map(Number);
+                if (!needed.some(([ny, nm]) => ny === y && nm === m)) el.remove();
+            });
+            // Reuse existing grids and only toggle classes — the CSS transitions on
+            // .hold-day produce the fade in / fade away of the \00b13-day edges.
+            // Brand-new grids (window reached a new month) fade in as a whole.
+            needed.forEach(([y, m]) => {
+                let el = Array.from(wrap.children).find(c => c.dataset.month === `${y}-${m}`);
+                if (!el) {
+                    el = buildMonthGrid(y, m, winStart, winEnd, start, end);
+                    el.style.animation = "holdMonthIn .45s ease both";
+                } else {
+                    el.querySelectorAll(".hold-day").forEach((cell, i) => {
+                        dayClasses(cell, new Date(y, m, i + 1), winStart, winEnd, start, end);
+                    });
+                }
+                wrap.appendChild(el); // (re)append keeps month order correct
+            });
         }
 
         function updateHoldPeriod() {
@@ -1700,6 +1737,16 @@
             });
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); startSession(); } });
+            });
+            // Picking a date straight from the calendar sets the current date;
+            // the hold due date (current + 15) follows automatically.
+            document.getElementById('holdCalendar').addEventListener('click', (e) => {
+                const cell = e.target.closest('.hold-day');
+                if (!cell || !cell.dataset.date) return;
+                const d = parseISODate(cell.dataset.date);
+                if (isNaN(d)) return;
+                document.getElementById('holdStartDate').value = toISODate(d);
+                updateHoldPeriod();
             });
             document.getElementById('holdStartDate').addEventListener('change', updateHoldPeriod);
             updateHoldPeriod();
