@@ -724,7 +724,6 @@
     <div class="calculation-steps hidden" id="calculationSteps" role="region" aria-label="Calculation steps">
         <div class="calc-toolbar">
             <button type="button" id="printBtn" class="icon-btn print-btn" title="Print calculations" aria-label="Print calculations">🖨️</button>
-            <button type="button" id="clearAllBtn" class="icon-btn clear-all-btn" title="Clear all calculations" aria-label="Clear all calculations">🗑️</button>
         </div>
         <div id="stepsContainer"></div>
         <div id="archivedStepsContainer" class="archived-steps-container"></div>
@@ -974,9 +973,11 @@
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
                 // Standard quantity fully accounted for: entry is locked until the batch
-                // is assigned to a lot (see assignLotAndContinue()).
+                // is assigned to a lot (see assignLotAndContinue()). Once assigned
+                // (pendingArchiveLot set), the card stays unlocked until the next
+                // calculation archives the batch.
                 batchComplete = remaining.eq(0) && calculationCount > 0;
-                awaitingLotAssignment = batchComplete;
+                awaitingLotAssignment = batchComplete && pendingArchiveLot === null;
             }
             // Lot assignment sits in the input card: the input fields are locked
             // (hidden) until the finished batch is assigned to a lot.
@@ -1016,17 +1017,6 @@
             updatePageNumbers();
         }
 
-        function clearAllCalculations() {
-            if (calculationCount === 0) return;
-            if (!confirm(`Delete all ${calculationCount} calculation${calculationCount > 1 ? 's' : ''}? This cannot be undone (archived batches are kept).`)) return;
-            calculations.length = 0;
-            domCache.stepsContainer.innerHTML = '';
-            calculationCount = 0;
-            refreshStepsPanelVisibility();
-            updateQuantityTracker();
-            domCache.QInput.focus();
-        }
-
         function assignLotAndContinue(lotNumber) {
             const lotIndex = lotNumber - 1;
             if (lotIndex < 0 || lotIndex >= domCache.acbInputs.b.length || !awaitingLotAssignment) return;
@@ -1050,7 +1040,7 @@
             document.getElementById('lotAssignPanel').classList.add('hidden');
             updateQuantityTracker();
             refreshStepsPanelVisibility();
-            showCalculator('acb'); input.focus();
+            showCalculator('formula'); domCache.QInput.focus();
         }
 
         function copyRemainingToQ() {
@@ -1503,11 +1493,6 @@
             applyDrugPreset('valacyclovir');
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
-
-            // Clear-all-calculations control (shown only in the locked-entry banner,
-            // once the standard quantity is fully dispensed)
-            // Clear-all-calculations control (deletes the active batch; archived batches are untouched)
-            document.getElementById('clearAllBtn').addEventListener('click', clearAllCalculations);
 
             // PWA — register service worker
             if ('serviceWorker' in navigator) {
