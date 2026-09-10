@@ -516,6 +516,14 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
+        /* ── PRODUCT SETUP ── */
+        .hold-period {
+            margin-top: 14px; padding: 10px 12px; background: #f7f8fa;
+            border: 1px solid #e3e7ee; border-radius: 8px; font-size: 13px; color: #444;
+        }
+        .hold-period .hold-label { display: block; font-weight: 600; color: #157347; margin-bottom: 4px; }
+        #holdDates { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
             .calculation-entry { font-size: 12pt; }
@@ -609,19 +617,6 @@
 
             <div class="menu-qty-tracker" id="menuQtyTracker">
                 <div class="menu-qty-group">
-                    <label for="drugSelector" class="menu-qty-label">Drug / Std Qty</label>
-                    <select id="drugSelector" class="lot-select" style="width:120px;" aria-label="Select drug preset" onchange="applyDrugPreset(this.value)">
-                        <option value="valacyclovir" selected>Vala – 417</option>
-                        <option value="levetiracetam">Lev – 268.750</option>
-                        <option value="manual">Manual</option>
-                    </select>
-                </div>
-                <!-- Hidden stdQty still needed for tracker calculations; shown only in Manual mode -->
-                <div class="menu-qty-group" id="stdQtyGroup" style="display:none">
-                    <label for="stdQty" class="menu-qty-label">Std Qty (kg)</label>
-                    <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" placeholder="Enter std qty" onchange="updateQuantityTracker()">
-                </div>
-                <div class="menu-qty-group">
                     <label class="menu-qty-label">Dispensed</label>
                     <div id="dispensedQty" class="menu-qty-value">0.000</div>
                 </div>
@@ -636,8 +631,32 @@
         </div>
     </div>
 
+    <!-- PRODUCT SETUP — shown once on page visit; the product is selected here and never asked again -->
+    <div id="productSetup" class="calculator-container active">
+        <h2>Select Product</h2>
+        <div class="input-group">
+            <label for="drugSelector">Product:</label>
+            <select id="drugSelector" aria-label="Select product">
+                <option value="valacyclovir" selected>Valacyclovir (Std Qty 417 kg)</option>
+                <option value="levetiracetam">Levetiracetam (Std Qty 268.750 kg)</option>
+                <option value="manual">Manual</option>
+            </select>
+        </div>
+        <div class="input-group" id="stdQtyGroup" style="display:none">
+            <label for="stdQty">Std Qty (A) kg:</label>
+            <input type="number" id="stdQty" step="0.001" min="0" placeholder="Enter Std Qty (A)" onchange="updateQuantityTracker()">
+        </div>
+        <div class="input-group" id="stdCGroup" style="display:none">
+            <label for="stdC">Std Qty (C) kg:</label>
+            <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std Qty (C)">
+        </div>
+        <div class="button-row">
+            <button type="button" id="startBtn" aria-label="Start calculations">Start →</button>
+        </div>
+    </div>
+
     <!-- FORMULA CALCULATOR -->
-    <div id="formulaCalculator" class="calculator-container active">
+    <div id="formulaCalculator" class="calculator-container">
         <h2 id="formulaCardTitle">Formula Calculator</h2>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
@@ -723,6 +742,10 @@
                 </tr>
             </tbody>
         </table>
+        <div class="hold-period" id="holdPeriod">
+            <span class="hold-label">Hold Time Period (15 days)</span>
+            <span id="holdDates">—</span>
+        </div>
         <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
     </div>
 
@@ -741,6 +764,7 @@
             <span class="close" id="infoModalClose" aria-label="Close">×</span>
             <div id="formulaInfo" class="info-section">
                 <h3 id="infoTitle">Formula Calculator — Shortcuts</h3>
+                <div class="info-item"><span class="info-key">Start:</span> Pick the product once — the calculator then proceeds without asking again</div>
                 <div class="info-item"><span class="info-key">F1/F2/F3:</span> Calculate respective formulas</div>
                 <div class="info-item"><span class="info-key">❌:</span> Remove individual calculations</div>
                 <div class="info-item"><span class="info-key">F5:</span> Refresh page</div>
@@ -860,6 +884,9 @@
             stepsContainer: document.getElementById("stepsContainer"),
             archivedStepsContainer: document.getElementById("archivedStepsContainer"),
             formulaCalculator: document.getElementById("formulaCalculator"),
+            productSetup: document.getElementById("productSetup"),
+            stdCInput: document.getElementById("stdC"),
+            stdCGroup: document.getElementById("stdCGroup"),
             acbCalculator: document.getElementById("acbCalculator"),
             menuFormula: document.getElementById("menuFormula"),
             menuAcb: document.getElementById("menuAcb"),
@@ -882,6 +909,7 @@
 
         let calculationCount = 0, hasCalculated = false, batchComplete = false;
         let calculations = [];
+        let sessionStarted = false;
         let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null, pendingArchiveLot = null;
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
@@ -962,6 +990,49 @@
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
 
+        function getCurrentBatchDispensed() {
+            let d = new Decimal(0);
+            calculations.forEach(calc => {
+                if (calc.lot !== undefined && calc.lot !== currentLot) return; // already tagged to another lot
+                if (calc.formulaType === 'F2') d = d.plus(calc.Q);
+                else d = d.plus(calc.result);
+            });
+            return d;
+        }
+
+        // Effective (A+C)-B for a lot: the table's Issued Qty (B) if present, plus the
+        // current batch's dispensed qty when the lot is the active one. This keeps the
+        // F1/F3 cards up to date immediately — no waiting for lot assignment.
+        function getEffectiveLotBalance(lotIndex) {
+            const a = new Decimal(domCache.acbInputs.a[lotIndex]?.value || 0);
+            const c = new Decimal(domCache.acbInputs.c[lotIndex]?.value || 0);
+            let b = new Decimal(domCache.acbInputs.b[lotIndex]?.value || 0);
+            if (lotIndex === currentLot - 1) b = b.plus(getCurrentBatchDispensed());
+            return a.plus(c).minus(b);
+        }
+
+        function updateHoldPeriod() {
+            const now = new Date();
+            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15);
+            const opts = { day: 'numeric', month: 'long', year: 'numeric' };
+            const el = document.getElementById('holdDates');
+            if (el) el.textContent = `${now.toLocaleDateString('en-US', opts)}  →  ${end.toLocaleDateString('en-US', opts)}`;
+        }
+
+        function startSession() {
+            const preset = document.getElementById('drugSelector').value;
+            if (preset === 'manual') {
+                const a = parseFloat(domCache.stdQtyInput.value);
+                const c = parseFloat(domCache.stdCInput.value);
+                if (!(a > 0)) { alert('Please enter a valid Std Qty (A).'); domCache.stdQtyInput.focus(); return; }
+                if (!(c > 0)) { alert('Please enter a valid Std Qty (C).'); domCache.stdCInput.focus(); return; }
+            }
+            sessionStarted = true;
+            applyDrugPreset(preset);
+            domCache.productSetup.classList.remove('active');
+            showCalculator('formula');
+        }
+
         function updateQuantityTracker() {
             const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
             let dispensed = new Decimal(0), remainingCalc = new Decimal(0), hasFinal = false;
@@ -1031,10 +1102,11 @@
             const input = domCache.acbInputs.b[lotIndex];
             input.value = domCache.dispensedQty.textContent;
             input.classList.add('acb-manual-input');
-            updateACB(input, lotIndex, 'b');
 
             // 2. Tag the finished batch with this lot — archiving happens only when
             //    the user proceeds with the next calculation (see calculate()).
+            //    Tagging happens BEFORE the balance sync so the effective-balance
+            //    math doesn't double-count the just-assigned qty.
             calculations.forEach(c => c.lot = lotNumber);
             domCache.stepsContainer.querySelectorAll('.calculation-entry .lot-label')
                 .forEach(el => el.textContent = LOT_NAMES[lotNumber]);
@@ -1044,6 +1116,9 @@
             currentLot = Math.min(lotNumber + 1, 4);
             awaitingLotAssignment = false; batchComplete = false;
             document.getElementById('lotAssignPanel').classList.add('hidden');
+
+            // 4. Sync the table (and card balance lines) with the tagged batch
+            updateACB(input, lotIndex, 'b');
             updateQuantityTracker();
             refreshStepsPanelVisibility();
             showCalculator('formula'); domCache.QInput.focus();
@@ -1129,6 +1204,8 @@
         }
 
         function showCalculator(calculator) {
+            if (!sessionStarted && calculator !== 'setup') return; // product must be selected first
+            domCache.productSetup.classList.remove('active');
             domCache.formulaCalculator.classList.toggle('active', calculator === 'formula');
             domCache.acbCalculator.classList.toggle('active', calculator === 'acb');
             domCache.menuFormula.classList.toggle('active', calculator === 'formula');
@@ -1227,10 +1304,10 @@
             domCache.acbInputs.totals.result.classList.toggle('acb-prefilled', tR.isZero());
             domCache.acbInputs.totals.result.classList.toggle('acb-output', !tR.isZero());
 
-            // Keep F1/F3 cards' (A+C)-B lines in sync with the table's per-lot results
+            // Keep F1/F3 cards' (A+C)-B lines in sync — effective balance reflects the
+            // current batch's dispensed qty even before the lot's B cell is written.
             domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
-                const cell = domCache.acbInputs.results[parseInt(el.dataset.lotBalance, 10) - 1];
-                if (cell) el.textContent = `(A+C)-B = ${cell.textContent}`;
+                el.textContent = `(A+C)-B = ${getEffectiveLotBalance(parseInt(el.dataset.lotBalance, 10) - 1).toFixed(3)}`;
             });
         }
 
@@ -1305,14 +1382,9 @@
             newEntry.setAttribute("role", "region"); newEntry.setAttribute("aria-label", `Calculation ${formulaType}`);
             // F1/F3 are the issued-qty results — show the lot's (A+C)-B balance
             // directly on the card, in the space below the W/A reference values.
-            let acbBalanceLine = '';
-            if (formulaType === 'F1' || formulaType === 'F3') {
-                const li = currentLot - 1;
-                const aL = new Decimal(domCache.acbInputs.a[li]?.value || 0);
-                const cL = new Decimal(domCache.acbInputs.c[li]?.value || 0);
-                const bL = new Decimal(domCache.acbInputs.b[li]?.value || 0);
-                acbBalanceLine = `<div class="acb-balance" data-lot-balance="${currentLot}">(A+C)-B = ${aL.plus(cL).minus(bL).toFixed(3)}</div>`;
-            }
+            const acbBalanceLine = (formulaType === 'F1' || formulaType === 'F3')
+                ? `<div class="acb-balance" data-lot-balance="${currentLot}">(A+C)-B = ${getEffectiveLotBalance(currentLot - 1).toFixed(3)}</div>`
+                : '';
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="lot-label">${LOT_NAMES[currentLot]}</div>
@@ -1354,23 +1426,25 @@
             const isVala   = preset === 'valacyclovir';
 
             if (isManual) {
-                // Manual mode: all A and C fields empty, fully editable
+                // Manual mode: A and C both come from the setup card; fields stay editable
+                const aVal = domCache.stdQtyInput.value || '';
+                const cVal = domCache.stdCInput.value || '';
                 domCache.acbInputs.a.forEach(input => {
-                    input.value = ''; input.readOnly = false;
+                    input.value = aVal; input.readOnly = false;
                     input.classList.remove('acb-prefilled', 'acb-manual-input', 'edited');
+                    if (aVal) input.classList.add('acb-manual-input');
                     input.placeholder = 'Std Qty A';
                 });
                 domCache.acbInputs.c.forEach(input => {
-                    input.value = ''; input.readOnly = false;
+                    input.value = cVal; input.readOnly = false;
                     input.classList.remove('acb-prefilled', 'acb-manual-input', 'edited');
+                    if (cVal) input.classList.add('acb-manual-input');
                     input.placeholder = 'Std Qty C';
                 });
-                domCache.acbInputs.totals.a.textContent = '0.000';
-                domCache.acbInputs.totals.c.textContent = '0.000';
+                domCache.acbInputs.totals.a.textContent = new Decimal(aVal || 0).times(domCache.acbInputs.a.length).toFixed(3);
+                domCache.acbInputs.totals.c.textContent = new Decimal(cVal || 0).times(domCache.acbInputs.c.length).toFixed(3);
                 domCache.acbInputs.results.forEach(span => { span.textContent = '-'; span.classList.remove('acb-output','acb-prefilled'); });
                 domCache.acbInputs.totals.result.textContent = '0.000';
-                domCache.stdQtyInput.value = '';
-                document.getElementById('stdQtyGroup').style.display = 'flex';
                 updateQuantityTracker();
 
             } else if (isLeva) {
@@ -1388,7 +1462,6 @@
                 domCache.acbInputs.totals.a.textContent = CONSTANTS.LEVA_TOTAL_A.toFixed(3);
                 domCache.acbInputs.totals.c.textContent = CONSTANTS.LEVA_TOTAL_C.toFixed(3);
                 domCache.stdQtyInput.value = CONSTANTS.LEVA_A.toFixed(3);
-                document.getElementById('stdQtyGroup').style.display = 'none';
                 updateQuantityTracker();
 
             } else {
@@ -1406,7 +1479,6 @@
                 domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
                 domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
                 domCache.stdQtyInput.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
-                document.getElementById('stdQtyGroup').style.display = 'none';
                 updateQuantityTracker();
             }
 
@@ -1433,7 +1505,7 @@
             // fire after the user has already begun entering values).
             const userAlreadyTyping = document.activeElement !== document.body ||
                 domCache.QInput.value || domCache.waterInput.value || domCache.assayInput.value;
-            if (!userAlreadyTyping) requestAnimationFrame(() => domCache.QInput.focus());
+            if (!userAlreadyTyping) requestAnimationFrame(() => document.getElementById('drugSelector').focus());
 
             [domCache.QInput, domCache.waterInput, domCache.assayInput].forEach(input => {
                 input.addEventListener("input", e => { validateInput(input); handleInput(e); });
@@ -1478,6 +1550,17 @@
             });
 
             document.getElementById('resetAcbBtn').addEventListener('click', resetACBCalculator);
+            document.getElementById('startBtn').addEventListener('click', startSession);
+            document.getElementById('drugSelector').addEventListener('change', (e) => {
+                const manual = e.target.value === 'manual';
+                document.getElementById('stdQtyGroup').style.display = manual ? 'block' : 'none';
+                document.getElementById('stdCGroup').style.display = manual ? 'block' : 'none';
+                if (manual) domCache.stdQtyInput.focus();
+            });
+            [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
+                if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); startSession(); } });
+            });
+            updateHoldPeriod();
             document.getElementById('printBtn').addEventListener('click', printWithCheck);
             document.getElementById('infoBtn').addEventListener('click', showInfo);
             document.getElementById('infoModalClose').addEventListener('click', closeModal);
@@ -1511,9 +1594,6 @@
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.querySelectorAll('.lot-assign-btn').forEach(btn =>
                 btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
-
-            // Apply default preset (Valacyclovir) on load
-            applyDrugPreset('valacyclovir');
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
