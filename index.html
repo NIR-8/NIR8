@@ -291,6 +291,11 @@
 .lot-assign-panel {
             margin-top: 12px; padding: 8px; border: 1px solid #a9dfba; border-radius: 6px; background: #eaf7ee;
         }
+        /* Remaining = 0: hide the input card (Q/W/A fields, progress, buttons) until a lot is assigned */
+        #formulaCalculator.locked .input-group,
+        #formulaCalculator.locked .input-row,
+        #formulaCalculator.locked .progress-container,
+        #formulaCalculator.locked .button-row { display: none; }
         .lot-assign-panel.hidden { display: none; }
         .lot-assign-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
         .lot-assign-btn { padding: 8px 12px; font-size: 14px; flex: 0 1 auto; min-width: 64px; }
@@ -973,9 +978,9 @@
                 batchComplete = remaining.eq(0) && calculationCount > 0;
                 awaitingLotAssignment = batchComplete;
             }
-            // Lot assignment sits in the input card: shown only when the batch is complete.
-            // The finished batch's cards stay hidden until its lot is assigned.
-            domCache.stepsContainer.classList.toggle('hidden', awaitingLotAssignment);
+            // Lot assignment sits in the input card: the input fields are locked
+            // (hidden) until the finished batch is assigned to a lot.
+            domCache.formulaCalculator.classList.toggle('locked', awaitingLotAssignment);
             const lotPanel = document.getElementById('lotAssignPanel');
             if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
         }
