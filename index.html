@@ -170,13 +170,6 @@
             scroll-margin-top: 60px;
         }
         #acbCalculator { max-width: 900px; }
-        /* Keep the input card reachable while scrolling a long calculation list,
-           instead of wasting space by leaving it stranded above the fold. Desktop/tablet
-           only — the mobile menu bar can wrap to two rows, so a fixed offset there risks
-           the sticky card sitting partly behind it. */
-        @media (min-width: 769px) {
-            #formulaCalculator.active { position: sticky; top: 74px; z-index: 10; }
-        }
         .calculator-container.active { display: block; }
         .input-group { margin-top: 10px; text-align: left; }
         label { font-weight: 600; display: block; color: #444; }
