@@ -288,18 +288,12 @@
             display: flex; gap: 6px; align-items: center; padding-bottom: 8px;
         }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
-        .batch-complete-note {
-            margin-top: 12px; padding: 10px 12px; border-radius: 6px; font-size: 13px;
-            background: #eaf7ee; border: 1px solid #a9dfba; color: #157347; text-align: center;
-        }
-        .lot-assign-panel {
-            margin-top: 15px; padding: 12px; border: 2px solid #157347; border-radius: 8px;
-            background: #eaf7ee; text-align: center;
+.lot-assign-panel {
+            margin-top: 12px; padding: 8px; border: 1px solid #a9dfba; border-radius: 6px; background: #eaf7ee;
         }
         .lot-assign-panel.hidden { display: none; }
-        .lot-assign-text { font-size: 14px; font-weight: 600; color: #157347; margin-bottom: 10px; line-height: 1.5; }
         .lot-assign-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-        .lot-assign-btn { padding: 10px 14px; font-size: 14px; flex: 0 1 auto; min-width: 70px; }
+        .lot-assign-btn { padding: 8px 12px; font-size: 14px; flex: 0 1 auto; min-width: 64px; }
         .archived-steps-container { margin-top: 10px; }
         .archived-batch {
             border: 1px solid #ddd; border-radius: 6px; margin-bottom: 12px; overflow: hidden;
@@ -551,7 +545,7 @@
             body { background: transparent; padding: 0; margin: 0; }
             .calculator-container,
             .delete-button, .info-btn, .menu-bar, .print-btn, .clear-all-btn, .calc-toolbar,
-            .batch-complete-note, .archived-steps-container, .progress-container, footer, .reset-acb-btn,
+            .archived-steps-container, .progress-container, footer, .reset-acb-btn,
             .sidenav, .sidenav-overlay, .writeus-panel { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
@@ -634,10 +628,6 @@
     <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container active">
         <h2>Formula Calculator</h2>
-        <div class="batch-complete-note hidden" id="batchCompleteNote" role="status">
-            Standard quantity fully dispensed. Assign this batch to a lot below —
-            it will be archived and the next lot will be auto-allotted for the next batch.
-        </div>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
             <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
@@ -661,7 +651,6 @@
             <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
         </div>
         <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
-            <div class="lot-assign-text" id="lotAssignText"></div>
             <div class="lot-assign-buttons">
                 <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
                 <button type="button" class="lot-assign-btn" data-lot="2">Lot-II</button>
@@ -857,7 +846,6 @@
             assayGroup: document.querySelector("#assay").parentElement,
             buttons: document.querySelector(".button-row"),
             progressBar: document.getElementById("progressBar"),
-            batchCompleteNote: document.getElementById("batchCompleteNote"),
             calculationSteps: document.getElementById("calculationSteps"),
             stepsContainer: document.getElementById("stepsContainer"),
             archivedStepsContainer: document.getElementById("archivedStepsContainer"),
@@ -884,7 +872,7 @@
 
         let calculationCount = 0, hasCalculated = false, batchComplete = false;
         let calculations = [];
-        let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null;
+        let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null, pendingArchiveLot = null;
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
         function truncateTo12Digits(num) {
@@ -985,17 +973,11 @@
                 batchComplete = remaining.eq(0) && calculationCount > 0;
                 awaitingLotAssignment = batchComplete;
             }
-            domCache.batchCompleteNote.classList.toggle('hidden', !batchComplete);
-            // Lot assignment moves into the input card: shown only when the batch is complete
+            // Lot assignment sits in the input card: shown only when the batch is complete.
+            // The finished batch's cards stay hidden until its lot is assigned.
+            domCache.stepsContainer.classList.toggle('hidden', awaitingLotAssignment);
             const lotPanel = document.getElementById('lotAssignPanel');
-            if (lotPanel) {
-                lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
-                if (awaitingLotAssignment) {
-                    document.getElementById('lotAssignText').textContent =
-                        `Remaining qty is 0 — assign the dispensed ${domCache.dispensedQty.textContent} kg to a lot to continue. ` +
-                        `The batch will be archived and the next batch will auto-allot to the following lot.`;
-                }
-            }
+            if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
         }
 
         function refreshStepsPanelVisibility() {
@@ -1048,18 +1030,17 @@
             input.classList.add('acb-manual-input');
             updateACB(input, lotIndex, 'b');
 
-            // 2. Tag the finished batch with this lot, then archive it
+            // 2. Tag the finished batch with this lot — archiving happens only when
+            //    the user proceeds with the next calculation (see calculate()).
             calculations.forEach(c => c.lot = lotNumber);
             domCache.stepsContainer.querySelectorAll('.calculation-entry .lot-label')
                 .forEach(el => el.textContent = LOT_NAMES[lotNumber]);
-            lastAssignedLot = lotNumber;
-            archiveCurrentBatch();
+            pendingArchiveLot = lotNumber;
 
             // 3. Advance to the next lot for auto-allotment and unlock entry
             currentLot = Math.min(lotNumber + 1, 4);
             awaitingLotAssignment = false; batchComplete = false;
             document.getElementById('lotAssignPanel').classList.add('hidden');
-            domCache.batchCompleteNote.classList.add('hidden');
             updateQuantityTracker();
             refreshStepsPanelVisibility();
             showCalculator('acb'); input.focus();
@@ -1300,6 +1281,14 @@
 
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
             if (!isConfirmed) return;
+
+            // The previous batch was fully dispensed and assigned to a lot — archive it
+            // now, only as the user proceeds with the next calculation.
+            if (pendingArchiveLot !== null && calculationCount > 0) {
+                lastAssignedLot = pendingArchiveLot;
+                archiveCurrentBatch();
+                pendingArchiveLot = null;
+            }
 
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
