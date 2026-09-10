@@ -632,7 +632,7 @@
 
     <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container active">
-        <h2>Formula Calculator</h2>
+        <h2 id="formulaCardTitle">Formula Calculator</h2>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
             <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
@@ -981,6 +981,8 @@
             // Lot assignment sits in the input card: the input fields are locked
             // (hidden) until the finished batch is assigned to a lot.
             domCache.formulaCalculator.classList.toggle('locked', awaitingLotAssignment);
+            document.getElementById('formulaCardTitle').textContent =
+                awaitingLotAssignment ? 'Assign Lot' : 'Formula Calculator';
             const lotPanel = document.getElementById('lotAssignPanel');
             if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
         }
