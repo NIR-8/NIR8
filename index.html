@@ -172,6 +172,18 @@
         #acbCalculator { max-width: 900px; }
         .calculator-container.active { display: block; }
         .input-group { margin-top: 10px; text-align: left; }
+        /* Formula card title + selected drug/Std Qty badge, side by side on one line */
+        .formula-header-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; flex-wrap: nowrap;
+        }
+        .formula-header-row h2 { margin: 0; white-space: nowrap; }
+        .drug-badge {
+            font-size: 12px; font-weight: 600; color: #157347;
+            background: #eaf7ee; border: 1px solid #a9dfba; border-radius: 12px;
+            padding: 4px 10px; white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; max-width: 58%;
+        }
         label { font-weight: 600; display: block; color: #444; }
         input, select {
             width: calc(100% - 20px); padding: 10px; margin: 5px 0;
@@ -588,7 +600,16 @@
             opacity: .3; cursor: default;
         }
         .hold-day.cal-out:hover { transform: none; font-weight: 400; }
+        /* The 3-day buffer on each side of the hold period (today-3 .. today-1, and
+           end+1 .. end+3) stays green like the rest of the in-window days — it just
+           breathes with a slow fade in/out instead of sitting static or being grayed
+           out like .cal-out. */
+        .hold-day.cal-edge {
+            animation: dayFade .4s ease backwards, edgePulse 2.4s ease-in-out .4s infinite;
+        }
+        .hold-day.cal-edge:hover { animation-play-state: paused; }
         @keyframes dayFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes edgePulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
         @keyframes holdMonthIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         .hold-day.cal-today { background: #157347; border-color: #157347; color: #fff; font-weight: 700; }
         .hold-day.cal-hold { background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 700; }
@@ -731,7 +752,10 @@
 
     <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container">
-        <h2 id="formulaCardTitle">Formula Calculator</h2>
+        <div class="formula-header-row">
+            <h2 id="formulaCardTitle">Formula Calculator</h2>
+            <span class="drug-badge hidden" id="drugBadge"></span>
+        </div>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
             <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
@@ -976,6 +1000,7 @@
             menuAcb: document.getElementById("menuAcb"),
             menuQtyTracker: document.getElementById("menuQtyTracker"),
             stdQtyInput: document.getElementById("stdQty"),
+            drugBadge: document.getElementById("drugBadge"),
             dispensedQty: document.getElementById("dispensedQty"),
             remainingQty: document.getElementById("remainingQty"),
             quantityWarning: document.getElementById("quantityWarning"),
@@ -995,6 +1020,7 @@
         let calculations = [];
         let sessionStarted = false;
         let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null, pendingArchiveLot = null;
+        let selectedDrugLabel = '';
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
         function truncateTo12Digits(num) {
@@ -1102,7 +1128,12 @@
         const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
         function dayClasses(cell, day, winStart, winEnd, start, end) {
-            cell.classList.toggle("cal-out", day < winStart || day > winEnd);
+            const isOut = day < winStart || day > winEnd;
+            // The ±3-day buffer sits inside the render window but outside the actual
+            // hold period [start, end] — these are the tiles that should pulse.
+            const isEdge = !isOut && (day < start || day > end);
+            cell.classList.toggle("cal-out", isOut);
+            cell.classList.toggle("cal-edge", isEdge);
             cell.classList.toggle("cal-today", sameDay(day, start));
             cell.classList.toggle("cal-hold", sameDay(day, end));
         }
@@ -1191,6 +1222,21 @@
             showCalculator('formula');
         }
 
+        // Keeps the "<Drug> · Std Qty (A): X kg" badge beside the Formula Calculator
+        // title in sync with the selected product and the current Std Qty (A) value
+        // (including live edits in Manual mode).
+        function updateDrugBadge() {
+            if (!domCache.drugBadge) return;
+            if (!selectedDrugLabel) { domCache.drugBadge.classList.add('hidden'); domCache.drugBadge.textContent = ''; return; }
+            const raw = domCache.stdQtyInput.value;
+            let qtyText = '—';
+            if (raw && raw.trim() !== '') {
+                try { qtyText = new Decimal(raw).toFixed(3); } catch { qtyText = raw; }
+            }
+            domCache.drugBadge.textContent = `${selectedDrugLabel} · Std Qty (A): ${qtyText} kg`;
+            domCache.drugBadge.classList.remove('hidden');
+        }
+
         function updateQuantityTracker() {
             const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
             let dispensed = new Decimal(0), remainingCalc = new Decimal(0), hasFinal = false;
@@ -1221,6 +1267,7 @@
                 awaitingLotAssignment ? 'Assign Lot' : 'Formula Calculator';
             const lotPanel = document.getElementById('lotAssignPanel');
             if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
+            updateDrugBadge();
         }
 
         function refreshStepsPanelVisibility() {
@@ -1725,7 +1772,8 @@
                 opt.addEventListener('click', () => {
                     const val = opt.dataset.value;
                     document.getElementById('drugSelector').value = val;
-                    drugTrigger.textContent = opt.childNodes[0].textContent.trim();
+                    selectedDrugLabel = opt.childNodes[0].textContent.trim();
+                    drugTrigger.textContent = selectedDrugLabel;
                     closeDrugOptions();
                     const manual = val === 'manual';
                     document.getElementById('stdQtyGroup').style.display = manual ? 'block' : 'none';
