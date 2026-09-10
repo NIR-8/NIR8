@@ -207,29 +207,28 @@
             padding-top: 10px; margin-top: 5px; border-top: 1px solid #eee;
         }
         .calculation-entry {
-            margin-bottom: 15px; border: 1px solid #000; padding: 15px;
-            position: relative; width: 100%; min-height: 200px; font-size: 14pt;
-            border-radius: 0; box-sizing: border-box; overflow: visible;
+            margin-bottom: 15px; border: 1px solid #000; padding: 0;
+            position: relative; width: 100%; font-size: 14pt;
+            border-radius: 0; box-sizing: border-box; overflow: hidden;
             scroll-margin-top: 70px;
         }
         .calculation-entry::before {
-            content: "Assay Based Calculation"; position: absolute; top: 0; left: 0;
-            width: 100%; background: #f0f0f0; padding: 5mm; text-align: center;
+            content: "Assay Based Calculation"; display: block;
+            background: #f0f0f0; padding: 5mm; text-align: center;
             font-size: 16pt; font-weight: 600; border-bottom: 1px solid #000; box-sizing: border-box;
         }
         .calculation-entry::after {
             content: "Remarks: ______________________________________________________________";
-            position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f0f0;
+            display: block; background: #f0f0f0;
             padding: 5mm; font-size: 14pt; border-top: 1px solid #000; box-sizing: border-box;
         }
-        .calculation-entry .lot-label::before {
-            content: "LOT: "; position: absolute; top: 24mm; left: 15mm; font-size: 14pt;
-        }
+        .calculation-entry .lot-label { display: block; padding: 4mm 15mm 0; font-size: 14pt; }
+        .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
         .reference-values {
-            position: absolute; top: 24mm; right: 15mm; font-size: 10pt; color: #000; z-index: 10;
+            display: block; text-align: right; padding: 1mm 15mm 0; font-size: 10pt; color: #000;
         }
         .calculation-content {
-            margin-top: 30mm; margin-bottom: 30mm; padding: 0 15mm; overflow: hidden; font-size: 14pt;
+            padding: 4mm 15mm; overflow: hidden; font-size: 14pt;
         }
         .delete-button {
             position: absolute; top: 10px; left: 10px; background: transparent; border: none;
@@ -293,6 +292,14 @@
             margin-top: 12px; padding: 10px 12px; border-radius: 6px; font-size: 13px;
             background: #eaf7ee; border: 1px solid #a9dfba; color: #157347; text-align: center;
         }
+        .lot-assign-panel {
+            margin-top: 15px; padding: 12px; border: 2px solid #157347; border-radius: 8px;
+            background: #eaf7ee; text-align: center;
+        }
+        .lot-assign-panel.hidden { display: none; }
+        .lot-assign-text { font-size: 14px; font-weight: 600; color: #157347; margin-bottom: 10px; line-height: 1.5; }
+        .lot-assign-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .lot-assign-btn { padding: 10px 14px; font-size: 14px; flex: 0 1 auto; min-width: 70px; }
         .archived-steps-container { margin-top: 10px; }
         .archived-batch {
             border: 1px solid #ddd; border-radius: 6px; margin-bottom: 12px; overflow: hidden;
@@ -508,11 +515,12 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .calculation-entry { min-height: 180px; font-size: 12pt; }
+            .calculation-entry { font-size: 12pt; }
             .calculation-entry::before { font-size: 14pt; padding: 4mm; }
-            .calculation-entry::after { font-size: 12pt; padding: 4mm; bottom: 8mm; }
-            .calculation-entry .lot-label::before, .reference-values { top: 24mm; font-size: 10pt; }
-            .calculation-content { margin-top: 26mm; margin-bottom: 26mm; font-size: 12pt; padding: 0 10mm; }
+            .calculation-entry::after { font-size: 12pt; padding: 4mm; }
+            .calculation-entry .lot-label { padding: 3mm 10mm 0; font-size: 12pt; }
+            .reference-values { font-size: 10pt; padding: 1mm 10mm 0; }
+            .calculation-content { font-size: 12pt; padding: 3mm 10mm; }
             .page-number { font-size: 10pt; bottom: 2mm; right: 10mm; }
             .acb-td, .acb-th { font-size: 12px; padding: 6px; min-width: 50px; }
             .acb-input, .acb-span { font-size: 12px; padding: 4px; }
@@ -520,15 +528,12 @@
             .menu-qty-tracker { order: 3; width: 100%; justify-content: center; margin-left: 0; }
         }
         @media (max-width: 480px) {
-            .calculation-entry { min-height: 180px; font-size: 10pt; }
+            .calculation-entry { font-size: 10pt; }
             .calculation-entry::before { font-size: 12pt; padding: 3mm; }
-            .calculation-entry::after { font-size: 10pt; padding: 3mm; bottom: 6mm; }
-            .calculation-entry .lot-label::before {
-                content: "LOT: "; position: absolute; top: 20mm; left: 8mm;
-                font-size: 10pt; width: 100%; text-align: left; z-index: 10;
-            }
-            .reference-values { position: absolute; top: 25mm; left: 8mm; right: auto; font-size: 10pt; text-align: left; width: 100%; z-index: 11; }
-            .calculation-content { margin-top: 28mm; margin-bottom: 22mm; font-size: 10pt; padding: 0 8mm; }
+            .calculation-entry::after { font-size: 10pt; padding: 3mm; }
+            .calculation-entry .lot-label { padding: 3mm 8mm 0; font-size: 10pt; }
+            .reference-values { font-size: 10pt; padding: 1mm 8mm 0; }
+            .calculation-content { font-size: 10pt; padding: 3mm 8mm; }
             .page-number { font-size: 8pt; bottom: 1mm; right: 8mm; }
             .acb-td, .acb-th { font-size: 10px; padding: 4px; min-width: 40px; }
             .acb-input, .acb-span { font-size: 10px; padding: 3px; }
@@ -620,16 +625,6 @@
                     <div id="remainingQty" class="menu-qty-value">0.000</div>
                     <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
                 </div>
-                <div class="menu-qty-group" id="lotSelectGroup" style="display:none">
-                    <label for="lotSelect" class="menu-qty-label">Select Lot</label>
-                    <select id="lotSelect" class="menu-qty-input">
-                        <option value="" disabled selected>Select Lot</option>
-                        <option value="1">I</option>
-                        <option value="2">II</option>
-                        <option value="3">III</option>
-                        <option value="4">IV</option>
-                    </select>
-                </div>
             </div>
             <!-- Hamburger -->
             <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
@@ -640,8 +635,8 @@
     <div id="formulaCalculator" class="calculator-container active">
         <h2>Formula Calculator</h2>
         <div class="batch-complete-note hidden" id="batchCompleteNote" role="status">
-            Standard quantity fully dispensed. Your next calculation will start a new batch —
-            the current calculations will be archived automatically.
+            Standard quantity fully dispensed. Assign this batch to a lot below —
+            it will be archived and the next lot will be auto-allotted for the next batch.
         </div>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
@@ -664,6 +659,15 @@
             <button type="button" data-formula="F1" aria-label="Calculate F1">Calculate F1</button>
             <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
             <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
+        </div>
+        <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
+            <div class="lot-assign-text" id="lotAssignText"></div>
+            <div class="lot-assign-buttons">
+                <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
+                <button type="button" class="lot-assign-btn" data-lot="2">Lot-II</button>
+                <button type="button" class="lot-assign-btn" data-lot="3">Lot-III</button>
+                <button type="button" class="lot-assign-btn" data-lot="4">Lot-IV</button>
+            </div>
         </div>
     </div>
 
@@ -744,7 +748,7 @@
                 <div class="info-item"><span class="info-key">F8:</span> Print calculations</div>
                 <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
                 <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
-                <div class="info-item"><span class="info-key">Lot Select:</span> Assign dispensed qty to selected lot</div>
+                <div class="info-item"><span class="info-key">Lot Assignment:</span> Appears in the input card when Remaining = 0 — pick a lot to archive the batch &amp; continue</div>
             </div>
             <div id="acbInfo" class="info-section" style="display:none">
                 <h3>(A+C)-B Calculator Features</h3>
@@ -866,8 +870,6 @@
             dispensedQty: document.getElementById("dispensedQty"),
             remainingQty: document.getElementById("remainingQty"),
             quantityWarning: document.getElementById("quantityWarning"),
-            lotSelect: document.getElementById("lotSelect"),
-            lotSelectGroup: document.getElementById("lotSelectGroup"),
             acbInputs: {
                 a: ['lot1-a','lot2-a','lot3-a','lot4-a'].map(id => document.getElementById(id)),
                 b: ['lot1-b','lot2-b','lot3-b','lot4-b'].map(id => document.getElementById(id)),
@@ -882,6 +884,8 @@
 
         let calculationCount = 0, hasCalculated = false, batchComplete = false;
         let calculations = [];
+        let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null;
+        const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
         function truncateTo12Digits(num) {
             try {
@@ -969,19 +973,29 @@
             });
             domCache.dispensedQty.textContent = formatNumber(dispensed);
             if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
-                domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active'); domCache.lotSelectGroup.style.display = 'none';
-                batchComplete = false;
+                domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active');
+                batchComplete = false; awaitingLotAssignment = false;
             } else {
                 const remaining = stdQty.minus(remainingCalc);
                 domCache.remainingQty.textContent = formatNumber(remaining);
-                domCache.lotSelectGroup.style.display = remaining.eq(0) ? 'block' : 'none';
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
-                // Standard quantity fully accounted for: the *next* calculation will
-                // automatically archive this batch and start a fresh one (see calculate()).
+                // Standard quantity fully accounted for: entry is locked until the batch
+                // is assigned to a lot (see assignLotAndContinue()).
                 batchComplete = remaining.eq(0) && calculationCount > 0;
+                awaitingLotAssignment = batchComplete;
             }
             domCache.batchCompleteNote.classList.toggle('hidden', !batchComplete);
+            // Lot assignment moves into the input card: shown only when the batch is complete
+            const lotPanel = document.getElementById('lotAssignPanel');
+            if (lotPanel) {
+                lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
+                if (awaitingLotAssignment) {
+                    document.getElementById('lotAssignText').textContent =
+                        `Remaining qty is 0 — assign the dispensed ${domCache.dispensedQty.textContent} kg to a lot to continue. ` +
+                        `The batch will be archived and the next batch will auto-allot to the following lot.`;
+                }
+            }
         }
 
         function refreshStepsPanelVisibility() {
@@ -995,7 +1009,8 @@
             const details = document.createElement('details');
             details.className = 'archived-batch';
             const summary = document.createElement('summary');
-            summary.textContent = `Archived batch — ${calculationCount} calculation${calculationCount > 1 ? 's' : ''} (Std Qty: ${formatNumber(stdQty)})`;
+            const lotTag = lastAssignedLot ? `Lot-${LOT_NAMES[lastAssignedLot]} · ` : '';
+            summary.textContent = `Archived batch — ${lotTag}${calculationCount} calculation${calculationCount > 1 ? 's' : ''} (Std Qty: ${formatNumber(stdQty)})`;
             details.appendChild(summary);
             const body = document.createElement('div');
             body.className = 'archived-batch-body';
@@ -1023,14 +1038,31 @@
             domCache.QInput.focus();
         }
 
-        function updateLotDispensedQty() {
-            const lotIndex = parseInt(domCache.lotSelect.value) - 1;
-            if (lotIndex >= 0 && lotIndex < domCache.acbInputs.b.length) {
-                const input = domCache.acbInputs.b[lotIndex];
-                input.value = domCache.dispensedQty.textContent; input.classList.add('acb-manual-input');
-                updateACB(input, lotIndex, 'b'); showCalculator('acb'); input.focus();
-                domCache.lotSelect.value = ''; domCache.lotSelectGroup.style.display = 'none';
-            }
+        function assignLotAndContinue(lotNumber) {
+            const lotIndex = lotNumber - 1;
+            if (lotIndex < 0 || lotIndex >= domCache.acbInputs.b.length || !awaitingLotAssignment) return;
+
+            // 1. Record the dispensed qty in the chosen lot's Issued Qty (B) cell
+            const input = domCache.acbInputs.b[lotIndex];
+            input.value = domCache.dispensedQty.textContent;
+            input.classList.add('acb-manual-input');
+            updateACB(input, lotIndex, 'b');
+
+            // 2. Tag the finished batch with this lot, then archive it
+            calculations.forEach(c => c.lot = lotNumber);
+            domCache.stepsContainer.querySelectorAll('.calculation-entry .lot-label')
+                .forEach(el => el.textContent = LOT_NAMES[lotNumber]);
+            lastAssignedLot = lotNumber;
+            archiveCurrentBatch();
+
+            // 3. Advance to the next lot for auto-allotment and unlock entry
+            currentLot = Math.min(lotNumber + 1, 4);
+            awaitingLotAssignment = false; batchComplete = false;
+            document.getElementById('lotAssignPanel').classList.add('hidden');
+            domCache.batchCompleteNote.classList.add('hidden');
+            updateQuantityTracker();
+            refreshStepsPanelVisibility();
+            showCalculator('acb'); input.focus();
         }
 
         function copyRemainingToQ() {
@@ -1249,6 +1281,10 @@
         }
 
         async function calculate(formulaType) {
+            if (awaitingLotAssignment) {
+                document.getElementById('lotAssignPanel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
             if (calculationCount >= CONSTANTS.MAX_CALCULATIONS) { alert(`Maximum of ${CONSTANTS.MAX_CALCULATIONS} calculations reached.`); return; }
             let Q, W, A;
             try { Q = new Decimal(domCache.QInput.value || 0); W = new Decimal(domCache.waterInput.value || 0); A = new Decimal(domCache.assayInput.value || 0); }
@@ -1265,17 +1301,13 @@
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
             if (!isConfirmed) return;
 
-            // The previous batch was already fully dispensed (Remaining = 0) — archive it
-            // automatically and start counting this calculation as a brand-new batch.
-            if (batchComplete) archiveCurrentBatch();
-
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry"; newEntry.setAttribute("tabindex", "0");
             newEntry.setAttribute("role", "region"); newEntry.setAttribute("aria-label", `Calculation ${formulaType}`);
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
-                <div class="lot-label"></div>
+                <div class="lot-label">${LOT_NAMES[currentLot]}</div>
                 <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 <div class="calculation-content">${calculationResult.html}</div>
                 <div class="page-number">${calculationCount+1}/${calculationCount+1}</div>
@@ -1468,7 +1500,8 @@
                 updateQuantityTracker();
             });
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
-            domCache.lotSelect.addEventListener('change', updateLotDispensedQty);
+            document.querySelectorAll('.lot-assign-btn').forEach(btn =>
+                btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
 
             // Apply default preset (Valacyclovir) on load
             applyDrugPreset('valacyclovir');
