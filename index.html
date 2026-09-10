@@ -282,24 +282,18 @@
         .acb-prefilled { color: #1a1a1a; }
         .acb-manual-input, .acb-output { color: #00f; }
         .acb-highlight-row { background-color: #e6f3ff; }
-        .print-btn {
-            background: transparent; color: #007bff; border: 2px solid #007bff;
-            border-radius: 50%; cursor: pointer; font-size: 17px; display: none;
-            width: 40px; height: 40px; padding: 0; align-items: center; justify-content: center;
-            transition: background .2s ease, transform .15s ease; flex-shrink: 0;
+        .icon-btn {
+            background: transparent; border: none; cursor: pointer; font-size: 20px;
+            width: 36px; height: 36px; padding: 0; display: flex; align-items: center;
+            justify-content: center; border-radius: 6px; transition: background .15s ease;
+            flex-shrink: 0; line-height: 1;
         }
-        .print-btn:hover { background: rgba(0,123,255,.12); transform: scale(1.06); }
-        .calculation-steps:not(.hidden) .print-btn { display: flex; }
-        .clear-all-btn {
-            background: transparent; color: #dc3545; border: 2px solid #dc3545;
-            border-radius: 50%; cursor: pointer; font-size: 17px; display: none;
-            width: 40px; height: 40px; padding: 0; align-items: center; justify-content: center;
-            transition: background .2s ease, transform .15s ease; flex-shrink: 0;
-        }
-        .clear-all-btn:hover { background: rgba(220,53,69,.12); transform: scale(1.06); }
-        .calculation-steps:not(.hidden) .clear-all-btn { display: flex; }
+        .print-btn { color: #007bff; }
+        .print-btn:hover { background: rgba(0,123,255,.08); }
+        .clear-all-btn { color: #dc3545; }
+        .clear-all-btn:hover { background: rgba(220,53,69,.08); }
         .calc-toolbar {
-            display: flex; gap: 10px; align-items: center; padding-bottom: 8px;
+            display: flex; gap: 6px; align-items: center; padding-bottom: 8px;
         }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
         .entry-locked-banner {
@@ -308,7 +302,6 @@
         }
         .entry-locked-banner .entry-locked-title { font-weight: 700; color: #157347; margin: 0 0 4px; }
         .entry-locked-banner .entry-locked-text { font-size: 13px; color: #444; margin: 0 0 12px; }
-        .entry-locked-banner .clear-all-btn { display: inline-flex; margin: 0 auto; }
         .reset-acb-btn {
             position: absolute; bottom: 10px; right: 10px; background: transparent; border: none;
             cursor: pointer; font-size: 20px; color: #ff6b6b; padding: 5px;
@@ -644,7 +637,7 @@
         <div class="entry-locked-banner hidden" id="entryLockedBanner" role="alert">
             <p class="entry-locked-title">Standard quantity fully dispensed</p>
             <p class="entry-locked-text">Clear the calculations below before starting a new entry.</p>
-            <button type="button" id="lockedClearBtn" class="clear-all-btn" title="Clear all calculations" aria-label="Clear all calculations to continue">🗑️</button>
+            <button type="button" id="lockedClearBtn" class="icon-btn clear-all-btn" title="Clear all calculations" aria-label="Clear all calculations to continue">🗑️</button>
         </div>
         <div id="formulaEntryFields">
             <div class="input-group">
@@ -730,8 +723,7 @@
     <!-- CALCULATION STEPS -->
     <div class="calculation-steps hidden" id="calculationSteps" role="region" aria-label="Calculation steps">
         <div class="calc-toolbar">
-            <button type="button" id="printBtn" class="print-btn" title="Print calculations" aria-label="Print calculations">🖨️</button>
-            <button type="button" id="clearAllBtn" class="clear-all-btn" title="Clear all calculations" aria-label="Clear all calculations">🗑️</button>
+            <button type="button" id="printBtn" class="icon-btn print-btn" title="Print calculations" aria-label="Print calculations">🖨️</button>
         </div>
         <div id="stepsContainer"></div>
     </div>
@@ -1450,8 +1442,8 @@
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
-            // Clear-all-calculations controls (toolbar button + locked-entry banner button)
-            document.getElementById('clearAllBtn').addEventListener('click', clearAllCalculations);
+            // Clear-all-calculations control (shown only in the locked-entry banner,
+            // once the standard quantity is fully dispensed)
             document.getElementById('lockedClearBtn').addEventListener('click', clearAllCalculations);
 
             // PWA — register service worker
