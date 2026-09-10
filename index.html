@@ -200,7 +200,13 @@
         .calculation-steps {
             margin-top: 20px; padding: 15px; width: 90%; max-width: 900px;
             background: #fff; border-radius: 0; box-shadow: 0 4px 10px rgba(0,0,0,.1);
-            color: #555; text-align: left; position: relative; padding-top: 20px; will-change: transform;
+            color: #555; text-align: left; position: relative; padding-top: 15px; will-change: transform;
+            max-height: min(70vh, 820px); display: flex; flex-direction: column; overflow: hidden;
+        }
+        #stepsContainer {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth;
+            padding-top: 10px; margin-top: 5px; border-top: 1px solid #eee;
         }
         .calculation-entry {
             margin-bottom: 15px; border: 1px solid #000; padding: 15px;
@@ -277,17 +283,24 @@
         }
         .print-btn:hover { background: #0056b3; }
         .calculation-steps:not(.hidden) .print-btn { display: block; }
-        .new-calc-btn {
-            display: none; position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
-            background: #157347; color: #fff; border: none; border-radius: 30px;
-            padding: 14px 32px; font-size: 16px; font-weight: 600; font-family: 'Inter', sans-serif;
-            cursor: pointer; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-            transition: background 0.2s, transform 0.15s; white-space: nowrap;
+        .clear-all-btn {
+            background: #dc3545; color: #fff; padding: 10px 20px; border: none;
+            border-radius: 5px; cursor: pointer; font-size: 16px; margin-bottom: 10px; display: none;
         }
-        .new-calc-btn:hover { background: #125c3b; }
-        .new-calc-btn:active { transform: translateX(-50%) scale(0.96); }
-        .new-calc-btn.visible { display: block; }
+        .clear-all-btn:hover { background: #b02a37; }
+        .calculation-steps:not(.hidden) .clear-all-btn { display: block; }
+        .calc-toolbar {
+            display: flex; gap: 10px; flex-wrap: wrap; position: sticky; top: 0;
+            background: #fff; z-index: 3; padding-top: 5px; padding-bottom: 5px;
+        }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
+        .entry-locked-banner {
+            margin-top: 12px; padding: 16px 14px; border-radius: 8px;
+            background: #eaf7ee; border: 1px solid #a9dfba; text-align: center;
+        }
+        .entry-locked-banner .entry-locked-title { font-weight: 700; color: #157347; margin: 0 0 4px; }
+        .entry-locked-banner .entry-locked-text { font-size: 13px; color: #444; margin: 0 0 12px; }
+        .entry-locked-banner .clear-all-btn { display: inline-block; margin-bottom: 0; width: auto; padding: 10px 24px; }
         .reset-acb-btn {
             position: absolute; bottom: 10px; right: 10px; background: transparent; border: none;
             cursor: pointer; font-size: 20px; color: #ff6b6b; padding: 5px;
@@ -526,12 +539,13 @@
             @page { size: A4 landscape; margin: 8mm; }
             body { background: transparent; padding: 0; margin: 0; }
             .calculator-container,
-            .delete-button, .info-btn, .menu-bar, .print-btn, .new-calc-btn,
-            .progress-container, footer, .reset-acb-btn,
+            .delete-button, .info-btn, .menu-bar, .print-btn, .clear-all-btn, .calc-toolbar,
+            .entry-locked-banner, .progress-container, footer, .reset-acb-btn,
             .sidenav, .sidenav-overlay, .writeus-panel { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
                 display: block !important; width: 100%; max-width: none; margin: 0; padding: 0; background: transparent;
+                max-height: none !important; overflow: visible !important;
             }
             .calculation-entry {
                 width: 280mm !important; height: 190mm !important; margin: 0 auto; padding: 0;
@@ -552,7 +566,7 @@
             .calculation-entry .lot-label::before { content: "LOT: "; position: absolute; top: 24mm; left: 15mm; font-size: 14pt; }
             .calculation-content { margin-top: 30mm; margin-bottom: 30mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
-            #stepsContainer { display: flex; flex-direction: column-reverse; }
+            #stepsContainer { display: block; overflow: visible; max-height: none; }
             .calc-step { margin-bottom: 5mm; }
             .frac .frac-num, .frac .frac-den { padding: 1.5mm 2mm; }
             .calc-result { margin-top: 3mm; padding-top: 0; }
@@ -619,27 +633,34 @@
     <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container active">
         <h2>Formula Calculator</h2>
-        <div class="input-group">
-            <label for="Q">Quantity (Q):</label>
-            <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
+        <div class="entry-locked-banner hidden" id="entryLockedBanner" role="alert">
+            <p class="entry-locked-title">Standard quantity fully dispensed</p>
+            <p class="entry-locked-text">Clear the calculations below before starting a new entry.</p>
+            <button type="button" id="lockedClearBtn" class="clear-all-btn" aria-label="Clear all calculations to continue">Clear All Calculations</button>
         </div>
-        <div class="input-row">
+        <div id="formulaEntryFields">
             <div class="input-group">
-                <label for="water">Water Content (W):</label>
-                <input type="number" id="water" step="0.01" min="0.01" max="99.99" required placeholder="Enter water content" oninput="handleInput(event)">
+                <label for="Q">Quantity (Q):</label>
+                <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
             </div>
-            <div class="input-group">
-                <label for="assay">Assay Content (A):</label>
-                <input type="number" id="assay" step="0.01" min="0.01" max="100.00" required placeholder="Enter assay content" oninput="handleInput(event)">
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="water">Water Content (W):</label>
+                    <input type="number" id="water" step="0.01" min="0.01" max="99.99" required placeholder="Enter water content" oninput="handleInput(event)">
+                </div>
+                <div class="input-group">
+                    <label for="assay">Assay Content (A):</label>
+                    <input type="number" id="assay" step="0.01" min="0.01" max="100.00" required placeholder="Enter assay content" oninput="handleInput(event)">
+                </div>
             </div>
-        </div>
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="button-row">
-            <button type="button" data-formula="F1" aria-label="Calculate F1">Calculate F1</button>
-            <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
-            <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="button-row">
+                <button type="button" data-formula="F1" aria-label="Calculate F1">Calculate F1</button>
+                <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
+                <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
+            </div>
         </div>
     </div>
 
@@ -700,7 +721,10 @@
 
     <!-- CALCULATION STEPS -->
     <div class="calculation-steps hidden" id="calculationSteps" role="region" aria-label="Calculation steps">
-        <button type="button" id="printBtn" class="print-btn" aria-label="Print calculations">Print Calculations</button>
+        <div class="calc-toolbar">
+            <button type="button" id="printBtn" class="print-btn" aria-label="Print calculations">Print Calculations</button>
+            <button type="button" id="clearAllBtn" class="clear-all-btn" aria-label="Clear all calculations">Clear All Calculations</button>
+        </div>
         <div id="stepsContainer"></div>
     </div>
 
@@ -739,11 +763,6 @@
             </div>
         </div>
     </div>
-
-    <!-- FLOATING NEW CALCULATION BUTTON -->
-    <button type="button" class="new-calc-btn" id="newCalcBtn" aria-label="Start new calculation">
-        ＋ New Calculation
-    </button>
 
     <!-- FOOTER -->
     <footer>
@@ -830,6 +849,8 @@
             assayGroup: document.querySelector("#assay").parentElement,
             buttons: document.querySelector(".button-row"),
             progressBar: document.getElementById("progressBar"),
+            formulaEntryFields: document.getElementById("formulaEntryFields"),
+            entryLockedBanner: document.getElementById("entryLockedBanner"),
             calculationSteps: document.getElementById("calculationSteps"),
             stepsContainer: document.getElementById("stepsContainer"),
             formulaCalculator: document.getElementById("formulaCalculator"),
@@ -935,6 +956,11 @@
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
 
+        function setEntryLocked(locked) {
+            domCache.formulaEntryFields.classList.toggle('hidden', locked);
+            domCache.entryLockedBanner.classList.toggle('hidden', !locked);
+        }
+
         function updateQuantityTracker() {
             const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
             let dispensed = new Decimal(0), remainingCalc = new Decimal(0), hasFinal = false;
@@ -945,13 +971,27 @@
             domCache.dispensedQty.textContent = formatNumber(dispensed);
             if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
                 domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active'); domCache.lotSelectGroup.style.display = 'none';
+                setEntryLocked(false);
             } else {
                 const remaining = stdQty.minus(remainingCalc);
                 domCache.remainingQty.textContent = formatNumber(remaining);
                 domCache.lotSelectGroup.style.display = remaining.eq(0) ? 'block' : 'none';
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
+                // Standard quantity fully accounted for: lock new entries until calculations are cleared.
+                setEntryLocked(remaining.eq(0) && calculationCount > 0);
             }
+        }
+
+        function clearAllCalculations() {
+            if (calculationCount === 0) return;
+            if (!confirm(`Delete all ${calculationCount} calculation${calculationCount > 1 ? 's' : ''}? This cannot be undone.`)) return;
+            calculations.length = 0;
+            domCache.stepsContainer.innerHTML = '';
+            calculationCount = 0;
+            domCache.calculationSteps.classList.add('hidden');
+            updateQuantityTracker();
+            domCache.QInput.focus();
         }
 
         function updateLotDispensedQty() {
@@ -1217,11 +1257,12 @@
             domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             updateQuantityTracker();
 
-            // Scroll the new card so it fills the screen, then focus it for keyboard users
+            // New entries are prepended to the top of the (now internally-scrolling) list,
+            // so just reset that list's own scroll position — the formula inputs above
+            // never leave the viewport, and keyboard users still get focus on the card.
             requestAnimationFrame(() => {
-                newEntry.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                domCache.stepsContainer.scrollTo({ top: 0, behavior: 'smooth' });
                 newEntry.focus({ preventScroll: true });
-                document.getElementById('newCalcBtn').classList.add('visible');
             });
         }
 
@@ -1324,7 +1365,6 @@
             });
             domCache.QInput.addEventListener("focus", () => {
                 requestAnimationFrame(() => domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-                document.getElementById('newCalcBtn').classList.remove('visible');
             });
 
             domCache.acbCalculator.addEventListener("input", e => {
@@ -1400,11 +1440,9 @@
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
-            // Floating new calculation button
-            document.getElementById('newCalcBtn').addEventListener('click', () => {
-                domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                requestAnimationFrame(() => setTimeout(() => domCache.QInput.focus(), 400));
-            });
+            // Clear-all-calculations controls (toolbar button + locked-entry banner button)
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllCalculations);
+            document.getElementById('lockedClearBtn').addEventListener('click', clearAllCalculations);
 
             // PWA — register service worker
             if ('serviceWorker' in navigator) {
