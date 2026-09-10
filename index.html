@@ -596,8 +596,8 @@
         }
         .hold-day:hover { transform: scale(1.15); font-weight: 600; }
         .hold-day.cal-out {
-            background: #fff; border-color: transparent; color: #c9c9c9;
-            opacity: .3; cursor: default;
+            background: #fff; border: 1px solid #ececec; color: #9a9a9a;
+            opacity: .7; cursor: default;
         }
         .hold-day.cal-out:hover { transform: none; font-weight: 400; }
         /* The 3-day buffer on each side of the hold period (today-3 .. today-1, and
@@ -613,6 +613,41 @@
         @keyframes holdMonthIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         .hold-day.cal-today { background: #157347; border-color: #157347; color: #fff; font-weight: 700; }
         .hold-day.cal-hold { background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 700; }
+
+        /* ── ACTIVE LOT CHIPS (manual lot control — never auto-assigned) ── */
+        .lot-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+        .lot-chip {
+            flex: 1; padding: 8px 4px; font-size: 13px; background: #f2f2f2; color: #444;
+            border: 2px solid #ddd; border-radius: 6px; min-width: 0; user-select: none;
+        }
+        .lot-chip:hover { background: #e6e6e6; }
+        .lot-chip.active { background: #157347; border-color: #157347; color: #fff; }
+
+        /* ── COLLAPSIBLE HOLD-PERIOD CALENDAR ── */
+        .calendar-toggle {
+            width: 100%; margin-top: 14px; padding: 10px 14px;
+            background: #eaf7ee; color: #157347; border: 1px solid #a9dfba; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer; flex: none;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            font-family: "Inter", sans-serif; user-select: none;
+        }
+        .calendar-toggle:hover { background: #d9f0e1; }
+        .calendar-collapsible { max-height: 0; overflow: hidden; transition: max-height .45s ease; }
+        .calendar-collapsible.open { max-height: 1400px; }
+        .calendar-collapsible .hold-calendar { margin-top: 14px; }
+
+        /* ── PER-LOT A/C VARIATION HIGHLIGHT (light red) ── */
+        .acb-input.acb-varies { background: #ffe3e3 !important; border-color: #f1b0b0; }
+
+        /* ── MENU BAR DRUG / STD QTY BADGE ── */
+        .menu-drug-badge { display: flex; align-items: center; flex-shrink: 1; min-width: 0; }
+        .menu-drug-badge.hidden { display: none; }
+        .badge-pill {
+            font-size: 12px; font-weight: 600; color: #157347;
+            background: #eaf7ee; border: 1px solid #a9dfba; border-radius: 12px;
+            padding: 4px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .badge-star { color: #dc3545; font-weight: 700; margin-left: 2px; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
@@ -705,6 +740,8 @@
                 data-calculator="acb"
                 aria-label="Show (A+C)-B Calculator">(A+C)-B Calculator</div>
 
+            <div class="menu-drug-badge hidden" id="drugBadge" aria-live="polite"></div>
+
             <div class="menu-qty-tracker" id="menuQtyTracker">
                 <div class="menu-qty-group">
                     <label class="menu-qty-label">Dispensed</label>
@@ -754,7 +791,6 @@
     <div id="formulaCalculator" class="calculator-container">
         <div class="formula-header-row">
             <h2 id="formulaCardTitle">Formula Calculator</h2>
-            <span class="drug-badge hidden" id="drugBadge"></span>
         </div>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
@@ -784,6 +820,15 @@
                 <button type="button" class="lot-assign-btn" data-lot="2">Lot-II</button>
                 <button type="button" class="lot-assign-btn" data-lot="3">Lot-III</button>
                 <button type="button" class="lot-assign-btn" data-lot="4">Lot-IV</button>
+            </div>
+        </div>
+        <div class="input-group" id="activeLotGroup">
+            <label id="activeLotLabel">Active Lot:</label>
+            <div class="lot-chips" role="group" aria-labelledby="activeLotLabel">
+                <button type="button" class="lot-chip active" data-lot="1">Lot-I</button>
+                <button type="button" class="lot-chip" data-lot="2">Lot-II</button>
+                <button type="button" class="lot-chip" data-lot="3">Lot-III</button>
+                <button type="button" class="lot-chip" data-lot="4">Lot-IV</button>
             </div>
         </div>
     </div>
@@ -852,7 +897,12 @@
                     <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
                 </div>
             </div>
-            <div class="hold-calendar" id="holdCalendar"></div>
+            <button type="button" id="calendarToggle" class="calendar-toggle" aria-expanded="false" aria-controls="calendarCollapsible">
+                <span>Hold Period Calendar</span><span id="calendarArrow">▼</span>
+            </button>
+            <div class="calendar-collapsible" id="calendarCollapsible">
+                <div class="hold-calendar" id="holdCalendar"></div>
+            </div>
         </div>
         <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
     </div>
@@ -880,6 +930,8 @@
                 <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
                 <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
                 <div class="info-item"><span class="info-key">Lot Assignment:</span> Appears in the input card when Remaining = 0 — pick a lot to archive the batch &amp; continue</div>
+                <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown beside Remaining Qty in the menu bar</div>
+                <div class="info-item"><span class="info-key">Active Lot:</span> Switch manually with the Lot-I…IV chips — lots are never auto-assigned. A/C values that differ between lots are highlighted in light red</div>
             </div>
             <div id="acbInfo" class="info-section" style="display:none">
                 <h3>(A+C)-B Calculator Features</h3>
@@ -1227,13 +1279,14 @@
         // (including live edits in Manual mode).
         function updateDrugBadge() {
             if (!domCache.drugBadge) return;
-            if (!selectedDrugLabel) { domCache.drugBadge.classList.add('hidden'); domCache.drugBadge.textContent = ''; return; }
+            if (!selectedDrugLabel) { domCache.drugBadge.classList.add('hidden'); domCache.drugBadge.innerHTML = ''; return; }
             const raw = domCache.stdQtyInput.value;
             let qtyText = '—';
             if (raw && raw.trim() !== '') {
                 try { qtyText = new Decimal(raw).toFixed(3); } catch { qtyText = raw; }
             }
-            domCache.drugBadge.textContent = `${selectedDrugLabel} · Std Qty (A): ${qtyText} kg`;
+            domCache.drugBadge.innerHTML =
+                `<span class="badge-pill" title="Std Qty (A) reference — the same value used by the Formula Calculator">${selectedDrugLabel} · Std Qty (A): ${qtyText} kg<span class="badge-star">*</span></span>`;
             domCache.drugBadge.classList.remove('hidden');
         }
 
@@ -1317,8 +1370,12 @@
                 .forEach(el => el.textContent = LOT_NAMES[lotNumber]);
             pendingArchiveLot = lotNumber;
 
-            // 3. Advance to the next lot for auto-allotment and unlock entry
-            currentLot = Math.min(lotNumber + 1, 4);
+            // 3. The user explicitly picked this lot — make it the active lot.
+            //    Lots are NEVER auto-advanced: the user switches lots manually via the
+            //    Active Lot chips, which is essential because lots can carry different
+            //    Std Qty (A)/(C) values depending on the product.
+            currentLot = lotNumber;
+            syncLotChips();
             awaitingLotAssignment = false; batchComplete = false;
             document.getElementById('lotAssignPanel').classList.add('hidden');
 
@@ -1327,6 +1384,45 @@
             updateQuantityTracker();
             refreshStepsPanelVisibility();
             showCalculator('formula'); domCache.QInput.focus();
+        }
+
+        function syncLotChips() {
+            document.querySelectorAll('.lot-chip').forEach(ch =>
+                ch.classList.toggle('active', parseInt(ch.dataset.lot, 10) === currentLot));
+        }
+
+        // Lots are assigned manually only. Switching is blocked while a batch is in
+        // progress so no calculation can be silently attributed to the wrong lot.
+        function setActiveLot(n) {
+            if (n < 1 || n > 4 || n === currentLot) return;
+            if (calculationCount > 0) {
+                alert('Finish or assign the current batch to a lot before switching the active lot.');
+                return;
+            }
+            currentLot = n;
+            syncLotChips();
+            syncLotBalanceLines();
+            updateQuantityTracker();
+        }
+
+        function syncLotBalanceLines() {
+            domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
+                el.textContent = `(A+C)-B = ${getEffectiveLotBalance(parseInt(el.dataset.lotBalance, 10) - 1).toFixed(3)}`;
+            });
+        }
+
+        // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
+        // C: 14.674 vs 14.673). Any deviation from Lot-I — even by 0.001 — is
+        // highlighted light red so the user sees it before entering quantities.
+        function highlightACBVariations() {
+            ['a', 'c'].forEach(type => {
+                const inputs = domCache.acbInputs[type];
+                const base = new Decimal(inputs[0].value || 0);
+                inputs.forEach((input, i) => {
+                    const v = new Decimal(input.value || 0);
+                    input.classList.toggle('acb-varies', i > 0 && !v.eq(base));
+                });
+            });
         }
 
         function copyRemainingToQ() {
@@ -1416,6 +1512,7 @@
             domCache.menuFormula.classList.toggle('active', calculator === 'formula');
             domCache.menuAcb.classList.toggle('active', calculator === 'acb');
             domCache.menuQtyTracker.classList.toggle('hidden', calculator === 'acb');
+            if (selectedDrugLabel) domCache.drugBadge.classList.toggle('hidden', calculator === 'acb');
             domCache.calculationSteps.classList.toggle('hidden', calculator !== 'formula' || (calculationCount === 0 && domCache.archivedStepsContainer.children.length === 0));
             requestAnimationFrame(() => {
                 if (calculator === 'formula') domCache.QInput?.focus();
@@ -1511,9 +1608,9 @@
 
             // Keep F1/F3 cards' (A+C)-B lines in sync — effective balance reflects the
             // current batch's dispensed qty even before the lot's B cell is written.
-            domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
-                el.textContent = `(A+C)-B = ${getEffectiveLotBalance(parseInt(el.dataset.lotBalance, 10) - 1).toFixed(3)}`;
-            });
+            syncLotBalanceLines();
+            // Flag per-lot A/C deviations (even 0.001) in light red.
+            highlightACBVariations();
         }
 
         function printWithCheck() {
@@ -1581,6 +1678,7 @@
                 pendingArchiveLot = null;
             }
 
+            calculationResult.lot = currentLot; // tagged at creation — lots are user-assigned, never auto
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry"; newEntry.setAttribute("tabindex", "0");
@@ -1831,6 +1929,23 @@
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.querySelectorAll('.lot-assign-btn').forEach(btn =>
                 btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
+            document.querySelectorAll('.lot-chip').forEach(btn =>
+                btn.addEventListener('click', () => setActiveLot(parseInt(btn.dataset.lot, 10))));
+
+            // Collapsible hold-period calendar: the down-arrow button pulls it open,
+            // the up-arrow button (or a firm scroll-up over it) pushes it back.
+            const calendarToggle = document.getElementById('calendarToggle');
+            const calendarCollapsible = document.getElementById('calendarCollapsible');
+            const calendarArrow = document.getElementById('calendarArrow');
+            function setCalendarOpen(open) {
+                calendarCollapsible.classList.toggle('open', open);
+                calendarToggle.setAttribute('aria-expanded', String(open));
+                calendarArrow.textContent = open ? '▲' : '▼';
+            }
+            calendarToggle.addEventListener('click', () => setCalendarOpen(!calendarCollapsible.classList.contains('open')));
+            calendarCollapsible.addEventListener('wheel', e => {
+                if (e.deltaY < -30) setCalendarOpen(false);
+            }, { passive: true });
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
