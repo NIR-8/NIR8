@@ -170,6 +170,9 @@
             scroll-margin-top: 60px;
         }
         #acbCalculator { max-width: 900px; }
+        /* Embedded in the pull-down panel above the Formula Calculator — visibility
+           is governed by the collapsible wrapper, not the .active tab class. */
+        #acbCalculator.acb-embedded { display: block; }
         .calculator-container.active { display: block; }
         .input-group { margin-top: 10px; text-align: left; }
         /* Formula card title + selected drug/Std Qty badge, side by side on one line */
@@ -614,14 +617,13 @@
         .hold-day.cal-today { background: #157347; border-color: #157347; color: #fff; font-weight: 700; }
         .hold-day.cal-hold { background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 700; }
 
-        /* ── ACTIVE LOT CHIPS (manual lot control — never auto-assigned) ── */
-        .lot-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-        .lot-chip {
-            flex: 1; padding: 8px 4px; font-size: 13px; background: #f2f2f2; color: #444;
-            border: 2px solid #ddd; border-radius: 6px; min-width: 0; user-select: none;
+        /* ── ACTIVE LOT DROP-DOWN (manual lot control — never auto-assigned) ── */
+        .lot-select-inline {
+            width: auto; min-width: 96px; padding: 6px 10px; margin: 0; flex: none;
+            border: 2px solid #a9dfba; border-radius: 8px; background: #eaf7ee;
+            color: #157347; font-size: 13px; font-weight: 600; cursor: pointer;
         }
-        .lot-chip:hover { background: #e6e6e6; }
-        .lot-chip.active { background: #157347; border-color: #157347; color: #fff; }
+        .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
 
         /* ── COLLAPSIBLE HOLD-PERIOD CALENDAR ── */
         .calendar-toggle {
@@ -643,11 +645,11 @@
         .menu-drug-badge { display: flex; align-items: center; flex-shrink: 1; min-width: 0; }
         .menu-drug-badge.hidden { display: none; }
         .badge-pill {
-            font-size: 12px; font-weight: 600; color: #157347;
-            background: #eaf7ee; border: 1px solid #a9dfba; border-radius: 12px;
-            padding: 4px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .3px;
+            background: #157347; border: 2px solid #2ea56c; border-radius: 14px;
+            padding: 5px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .badge-star { color: #dc3545; font-weight: 700; margin-left: 2px; }
+        .badge-star { color: #ffe08a; font-weight: 700; margin-left: 2px; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
@@ -690,7 +692,7 @@
             .calculator-container,
             .delete-button, .info-btn, .menu-bar, .print-btn, .clear-all-btn, .calc-toolbar,
             .archived-steps-container, .progress-container, footer, .reset-acb-btn,
-            .sidenav, .sidenav-overlay, .writeus-panel { display: none !important; }
+            .sidenav, .sidenav-overlay, .writeus-panel, #acbToggle { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
                 display: block !important; width: 100%; max-width: none; margin: 0; padding: 0; background: transparent;
@@ -733,13 +735,6 @@
     <!-- MENU BAR -->
     <div class="menu-bar">
         <div class="menu-container">
-            <div class="menu-item active" id="menuFormula" role="button" tabindex="0"
-                data-calculator="formula"
-                aria-label="Show Formula Calculator">Formula Calculator</div>
-            <div class="menu-item" id="menuAcb" role="button" tabindex="0"
-                data-calculator="acb"
-                aria-label="Show (A+C)-B Calculator">(A+C)-B Calculator</div>
-
             <div class="menu-drug-badge hidden" id="drugBadge" aria-live="polite"></div>
 
             <div class="menu-qty-tracker" id="menuQtyTracker">
@@ -791,6 +786,12 @@
     <div id="formulaCalculator" class="calculator-container">
         <div class="formula-header-row">
             <h2 id="formulaCardTitle">Formula Calculator</h2>
+            <select id="activeLotSelect" class="lot-select-inline" aria-label="Active Lot">
+                <option value="1" selected>Lot-I</option>
+                <option value="2">Lot-II</option>
+                <option value="3">Lot-III</option>
+                <option value="4">Lot-IV</option>
+            </select>
         </div>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
@@ -822,19 +823,15 @@
                 <button type="button" class="lot-assign-btn" data-lot="4">Lot-IV</button>
             </div>
         </div>
-        <div class="input-group" id="activeLotGroup">
-            <label id="activeLotLabel">Active Lot:</label>
-            <div class="lot-chips" role="group" aria-labelledby="activeLotLabel">
-                <button type="button" class="lot-chip active" data-lot="1">Lot-I</button>
-                <button type="button" class="lot-chip" data-lot="2">Lot-II</button>
-                <button type="button" class="lot-chip" data-lot="3">Lot-III</button>
-                <button type="button" class="lot-chip" data-lot="4">Lot-IV</button>
-            </div>
-        </div>
     </div>
 
-    <!-- ACB CALCULATOR -->
-    <div id="acbCalculator" class="calculator-container">
+    <!-- ACB CALCULATOR — collapsible pull-down panel above the Formula Calculator -->
+    <div id="acbWrapper" class="acb-wrapper hidden">
+        <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible">
+            <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
+        </button>
+        <div class="calendar-collapsible" id="acbCollapsible">
+            <div id="acbCalculator" class="calculator-container acb-embedded">
         <div class="header-row">
             <h2>(A+C)-B Calculator</h2>
         </div>
@@ -905,6 +902,8 @@
             </div>
         </div>
         <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
+            </div>
+        </div>
     </div>
 
     <!-- CALCULATION STEPS -->
@@ -931,7 +930,7 @@
                 <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
                 <div class="info-item"><span class="info-key">Lot Assignment:</span> Appears in the input card when Remaining = 0 — pick a lot to archive the batch &amp; continue</div>
                 <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown beside Remaining Qty in the menu bar</div>
-                <div class="info-item"><span class="info-key">Active Lot:</span> Switch manually with the Lot-I…IV chips — lots are never auto-assigned. A/C values that differ between lots are highlighted in light red</div>
+                <div class="info-item"><span class="info-key">Active Lot:</span> Drop-down beside the Formula Calculator title — starts at Lot-I; lots are never auto-assigned. A/C values that differ between lots are highlighted in light red</div>
             </div>
             <div id="acbInfo" class="info-section" style="display:none">
                 <h3>(A+C)-B Calculator Features</h3>
@@ -1048,8 +1047,6 @@
             stdCInput: document.getElementById("stdC"),
             stdCGroup: document.getElementById("stdCGroup"),
             acbCalculator: document.getElementById("acbCalculator"),
-            menuFormula: document.getElementById("menuFormula"),
-            menuAcb: document.getElementById("menuAcb"),
             menuQtyTracker: document.getElementById("menuQtyTracker"),
             stdQtyInput: document.getElementById("stdQty"),
             drugBadge: document.getElementById("drugBadge"),
@@ -1375,7 +1372,7 @@
             //    Active Lot chips, which is essential because lots can carry different
             //    Std Qty (A)/(C) values depending on the product.
             currentLot = lotNumber;
-            syncLotChips();
+            syncLotSelect();
             awaitingLotAssignment = false; batchComplete = false;
             document.getElementById('lotAssignPanel').classList.add('hidden');
 
@@ -1386,23 +1383,24 @@
             showCalculator('formula'); domCache.QInput.focus();
         }
 
-        function syncLotChips() {
-            document.querySelectorAll('.lot-chip').forEach(ch =>
-                ch.classList.toggle('active', parseInt(ch.dataset.lot, 10) === currentLot));
+        function syncLotSelect() {
+            const sel = document.getElementById('activeLotSelect');
+            if (sel) sel.value = String(currentLot);
         }
 
         // Lots are assigned manually only. Switching is blocked while a batch is in
         // progress so no calculation can be silently attributed to the wrong lot.
         function setActiveLot(n) {
-            if (n < 1 || n > 4 || n === currentLot) return;
+            if (n < 1 || n > 4 || n === currentLot) return true;
             if (calculationCount > 0) {
                 alert('Finish or assign the current batch to a lot before switching the active lot.');
-                return;
+                return false;
             }
             currentLot = n;
-            syncLotChips();
+            syncLotSelect();
             syncLotBalanceLines();
             updateQuantityTracker();
+            return true;
         }
 
         function syncLotBalanceLines() {
@@ -1507,23 +1505,18 @@
         function showCalculator(calculator) {
             if (!sessionStarted && calculator !== 'setup') return; // product must be selected first
             domCache.productSetup.classList.remove('active');
-            domCache.formulaCalculator.classList.toggle('active', calculator === 'formula');
-            domCache.acbCalculator.classList.toggle('active', calculator === 'acb');
-            domCache.menuFormula.classList.toggle('active', calculator === 'formula');
-            domCache.menuAcb.classList.toggle('active', calculator === 'acb');
-            domCache.menuQtyTracker.classList.toggle('hidden', calculator === 'acb');
-            if (selectedDrugLabel) domCache.drugBadge.classList.toggle('hidden', calculator === 'acb');
-            domCache.calculationSteps.classList.toggle('hidden', calculator !== 'formula' || (calculationCount === 0 && domCache.archivedStepsContainer.children.length === 0));
-            requestAnimationFrame(() => {
-                if (calculator === 'formula') domCache.QInput?.focus();
-                else domCache.acbInputs?.b?.[0]?.focus();
-            });
+            // Single-page layout: the Formula Calculator is always the main view and the
+            // (A+C)-B Calculator sits above it as a pull-down panel (never a separate page).
+            domCache.formulaCalculator.classList.add('active');
+            document.getElementById('acbWrapper')?.classList.remove('hidden');
+            refreshStepsPanelVisibility();
+            requestAnimationFrame(() => domCache.QInput?.focus());
         }
 
         function showInfo() {
             const modal = document.getElementById('infoModal');
-            document.getElementById('formulaInfo').style.display = domCache.formulaCalculator.classList.contains('active') ? 'block' : 'none';
-            document.getElementById('acbInfo').style.display = domCache.formulaCalculator.classList.contains('active') ? 'none' : 'block';
+            document.getElementById('formulaInfo').style.display = 'block';
+            document.getElementById('acbInfo').style.display = 'block';
             modal.style.display = 'flex';
             requestAnimationFrame(() => document.querySelector('#infoModal .close').focus());
         }
@@ -1844,14 +1837,6 @@
                 btn.addEventListener('click', () => calculate(btn.dataset.formula));
             });
 
-            // Menu tabs (click + keyboard, since these are role="button" divs, not <button>)
-            document.querySelectorAll('[data-calculator]').forEach(el => {
-                el.addEventListener('click', () => showCalculator(el.dataset.calculator));
-                el.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showCalculator(el.dataset.calculator); }
-                });
-            });
-
             document.getElementById('resetAcbBtn').addEventListener('click', resetACBCalculator);
             document.getElementById('startBtn').addEventListener('click', startSession);
             // Touch-friendly product dropdown: tapping an option selects it AND
@@ -1929,8 +1914,23 @@
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.querySelectorAll('.lot-assign-btn').forEach(btn =>
                 btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
-            document.querySelectorAll('.lot-chip').forEach(btn =>
-                btn.addEventListener('click', () => setActiveLot(parseInt(btn.dataset.lot, 10))));
+            const activeLotSelect = document.getElementById('activeLotSelect');
+            activeLotSelect.addEventListener('change', () => {
+                const requested = parseInt(activeLotSelect.value, 10);
+                if (!setActiveLot(requested)) activeLotSelect.value = String(currentLot);
+            });
+
+            // (A+C)-B pull-down panel: down arrow opens it above the Formula
+            // Calculator, up arrow pushes it back.
+            const acbToggle = document.getElementById('acbToggle');
+            const acbCollapsible = document.getElementById('acbCollapsible');
+            const acbArrow = document.getElementById('acbArrow');
+            acbToggle.addEventListener('click', () => {
+                const open = acbCollapsible.classList.toggle('open');
+                acbToggle.setAttribute('aria-expanded', String(open));
+                acbArrow.textContent = open ? '▲' : '▼';
+                if (open) acbCollapsible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
 
             // Collapsible hold-period calendar: the down-arrow button pulls it open,
             // the up-arrow button (or a firm scroll-up over it) pushes it back.
