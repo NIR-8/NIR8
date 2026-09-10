@@ -180,7 +180,15 @@
             display: flex; align-items: center; justify-content: space-between;
             gap: 8px; flex-wrap: nowrap;
         }
-        .formula-header-row h2 { margin: 0; white-space: nowrap; }
+        .formula-header-row h2 { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* The menu-bar title and the input-card title share one style — the drug /
+           Std Qty badge moved onto the card (where "Formula Calculator" used to be)
+           and "Formula Calculator" moved to the menu bar, in identical type. */
+        .menu-title, .formula-header-row h2 {
+            font-family: "Inter", sans-serif; font-size: 18px; font-weight: 600;
+            letter-spacing: -0.2px; color: inherit; line-height: 1.3;
+        }
+        .menu-title { color: #fff; flex-shrink: 0; margin: 0; }
         .drug-badge {
             font-size: 12px; font-weight: 600; color: #157347;
             background: #eaf7ee; border: 1px solid #a9dfba; border-radius: 12px;
@@ -565,21 +573,29 @@
         .select-option:active { background: #d9f0e1; }
 
         /* ── HOLD PERIOD ── */
-        .hold-dates-row { display: flex; align-items: flex-end; justify-content: center; gap: 14px; flex-wrap: wrap; }
-        .hold-date-group { display: flex; flex-direction: column; gap: 4px; }
-        .hold-date-group label { font-weight: 600; color: #157347; font-size: 12px; text-align: center; }
+        .hold-dates-row { display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: wrap; }
+        .hold-date-group { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+        /* Fixed label + fixed control heights keep the two date displays on one
+           straight line regardless of font metrics or native date-picker chrome. */
+        .hold-date-group label, .hold-date-group .hold-label {
+            display: block; height: 18px; line-height: 18px; font-weight: 600;
+            color: #157347; font-size: 12px; text-align: center; overflow: hidden;
+            white-space: nowrap;
+        }
         .hold-date-input {
-            width: 160px; padding: 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
+            width: 160px; height: 40px; padding: 0 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
             text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; background: #fff;
+            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
         }
         .hold-date-input:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
         .hold-date-static {
-            display: inline-block; width: 160px; padding: 8px; border: 1.5px solid #a9dfba;
-            border-radius: 6px; text-align: center; font-size: 14px; font-weight: 600;
-            font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
+            display: inline-flex; align-items: center; justify-content: center; width: 160px; height: 40px;
+            padding: 0 8px; border: 1.5px solid #a9dfba; border-radius: 6px; text-align: center; font-size: 14px;
+            font-weight: 600; font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
         }
-        .hold-sep { font-weight: 700; color: #157347; padding-bottom: 9px; font-size: 16px; }
-        .hold-calendar { margin-top: 14px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+        .hold-sep { display: flex; align-items: center; font-weight: 700; color: #157347; font-size: 16px; }
+        /* Calendar renders first, dates row sits below it — always visible, no collapsible. */
+        .hold-calendar { margin: 0 0 14px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
         .hold-month { background: #fff; border: 1px solid #e3e7ee; border-radius: 10px; padding: 10px; }
         .hold-month-title { font-weight: 600; text-align: center; margin-bottom: 8px; font-size: 13px; color: #111; }
         .hold-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 3px; }
@@ -640,16 +656,6 @@
 
         /* ── PER-LOT A/C VARIATION HIGHLIGHT (light red) ── */
         .acb-input.acb-varies { background: #ffe3e3 !important; border-color: #f1b0b0; }
-
-        /* ── MENU BAR DRUG / STD QTY BADGE ── */
-        .menu-drug-badge { display: flex; align-items: center; flex-shrink: 1; min-width: 0; }
-        .menu-drug-badge.hidden { display: none; }
-        .badge-pill {
-            font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .3px;
-            background: #157347; border: 2px solid #2ea56c; border-radius: 14px;
-            padding: 5px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .badge-star { color: #ffe08a; font-weight: 700; margin-left: 2px; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
@@ -735,7 +741,7 @@
     <!-- MENU BAR -->
     <div class="menu-bar">
         <div class="menu-container">
-            <div class="menu-drug-badge hidden" id="drugBadge" aria-live="polite"></div>
+            <h2 class="menu-title" id="menuTitle">Formula Calculator</h2>
 
             <div class="menu-qty-tracker" id="menuQtyTracker">
                 <div class="menu-qty-group">
@@ -785,7 +791,7 @@
     <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container">
         <div class="formula-header-row">
-            <h2 id="formulaCardTitle">Formula Calculator</h2>
+            <h2 id="formulaCardTitle" title="Drug · Std Qty (A) reference">Formula Calculator</h2>
             <select id="activeLotSelect" class="lot-select-inline" aria-label="Active Lot">
                 <option value="1" selected>Lot-I</option>
                 <option value="2">Lot-II</option>
@@ -883,6 +889,8 @@
             </tbody>
         </table>
         <div class="hold-period" id="holdPeriod">
+            <!-- Calendar first (always visible — no collapsible), dates row below -->
+            <div class="hold-calendar" id="holdCalendar"></div>
             <div class="hold-dates-row">
                 <div class="hold-date-group">
                     <label for="holdStartDate">Current date</label>
@@ -893,12 +901,6 @@
                     <span class="hold-label">Hold time period (15 days)</span>
                     <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
                 </div>
-            </div>
-            <button type="button" id="calendarToggle" class="calendar-toggle" aria-expanded="false" aria-controls="calendarCollapsible">
-                <span>Hold Period Calendar</span><span id="calendarArrow">▼</span>
-            </button>
-            <div class="calendar-collapsible" id="calendarCollapsible">
-                <div class="hold-calendar" id="holdCalendar"></div>
             </div>
         </div>
         <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
@@ -928,8 +930,8 @@
                 <div class="info-item"><span class="info-key">F8:</span> Print calculations</div>
                 <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
                 <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
-                <div class="info-item"><span class="info-key">Lot Assignment:</span> Appears in the input card when Remaining = 0 — pick a lot to archive the batch &amp; continue</div>
-                <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown beside Remaining Qty in the menu bar</div>
+                <div class="info-item"><span class="info-key">Lot Assignment:</span> When Remaining = 0 the batch auto-assigns to the first free lot (or the lot with the largest balance) — the lot buttons are a manual override</div>
+                <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown in the input-card title</div>
                 <div class="info-item"><span class="info-key">Active Lot:</span> Drop-down beside the Formula Calculator title — starts at Lot-I; lots are never auto-assigned. A/C values that differ between lots are highlighted in light red</div>
             </div>
             <div id="acbInfo" class="info-section" style="display:none">
@@ -1049,7 +1051,6 @@
             acbCalculator: document.getElementById("acbCalculator"),
             menuQtyTracker: document.getElementById("menuQtyTracker"),
             stdQtyInput: document.getElementById("stdQty"),
-            drugBadge: document.getElementById("drugBadge"),
             dispensedQty: document.getElementById("dispensedQty"),
             remainingQty: document.getElementById("remainingQty"),
             quantityWarning: document.getElementById("quantityWarning"),
@@ -1066,6 +1067,7 @@
         };
 
         let calculationCount = 0, hasCalculated = false, batchComplete = false;
+        let autoAssignScheduled = false;
         let calculations = [];
         let sessionStarted = false;
         let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null, pendingArchiveLot = null;
@@ -1159,15 +1161,23 @@
             return d;
         }
 
+        // Parse any field value safely — a half-typed "-" or stray character must
+        // never propagate a Decimal.js exception into the UI.
+        function safeDec(v) { try { const d = new Decimal(v || 0); return d.isNaN() ? new Decimal(0) : d; } catch { return new Decimal(0); } }
+
         // Effective (A+C)-B for a lot: the table's Issued Qty (B) if present, plus the
-        // current batch's dispensed qty when the lot is the active one. This keeps the
-        // F1/F3 cards up to date immediately — no waiting for lot assignment.
+        // current batch's dispensed qty while that batch is still untagged. Once a lot
+        // is assigned, the batch's qty is ALREADY recorded in the B cell — adding it
+        // again would double-count and the card's (A+C)-B line would be wrong
+        // (this was the reported "(A+C)-B = shows errors" bug).
         function getEffectiveLotBalance(lotIndex) {
-            const a = new Decimal(domCache.acbInputs.a[lotIndex]?.value || 0);
-            const c = new Decimal(domCache.acbInputs.c[lotIndex]?.value || 0);
-            let b = new Decimal(domCache.acbInputs.b[lotIndex]?.value || 0);
-            if (lotIndex === currentLot - 1) b = b.plus(getCurrentBatchDispensed());
-            return a.plus(c).minus(b);
+            try {
+                const a = safeDec(domCache.acbInputs.a[lotIndex]?.value);
+                const c = safeDec(domCache.acbInputs.c[lotIndex]?.value);
+                let b = safeDec(domCache.acbInputs.b[lotIndex]?.value);
+                if (lotIndex === currentLot - 1 && pendingArchiveLot === null) b = b.plus(getCurrentBatchDispensed());
+                return a.plus(c).minus(b);
+            } catch { return new Decimal(0); }
         }
 
         const pad2 = n => String(n).padStart(2, "0");
@@ -1274,17 +1284,19 @@
         // Keeps the "<Drug> · Std Qty (A): X kg" badge beside the Formula Calculator
         // title in sync with the selected product and the current Std Qty (A) value
         // (including live edits in Manual mode).
+        // The input card's title IS the drug badge now: "Valacyclovir · Std Qty (A):
+        // 417.000 kg*" sits exactly where "Formula Calculator" used to be, while the
+        // menu bar carries the "Formula Calculator" title — same font, same style.
         function updateDrugBadge() {
-            if (!domCache.drugBadge) return;
-            if (!selectedDrugLabel) { domCache.drugBadge.classList.add('hidden'); domCache.drugBadge.innerHTML = ''; return; }
+            const titleEl = document.getElementById('formulaCardTitle');
+            if (!titleEl) return;
+            if (!selectedDrugLabel) { titleEl.textContent = 'Formula Calculator'; return; }
             const raw = domCache.stdQtyInput.value;
             let qtyText = '—';
             if (raw && raw.trim() !== '') {
                 try { qtyText = new Decimal(raw).toFixed(3); } catch { qtyText = raw; }
             }
-            domCache.drugBadge.innerHTML =
-                `<span class="badge-pill" title="Std Qty (A) reference — the same value used by the Formula Calculator">${selectedDrugLabel} · Std Qty (A): ${qtyText} kg<span class="badge-star">*</span></span>`;
-            domCache.drugBadge.classList.remove('hidden');
+            titleEl.textContent = `${selectedDrugLabel} · Std Qty (A): ${qtyText} kg*`;
         }
 
         function updateQuantityTracker() {
@@ -1313,10 +1325,28 @@
             // Lot assignment sits in the input card: the input fields are locked
             // (hidden) until the finished batch is assigned to a lot.
             domCache.formulaCalculator.classList.toggle('locked', awaitingLotAssignment);
-            document.getElementById('formulaCardTitle').textContent =
-                awaitingLotAssignment ? 'Assign Lot' : 'Formula Calculator';
             const lotPanel = document.getElementById('lotAssignPanel');
             if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
+            // Automation: the moment a batch fully accounts for the Std Qty
+            // (Remaining = 0), assign it to a lot without waiting for a manual tap —
+            // first lot with no Issued Qty yet, otherwise the lot with the largest
+            // remaining balance. The lot buttons remain as a manual override.
+            if (awaitingLotAssignment && !autoAssignScheduled) {
+                autoAssignScheduled = true;
+                setTimeout(() => {
+                    autoAssignScheduled = false;
+                    if (!awaitingLotAssignment) return;
+                    let target = domCache.acbInputs.b.findIndex(inp => !inp.value.trim());
+                    if (target === -1) {
+                        let bestBal = null;
+                        domCache.acbInputs.b.forEach((_, i) => {
+                            const bal = getEffectiveLotBalance(i);
+                            if (bestBal === null || bal.gt(bestBal)) { bestBal = bal; target = i; }
+                        });
+                    }
+                    if (target >= 0 && awaitingLotAssignment) assignLotAndContinue(target + 1);
+                }, 600);
+            }
             updateDrugBadge();
         }
 
@@ -1585,7 +1615,7 @@
 
             let tA = new Decimal(0), tB = new Decimal(0), tC = new Decimal(0), tR = new Decimal(0);
             domCache.acbInputs.a.forEach((aIn, i) => {
-                const a = new Decimal(aIn.value || 0), b = new Decimal(domCache.acbInputs.b[i].value || 0), c = new Decimal(domCache.acbInputs.c[i].value || 0);
+                const a = safeDec(aIn.value), b = safeDec(domCache.acbInputs.b[i].value), c = safeDec(domCache.acbInputs.c[i].value);
                 const re = domCache.acbInputs.results[i];
                 if (b.isZero() || !domCache.acbInputs.b[i].value.trim()) { re.textContent = '-'; re.classList.remove('acb-output','acb-prefilled'); }
                 else { const r = a.plus(c).minus(b); re.textContent = formatNumber(r); re.classList.add('acb-output'); re.classList.remove('acb-prefilled'); tR = tR.plus(r); }
@@ -1931,21 +1961,6 @@
                 acbArrow.textContent = open ? '▲' : '▼';
                 if (open) acbCollapsible.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
-
-            // Collapsible hold-period calendar: the down-arrow button pulls it open,
-            // the up-arrow button (or a firm scroll-up over it) pushes it back.
-            const calendarToggle = document.getElementById('calendarToggle');
-            const calendarCollapsible = document.getElementById('calendarCollapsible');
-            const calendarArrow = document.getElementById('calendarArrow');
-            function setCalendarOpen(open) {
-                calendarCollapsible.classList.toggle('open', open);
-                calendarToggle.setAttribute('aria-expanded', String(open));
-                calendarArrow.textContent = open ? '▲' : '▼';
-            }
-            calendarToggle.addEventListener('click', () => setCalendarOpen(!calendarCollapsible.classList.contains('open')));
-            calendarCollapsible.addEventListener('wheel', e => {
-                if (e.deltaY < -30) setCalendarOpen(false);
-            }, { passive: true });
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
