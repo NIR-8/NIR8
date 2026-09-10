@@ -522,7 +522,64 @@
             border: 1px solid #e3e7ee; border-radius: 8px; font-size: 13px; color: #444;
         }
         .hold-period .hold-label { display: block; font-weight: 600; color: #157347; margin-bottom: 4px; }
-        #holdDates { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
+        /* ── TOUCH-FRIENDLY DROPDOWN ── */
+        .custom-select { position: relative; text-align: left; }
+        .select-trigger {
+            width: 100%; padding: 14px 14px; border: 2px solid #ddd; border-radius: 8px;
+            background: #fff; font-size: 16px; color: #444; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            min-height: 52px; font-family: "Inter", sans-serif; flex: none; text-align: left;
+        }
+        .select-trigger:hover { background: #f7f8fa; }
+        .select-trigger::after { content: "\25BE"; color: #157347; font-size: 14px; margin-left: 10px; }
+        .select-options {
+            display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            background: #fff; border: 2px solid #ddd; border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(0,0,0,.18); z-index: 60; overflow: hidden;
+        }
+        .select-options.open { display: block; }
+        .select-option {
+            display: block; width: 100%; padding: 16px; background: #fff; color: #222;
+            font-size: 16px; text-align: left; border-bottom: 1px solid #f0f0f0;
+            cursor: pointer; min-height: 56px; flex: none; font-family: "Inter", sans-serif;
+            border-radius: 0;
+        }
+        .select-option:last-child { border-bottom: none; }
+        .select-option small { display: block; color: #767676; font-size: 12px; margin-top: 2px; }
+        .select-option:hover { background: #eaf7ee; }
+        .select-option:active { background: #d9f0e1; }
+
+        /* ── HOLD PERIOD ── */
+        .hold-dates-row { display: flex; align-items: flex-end; justify-content: center; gap: 14px; flex-wrap: wrap; }
+        .hold-date-group { display: flex; flex-direction: column; gap: 4px; }
+        .hold-date-group label { font-weight: 600; color: #157347; font-size: 12px; text-align: center; }
+        .hold-date-input {
+            width: 160px; padding: 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
+            text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; background: #fff;
+        }
+        .hold-date-input:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
+        .hold-date-static {
+            display: inline-block; width: 160px; padding: 8px; border: 1.5px solid #a9dfba;
+            border-radius: 6px; text-align: center; font-size: 14px; font-weight: 600;
+            font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
+        }
+        .hold-sep { font-weight: 700; color: #157347; padding-bottom: 9px; font-size: 16px; }
+        .hold-calendar { margin-top: 14px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+        .hold-month { background: #fff; border: 1px solid #e3e7ee; border-radius: 10px; padding: 10px; }
+        .hold-month-title { font-weight: 600; text-align: center; margin-bottom: 8px; font-size: 13px; color: #111; }
+        .hold-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 3px; }
+        .hold-dow {
+            width: 32px; height: 24px; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #999; font-size: 10px;
+        }
+        .hold-day {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; font-size: 12px; font-variant-numeric: tabular-nums;
+            background: #eaf7ee; border: 1px solid #d9ecdf; color: #333;
+        }
+        .hold-day.cal-out { background: #fff; border-color: transparent; color: #c9c9c9; }
+        .hold-day.cal-today { background: #157347; border-color: #157347; color: #fff; font-weight: 700; }
+        .hold-day.cal-hold { background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 700; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
@@ -635,12 +692,17 @@
     <div id="productSetup" class="calculator-container active">
         <h2>Select Product</h2>
         <div class="input-group">
-            <label for="drugSelector">Product:</label>
-            <select id="drugSelector" aria-label="Select product">
-                <option value="valacyclovir" selected>Valacyclovir (Std Qty 417 kg)</option>
-                <option value="levetiracetam">Levetiracetam (Std Qty 268.750 kg)</option>
-                <option value="manual">Manual</option>
-            </select>
+            <label id="drugSelectorLabel">Product:</label>
+            <input type="hidden" id="drugSelector" value="">
+            <div class="custom-select">
+                <button type="button" class="select-trigger" id="drugTrigger"
+                    aria-haspopup="listbox" aria-expanded="false" aria-labelledby="drugSelectorLabel">Select product&hellip;</button>
+                <div class="select-options" id="drugOptions" role="listbox" aria-label="Select product">
+                    <button type="button" class="select-option" role="option" data-value="valacyclovir">Valacyclovir<small>Std Qty 417 kg</small></button>
+                    <button type="button" class="select-option" role="option" data-value="levetiracetam">Levetiracetam<small>Std Qty 268.750 kg</small></button>
+                    <button type="button" class="select-option" role="option" data-value="manual">Manual<small>Enter your own Std Qty (A) &amp; (C)</small></button>
+                </div>
+            </div>
         </div>
         <div class="input-group" id="stdQtyGroup" style="display:none">
             <label for="stdQty">Std Qty (A) kg:</label>
@@ -651,7 +713,7 @@
             <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std Qty (C)">
         </div>
         <div class="button-row">
-            <button type="button" id="startBtn" aria-label="Start calculations">Start →</button>
+            <button type="button" id="startBtn" aria-label="Start calculations" style="display:none">Start →</button>
         </div>
     </div>
 
@@ -743,8 +805,18 @@
             </tbody>
         </table>
         <div class="hold-period" id="holdPeriod">
-            <span class="hold-label">Hold Time Period (15 days)</span>
-            <span id="holdDates">—</span>
+            <div class="hold-dates-row">
+                <div class="hold-date-group">
+                    <label for="holdStartDate">Current date</label>
+                    <input type="date" id="holdStartDate" class="hold-date-input">
+                </div>
+                <div class="hold-sep">/</div>
+                <div class="hold-date-group">
+                    <span class="hold-label">Hold time period (15 days)</span>
+                    <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
+                </div>
+            </div>
+            <div class="hold-calendar" id="holdCalendar"></div>
         </div>
         <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
     </div>
@@ -1011,12 +1083,61 @@
             return a.plus(c).minus(b);
         }
 
+        const pad2 = n => String(n).padStart(2, "0");
+        const fmtDDMMYYYY = d => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+        const toISODate = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        const parseISODate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+        const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+        function buildMonthGrid(y, m, winStart, winEnd, start, end) {
+            const dows = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+            const monthEl = document.createElement("div"); monthEl.className = "hold-month";
+            const title = document.createElement("div"); title.className = "hold-month-title";
+            title.textContent = new Date(y, m).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+            const grid = document.createElement("div"); grid.className = "hold-grid";
+            dows.forEach(d => { const el = document.createElement("div"); el.className = "hold-dow"; el.textContent = d; grid.appendChild(el); });
+            const firstDow = new Date(y, m, 1).getDay();
+            for (let i = 0; i < firstDow; i++) grid.appendChild(document.createElement("div"));
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const day = new Date(y, m, d);
+                const cell = document.createElement("div"); cell.className = "hold-day"; cell.textContent = d;
+                if (day < winStart || day > winEnd) cell.classList.add("cal-out");
+                if (sameDay(day, start)) cell.classList.add("cal-today");
+                if (sameDay(day, end)) cell.classList.add("cal-hold");
+                grid.appendChild(cell);
+            }
+            monthEl.appendChild(title); monthEl.appendChild(grid);
+            return monthEl;
+        }
+
+        function renderHoldCalendar(start, end) {
+            const wrap = document.getElementById("holdCalendar");
+            if (!wrap) return;
+            wrap.innerHTML = "";
+            // Window: 3 days before the current date through 3 days after the hold
+            // due date (21 days total). Months outside the window are not rendered,
+            // so a hold date falling in the next month just adds that month's grid.
+            const winStart = new Date(start.getFullYear(), start.getMonth(), start.getDate() - 3);
+            const winEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 3);
+            const month = new Date(winStart.getFullYear(), winStart.getMonth(), 1);
+            const lastMonth = new Date(winEnd.getFullYear(), winEnd.getMonth(), 1);
+            while (month <= lastMonth) {
+                wrap.appendChild(buildMonthGrid(month.getFullYear(), month.getMonth(), winStart, winEnd, start, end));
+                month.setMonth(month.getMonth() + 1);
+            }
+        }
+
         function updateHoldPeriod() {
-            const now = new Date();
-            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15);
-            const opts = { day: 'numeric', month: 'long', year: 'numeric' };
-            const el = document.getElementById('holdDates');
-            if (el) el.textContent = `${now.toLocaleDateString('en-US', opts)}  →  ${end.toLocaleDateString('en-US', opts)}`;
+            const startInput = document.getElementById("holdStartDate");
+            if (!startInput) return;
+            if (!startInput.value) startInput.value = toISODate(new Date());
+            const start = parseISODate(startInput.value);
+            if (isNaN(start)) return;
+            const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 15);
+            const endEl = document.getElementById("holdEndDateStatic");
+            if (endEl) endEl.textContent = fmtDDMMYYYY(end);
+            renderHoldCalendar(start, end);
         }
 
         function startSession() {
@@ -1505,7 +1626,7 @@
             // fire after the user has already begun entering values).
             const userAlreadyTyping = document.activeElement !== document.body ||
                 domCache.QInput.value || domCache.waterInput.value || domCache.assayInput.value;
-            if (!userAlreadyTyping) requestAnimationFrame(() => document.getElementById('drugSelector').focus());
+            if (!userAlreadyTyping) requestAnimationFrame(() => document.getElementById('drugTrigger').focus());
 
             [domCache.QInput, domCache.waterInput, domCache.assayInput].forEach(input => {
                 input.addEventListener("input", e => { validateInput(input); handleInput(e); });
@@ -1551,15 +1672,36 @@
 
             document.getElementById('resetAcbBtn').addEventListener('click', resetACBCalculator);
             document.getElementById('startBtn').addEventListener('click', startSession);
-            document.getElementById('drugSelector').addEventListener('change', (e) => {
-                const manual = e.target.value === 'manual';
-                document.getElementById('stdQtyGroup').style.display = manual ? 'block' : 'none';
-                document.getElementById('stdCGroup').style.display = manual ? 'block' : 'none';
-                if (manual) domCache.stdQtyInput.focus();
+            // Touch-friendly product dropdown: tapping an option selects it AND
+            // proceeds immediately (no separate Start tap needed on touch screens).
+            const drugTrigger = document.getElementById('drugTrigger');
+            const drugOptions = document.getElementById('drugOptions');
+            const closeDrugOptions = () => { drugOptions.classList.remove('open'); drugTrigger.setAttribute('aria-expanded', 'false'); };
+            drugTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = drugOptions.classList.toggle('open');
+                drugTrigger.setAttribute('aria-expanded', open);
+            });
+            document.addEventListener('click', (e) => { if (!e.target.closest('.custom-select')) closeDrugOptions(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrugOptions(); });
+            drugOptions.querySelectorAll('.select-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const val = opt.dataset.value;
+                    document.getElementById('drugSelector').value = val;
+                    drugTrigger.textContent = opt.childNodes[0].textContent.trim();
+                    closeDrugOptions();
+                    const manual = val === 'manual';
+                    document.getElementById('stdQtyGroup').style.display = manual ? 'block' : 'none';
+                    document.getElementById('stdCGroup').style.display = manual ? 'block' : 'none';
+                    document.getElementById('startBtn').style.display = manual ? 'block' : 'none';
+                    if (manual) { domCache.stdQtyInput.focus(); }
+                    else { startSession(); } // presets proceed immediately
+                });
             });
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); startSession(); } });
             });
+            document.getElementById('holdStartDate').addEventListener('change', updateHoldPeriod);
             updateHoldPeriod();
             document.getElementById('printBtn').addEventListener('click', printWithCheck);
             document.getElementById('infoBtn').addEventListener('click', showInfo);
