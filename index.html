@@ -227,6 +227,10 @@
         .reference-values {
             display: block; text-align: right; padding: 1mm 15mm 0; font-size: 10pt; color: #000;
         }
+        .acb-balance {
+            display: block; text-align: right; padding: 1mm 15mm 0; font-size: 10pt;
+            color: #000; font-weight: 600;
+        }
         .calculation-content {
             padding: 4mm 15mm; overflow: hidden; font-size: 14pt;
         }
@@ -519,6 +523,7 @@
             .calculation-entry::after { font-size: 12pt; padding: 4mm; }
             .calculation-entry .lot-label { padding: 3mm 10mm 0; font-size: 12pt; }
             .reference-values { font-size: 10pt; padding: 1mm 10mm 0; }
+            .acb-balance { font-size: 10pt; padding: 1mm 10mm 0; }
             .calculation-content { font-size: 12pt; padding: 3mm 10mm; }
             .page-number { font-size: 10pt; bottom: 2mm; right: 10mm; }
             .acb-td, .acb-th { font-size: 12px; padding: 6px; min-width: 50px; }
@@ -532,6 +537,7 @@
             .calculation-entry::after { font-size: 10pt; padding: 3mm; }
             .calculation-entry .lot-label { padding: 3mm 8mm 0; font-size: 10pt; }
             .reference-values { font-size: 10pt; padding: 1mm 8mm 0; }
+            .acb-balance { font-size: 10pt; padding: 1mm 8mm 0; }
             .calculation-content { font-size: 10pt; padding: 3mm 8mm; }
             .page-number { font-size: 8pt; bottom: 1mm; right: 8mm; }
             .acb-td, .acb-th { font-size: 10px; padding: 4px; min-width: 40px; }
@@ -1291,10 +1297,21 @@
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry"; newEntry.setAttribute("tabindex", "0");
             newEntry.setAttribute("role", "region"); newEntry.setAttribute("aria-label", `Calculation ${formulaType}`);
+            // F1/F3 are the issued-qty results — show the lot's (A+C)-B balance
+            // directly on the card, in the space below the W/A reference values.
+            let acbBalanceLine = '';
+            if (formulaType === 'F1' || formulaType === 'F3') {
+                const li = currentLot - 1;
+                const aL = new Decimal(domCache.acbInputs.a[li]?.value || 0);
+                const cL = new Decimal(domCache.acbInputs.c[li]?.value || 0);
+                const bL = new Decimal(domCache.acbInputs.b[li]?.value || 0);
+                acbBalanceLine = `<div class="acb-balance">(A+C)-B = ${aL.plus(cL).minus(bL).toFixed(3)}</div>`;
+            }
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="lot-label">${LOT_NAMES[currentLot]}</div>
                 <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
+                ${acbBalanceLine}
                 <div class="calculation-content">${calculationResult.html}</div>
                 <div class="page-number">${calculationCount+1}/${calculationCount+1}</div>
             `;
