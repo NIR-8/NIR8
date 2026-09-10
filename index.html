@@ -1226,6 +1226,12 @@
             [domCache.acbInputs.totals.a, domCache.acbInputs.totals.b, domCache.acbInputs.totals.c].forEach(el => { el.classList.add('acb-output'); el.classList.remove('acb-prefilled'); });
             domCache.acbInputs.totals.result.classList.toggle('acb-prefilled', tR.isZero());
             domCache.acbInputs.totals.result.classList.toggle('acb-output', !tR.isZero());
+
+            // Keep F1/F3 cards' (A+C)-B lines in sync with the table's per-lot results
+            domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
+                const cell = domCache.acbInputs.results[parseInt(el.dataset.lotBalance, 10) - 1];
+                if (cell) el.textContent = `(A+C)-B = ${cell.textContent}`;
+            });
         }
 
         function printWithCheck() {
@@ -1305,7 +1311,7 @@
                 const aL = new Decimal(domCache.acbInputs.a[li]?.value || 0);
                 const cL = new Decimal(domCache.acbInputs.c[li]?.value || 0);
                 const bL = new Decimal(domCache.acbInputs.b[li]?.value || 0);
-                acbBalanceLine = `<div class="acb-balance">(A+C)-B = ${aL.plus(cL).minus(bL).toFixed(3)}</div>`;
+                acbBalanceLine = `<div class="acb-balance" data-lot-balance="${currentLot}">(A+C)-B = ${aL.plus(cL).minus(bL).toFixed(3)}</div>`;
             }
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
