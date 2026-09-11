@@ -100,43 +100,29 @@
         /* ── GLOBAL ── */
         *, *::before, *::after { box-sizing: border-box; }
 
-        /* ── MENU BAR ── */
-        .menu-bar {
-            width: 100%; background: rgba(0,0,0,.8); color: #fff;
-            display: flex; justify-content: center;
-            position: fixed; top: 0; left: 0; z-index: 100; padding: 10px 0;
-        }
-        .menu-container {
-            display: flex; max-width: 1000px; width: 100%;
-            padding: 0 20px; align-items: center; gap: 10px; overflow: hidden;
-        }
-        .menu-item {
-            color: #fff; text-decoration: none; padding: 10px 16px;
-            margin: 0 5px; border-radius: 5px; transition: background .3s ease;
-            cursor: pointer; white-space: nowrap; min-height: 44px;
-            display: inline-flex; align-items: center;
-        }
-        .menu-item:hover { background: rgba(255,255,255,.2); }
-        .menu-item.active { background: #157347; }
-
-        /* ── HAMBURGER ── */
+        /* ── HAMBURGER — small circular button, fixed top-right corner ── */
         .hamburger-btn {
-            background: transparent; border: none; color: #fff;
-            font-size: 22px; cursor: pointer; padding: 8px 10px;
-            min-height: 44px; min-width: 44px;
+            position: fixed; top: 12px; right: 12px; z-index: 1000;
+            width: 46px; height: 46px; border-radius: 50%;
+            background: rgba(0,0,0,.8); color: #fff; border: none;
+            font-size: 20px; line-height: 1; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 6px; margin-left: 8px;
-            transition: background 0.2s; flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,.25);
+            transition: background .2s, transform .2s;
         }
-        .hamburger-btn:hover { background: rgba(255,255,255,0.15); }
+        .hamburger-btn:hover { background: #157347; transform: scale(1.06); }
+
+        /* ── CALENDAR SLOT — lives inside the input card while (A+C)-B is open ── */
+        #holdPeriodSlot { display: none; margin-top: 14px; }
+        #holdPeriodSlot.open { display: block; }
 
         /* ── BODY ── */
         body {
             font-family: "Inter", sans-serif;
             background: linear-gradient(to right, #4facfe, #00f2fe);
-            display: flex; justify-content: center; align-items: center;
+            display: flex; justify-content: flex-start; align-items: center;
             min-height: 100vh; flex-direction: column;
-            padding: 80px 20px 60px; text-align: center; margin: 0;
+            padding: 20px 20px 60px; text-align: center; margin: 0;
         }
 
         /* ── CALCULATOR ── */
@@ -158,14 +144,12 @@
             gap: 8px; flex-wrap: nowrap;
         }
         .formula-header-row h2 { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        /* The menu-bar title and the input-card title share one style — the drug /
-           Std Qty badge moved onto the card (where "Formula Calculator" used to be)
-           and "Formula Calculator" moved to the menu bar, in identical type. */
-        .menu-title, .formula-header-row h2 {
+        /* The input-card title style — the drug / Std Qty badge sits on its own
+           line under the card title at the top of the input card. */
+        .formula-header-row h2 {
             font-family: "Inter", sans-serif; font-size: 18px; font-weight: 600;
             letter-spacing: -0.2px; color: inherit; line-height: 1.3;
         }
-        .menu-title { color: #fff; flex-shrink: 0; margin: 0; }
         /* Drug/Std Qty badge — its own full-width line under the card title, so it
            always has room to wrap instead of getting cropped next to the lot select. */
         .drug-badge {
@@ -683,7 +667,6 @@
             .page-number { font-size: 10pt; bottom: 2mm; right: 10mm; }
             .acb-td, .acb-th { font-size: 12px; padding: 6px; min-width: 50px; }
             .acb-input, .acb-span { font-size: 12px; padding: 4px; }
-            .menu-container { flex-wrap: wrap; gap: 10px; padding: 10px; }
         }
         @media (max-width: 480px) {
             .calculation-entry { font-size: 10pt; }
@@ -699,7 +682,6 @@
             .calculator-container { width: 100%; padding: 15px; }
             .acb-input, input { font-size: 14px; }
             button { font-size: 14px; padding: 10px; }
-            .menu-item { padding: 6px 10px; font-size: 14px; }
             .qty-tracker-value { font-size: 15px; }
             .sidenav, .writeus-panel { width: auto; right: 0; left: 0; max-width: 100%; }
         }
@@ -709,7 +691,7 @@
             @page { size: A4 landscape; margin: 8mm; }
             body { background: transparent; padding: 0; margin: 0; }
             .calculator-container,
-            .delete-button, .info-btn, .menu-bar, .print-btn, .clear-all-btn, .calc-toolbar,
+            .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .archived-steps-container, .progress-container, footer, .reset-acb-btn, .reset-acb-row,
             .sidenav, .sidenav-overlay, .writeus-panel, #acbToggle { display: none !important; }
             .calculation-steps {
@@ -751,14 +733,8 @@
         </div>
     </noscript>
 
-    <!-- MENU BAR -->
-    <div class="menu-bar">
-        <div class="menu-container">
-            <h2 class="menu-title" id="menuTitle">Formula Calculator</h2>
-            <!-- Hamburger -->
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
-        </div>
-    </div>
+    <!-- HAMBURGER — floating circular button, top-right corner -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
 
     <!-- PRODUCT SETUP — shown once on page visit; the product is selected here and never asked again -->
     <div id="productSetup" class="calculator-container active">
@@ -838,6 +814,8 @@
         <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible">
             <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
         </button>
+        <!-- Hold-period calendar lives here while the (A+C)-B panel is open -->
+        <div id="holdPeriodSlot"></div>
         <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
             <div class="lot-assign-buttons">
                 <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
@@ -905,6 +883,7 @@
         <div class="reset-acb-row">
             <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
         </div>
+        <div id="holdPeriodHome">
         <div class="hold-period" id="holdPeriod">
             <!-- Calendar first (always visible — no collapsible), dates row below -->
             <div class="hold-calendar" id="holdCalendar"></div>
@@ -918,6 +897,7 @@
                     <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
                 </div>
             </div>
+        </div>
         </div>
             </div>
         </div>
@@ -937,23 +917,13 @@
         <div class="modal-content">
             <span class="close" id="infoModalClose" aria-label="Close">×</span>
             <div id="formulaInfo" class="info-section">
-                <h3 id="infoTitle">Formula Calculator — Shortcuts</h3>
-                <div class="info-item"><span class="info-key">Start:</span> Pick the product once — the calculator then proceeds without asking again</div>
-                <div class="info-item"><span class="info-key">F1/F2/F3:</span> Calculate respective formulas</div>
-                <div class="info-item"><span class="info-key">❌:</span> Remove individual calculations</div>
-                <div class="info-item"><span class="info-key">F5:</span> Refresh page</div>
-                <div class="info-item"><span class="info-key">F8:</span> Print calculations</div>
-                <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
-                <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
-                <div class="info-item"><span class="info-key">Lot Assignment:</span> When Remaining = 0 the batch auto-assigns to the first free lot (or the lot with the largest balance) — the lot buttons are a manual override</div>
-                <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown in the input-card title</div>
-                <div class="info-item"><span class="info-key">Active Lot:</span> Drop-down beside the Formula Calculator title — starts at Lot-I; lots are never auto-assigned. A/C values that differ between lots are highlighted in light red</div>
-            </div>
-            <div id="acbInfo" class="info-section" style="display:none">
-                <h3>(A+C)-B Calculator Features</h3>
-                <div class="info-item"><span class="info-key">Enter:</span> Navigate between editable fields</div>
-                <div class="info-item"><span class="info-key">Auto-update:</span> Changes automatically update totals</div>
-                <div class="info-item"><span class="info-key">Reset Button (↻):</span> Reset all values</div>
+                <h3 id="infoTitle">Help</h3>
+                <div class="info-item"><span class="info-key">F1/F2/F3 buttons:</span> Calculate the respective formula</div>
+                <div class="info-item"><span class="info-key">❌:</span> Remove a calculation</div>
+                <div class="info-item"><span class="info-key">Remaining Qty:</span> Tap it to copy into the Q field</div>
+                <div class="info-item"><span class="info-key">Lot Assignment:</span> When Remaining = 0, assign the finished batch to a lot — the lot buttons are a manual override</div>
+                <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown on the card</div>
+                <div class="info-item"><span class="info-key">Active Lot:</span> Drop-down beside the card title; A/C values that differ between lots are highlighted in light red</div>
             </div>
             <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
@@ -1579,7 +1549,6 @@
         function showInfo() {
             const modal = document.getElementById('infoModal');
             document.getElementById('formulaInfo').style.display = 'block';
-            document.getElementById('acbInfo').style.display = 'block';
             modal.style.display = 'flex';
             requestAnimationFrame(() => document.querySelector('#infoModal .close').focus());
         }
@@ -1957,15 +1926,6 @@
                 if (btn) deleteCalculation(btn);
             });
 
-            document.addEventListener("keydown", e => {
-                switch (e.key) {
-                    case "F1": e.preventDefault(); calculate("F1"); break;
-                    case "F2": e.preventDefault(); calculate("F2"); break;
-                    case "F3": e.preventDefault(); calculate("F3"); break;
-                    case "F8": e.preventDefault(); if (calculationCount > 0) printWithCheck(); break;
-                }
-            });
-
             domCache.stdQtyInput.addEventListener('input', () => { validateInput(domCache.stdQtyInput); updateQuantityTracker(); });
             domCache.stdQtyInput.addEventListener("change", () => {
                 const preset = document.getElementById('drugSelector')?.value || 'valacyclovir';
@@ -1988,10 +1948,24 @@
             const acbToggle = document.getElementById('acbToggle');
             const acbCollapsible = document.getElementById('acbCollapsible');
             const acbArrow = document.getElementById('acbArrow');
+            const holdPeriod = document.getElementById('holdPeriod');
+            const holdPeriodSlot = document.getElementById('holdPeriodSlot');
+            const holdPeriodHome = document.getElementById('holdPeriodHome');
             acbToggle.addEventListener('click', () => {
                 const open = acbCollapsible.classList.toggle('open');
                 acbToggle.setAttribute('aria-expanded', String(open));
                 acbArrow.textContent = open ? '▲' : '▼';
+                if (open) {
+                    // The hold calendar moves into the input card so the opened
+                    // (A+C)-B panel can use the freed space for its table.
+                    holdPeriodSlot.appendChild(holdPeriod);
+                    holdPeriodSlot.classList.add('open');
+                } else {
+                    // Collapsed: the calendar goes back home and the input card
+                    // is restored to its normal layout.
+                    holdPeriodHome.appendChild(holdPeriod);
+                    holdPeriodSlot.classList.remove('open');
+                }
                 if (open) acbCollapsible.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
