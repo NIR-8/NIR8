@@ -292,7 +292,10 @@
         .clear-all-btn { color: #dc3545; }
         .clear-all-btn:hover { background: rgba(220,53,69,.08); }
         /* Print button: small circular button pinned to the left-most corner of the card */
-        .calc-toolbar { position: absolute; top: 10px; left: 10px; z-index: 20; padding: 0; }
+        /* Print toolbar pinned top-RIGHT: top-left is where every calculation
+           card's delete ❌ button lives — keeping it left overlapped the newest
+           card's delete button exactly. */
+        .calc-toolbar { position: absolute; top: 10px; right: 10px; z-index: 20; padding: 0; }
         .print-btn {
             color: #157347; font-size: 16px; width: 40px; height: 40px;
             border-radius: 50%; background: #fff; border: 1px solid #e3e7ee;
@@ -302,6 +305,10 @@
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
 .lot-assign-panel {
             margin-top: 12px; padding: 8px; border: 1px solid #a9dfba; border-radius: 6px; background: #eaf7ee;
+        }
+        .lot-assign-title {
+            font-size: 13px; font-weight: 600; color: #157347; text-align: center;
+            margin: 2px 0 8px; line-height: 1.4;
         }
         /* Remaining = 0: hide the input card (Q/W/A fields, progress, buttons) until a lot is assigned */
         #formulaCalculator.locked .input-group,
@@ -796,6 +803,7 @@
             <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
         </button>
         <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
+            <div class="lot-assign-title" id="lotAssignTitle">Remaining qty is 0 — this batch is complete. Assign it to a lot to continue:</div>
             <div class="lot-assign-buttons">
                 <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
                 <button type="button" class="lot-assign-btn" data-lot="2">Lot-II</button>
@@ -972,7 +980,7 @@
             assayInput: document.getElementById("assay"),
             waterGroup: document.querySelector("#water").parentElement,
             assayGroup: document.querySelector("#assay").parentElement,
-            buttons: document.querySelector(".button-row"),
+            buttons: document.querySelector("#formulaCalculator .button-row"),
             progressBar: document.getElementById("progressBar"),
             calculationSteps: document.getElementById("calculationSteps"),
             stepsContainer: document.getElementById("stepsContainer"),
@@ -1005,6 +1013,38 @@
         let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null, pendingArchiveLot = null;
         let selectedDrugLabel = '';
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
+
+        // ── (A+C)-B PANEL ── Single open/close path shared by the toggle, the
+        //    auto-hide on scroll, and auto-collapse when the user proceeds with
+        //    a calculation.
+        const acbToggleEl       = document.getElementById('acbToggle');
+        const acbCollapsibleEl  = document.getElementById('acbCollapsible');
+        const acbArrowEl        = document.getElementById('acbArrow');
+        const acbWrapperEl      = document.getElementById('acbWrapper');
+        let acbScrollAccum = 0, acbLastScrollY = 0, acbOpenGraceUntil = 0;
+        function acbPanelIsOpen() { return !!acbCollapsibleEl && acbCollapsibleEl.classList.contains('open'); }
+        function setAcbPanel(open) {
+            if (!acbCollapsibleEl) return;
+            acbCollapsibleEl.classList.toggle('open', open);
+            acbToggleEl.setAttribute('aria-expanded', String(open));
+            acbArrowEl.textContent = open ? '▲' : '▼';
+            acbScrollAccum = 0;
+            acbLastScrollY = window.scrollY;
+            // Brief grace period after opening: the smooth scrollIntoView that
+            // follows would otherwise trip the heavy-scroll auto-hide instantly.
+            acbOpenGraceUntil = open ? Date.now() + 800 : 0;
+        }
+        // Heavy scrolling while the panel is out of focus tucks it away.
+        window.addEventListener('scroll', () => {
+            if (!acbPanelIsOpen()) { acbLastScrollY = window.scrollY; return; }
+            if (Date.now() < acbOpenGraceUntil) { acbLastScrollY = window.scrollY; return; }
+            const dy = Math.abs(window.scrollY - acbLastScrollY);
+            acbLastScrollY = window.scrollY;
+            const focusInside = acbWrapperEl.contains(document.activeElement) || acbToggleEl.contains(document.activeElement);
+            if (focusInside) { acbScrollAccum = 0; return; }
+            acbScrollAccum += dy;
+            if (acbScrollAccum > 250) setAcbPanel(false);
+        }, { passive: true });
 
         function truncateTo12Digits(num) {
             try {
@@ -1570,6 +1610,9 @@
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
             if (!isConfirmed) return;
 
+            // User is proceeding with calculations — tuck the (A+C)-B panel away.
+            setAcbPanel(false);
+
             // The previous batch was fully dispensed and assigned to a lot — archive it
             // now, only as the user proceeds with the next calculation.
             if (pendingArchiveLot !== null && calculationCount > 0) {
@@ -1803,15 +1846,12 @@
             document.querySelectorAll('.lot-assign-btn').forEach(btn =>
                 btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
             // (A+C)-B pull-down panel: down arrow opens it above the Formula
-            // Calculator, up arrow pushes it back.
-            const acbToggle = document.getElementById('acbToggle');
-            const acbCollapsible = document.getElementById('acbCollapsible');
-            const acbArrow = document.getElementById('acbArrow');
-            acbToggle.addEventListener('click', () => {
-                const open = acbCollapsible.classList.toggle('open');
-                acbToggle.setAttribute('aria-expanded', String(open));
-                acbArrow.textContent = open ? '▲' : '▼';
-                if (open) acbCollapsible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Calculator, up arrow pushes it back. Opening also arms the
+            // scroll-away / proceed-with-calculation auto-hide (setAcbPanel).
+            acbToggleEl.addEventListener('click', () => {
+                const open = !acbPanelIsOpen();
+                setAcbPanel(open);
+                if (open) acbCollapsibleEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
