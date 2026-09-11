@@ -353,7 +353,7 @@
 
         /* ── ACB WRAPPER — centered, tucked directly under the input card ── */
         .acb-wrapper {
-            width: 90%; max-width: 900px; margin: -10px auto 20px; text-align: left;
+            width: 90%; max-width: 900px; margin: 10px auto 20px; text-align: left;
         }
 
         /* ── MODALS ── */
@@ -650,15 +650,16 @@
         .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
 
         /* ── COLLAPSIBLE HOLD-PERIOD CALENDAR ── */
-        /* Minimal pull-down tab — small, quiet, hugging the left edge below the input card */
+        /* (A+C)-B pull-down button — full-width secondary button below F1/F2/F3 */
         .calendar-toggle {
-            width: auto; margin: 0 0 6px; padding: 5px 10px;
-            background: transparent; color: #157347; border: none; border-radius: 6px;
-            font-size: 13px; font-weight: 600; cursor: pointer; flex: none;
-            display: inline-flex; align-items: center; gap: 6px;
+            width: 100%; margin-top: 12px; padding: 12px;
+            background: #eaf7ee; color: #157347; border: 1.5px solid #a9dfba; border-radius: 5px;
+            font-size: 15px; font-weight: 600; cursor: pointer; flex: none;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
             font-family: "Inter", sans-serif; user-select: none;
+            transition: background .2s ease;
         }
-        .calendar-toggle:hover { background: #eaf7ee; text-decoration: underline; }
+        .calendar-toggle:hover { background: #d9f0e1; }
         .calendar-collapsible { max-height: 0; overflow: hidden; transition: max-height .45s ease; }
         .calendar-collapsible.open { max-height: 1400px; }
         .calendar-collapsible .hold-calendar { margin-top: 14px; }
@@ -830,6 +831,9 @@
             <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
             <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
         </div>
+        <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible">
+            <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
+        </button>
         <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
             <div class="lot-assign-buttons">
                 <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
@@ -842,9 +846,6 @@
 
     <!-- ACB CALCULATOR — collapsible pull-down panel above the Formula Calculator -->
     <div id="acbWrapper" class="acb-wrapper hidden">
-        <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible">
-            <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
-        </button>
         <div class="calendar-collapsible" id="acbCollapsible">
             <div id="acbCalculator" class="calculator-container acb-embedded">
         <div class="header-row">
