@@ -100,25 +100,66 @@
         /* ── GLOBAL ── */
         *, *::before, *::after { box-sizing: border-box; }
 
-        /* ── HAMBURGER — small circular button, fixed top-right corner ── */
-        .hamburger-btn {
-            position: fixed; top: 12px; right: 12px; z-index: 1000;
-            width: 46px; height: 46px; border-radius: 50%;
-            background: rgba(0,0,0,.8); color: #fff; border: none;
-            font-size: 20px; line-height: 1; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,.25);
-            transition: background .2s, transform .2s;
+        /* ── MENU BAR ── */
+        .menu-bar {
+            width: 100%; background: rgba(0,0,0,.8); color: #fff;
+            display: flex; justify-content: center;
+            position: fixed; top: 0; left: 0; z-index: 100; padding: 10px 0;
         }
-        .hamburger-btn:hover { background: #157347; transform: scale(1.06); }
+        .menu-container {
+            display: flex; max-width: 1000px; width: 100%;
+            padding: 0 20px; align-items: center; gap: 10px; overflow: hidden;
+        }
+        .menu-item {
+            color: #fff; text-decoration: none; padding: 10px 16px;
+            margin: 0 5px; border-radius: 5px; transition: background .3s ease;
+            cursor: pointer; white-space: nowrap; min-height: 44px;
+            display: inline-flex; align-items: center;
+        }
+        .menu-item:hover { background: rgba(255,255,255,.2); }
+        .menu-item.active { background: #157347; }
+
+        /* ── QTY TRACKER ── */
+        .menu-qty-tracker {
+            display: flex; align-items: center; gap: 10px; margin-left: auto;
+            flex-shrink: 1; min-width: 0; overflow: hidden;
+        }
+        .menu-qty-tracker.hidden { display: none; }
+        .menu-qty-group { display: flex; flex-direction: column; align-items: flex-start; flex-shrink: 0; }
+        .menu-qty-input, .lot-select {
+            width: 90px; padding: 5px; border: 1px solid #ddd; border-radius: 3px;
+            text-align: center; background: #fff; color: #000; font-size: 13px;
+        }
+        .menu-qty-input:focus, .lot-select:focus { outline: 0; border-color: #28a745; }
+        .lot-select option { background: #fff; color: #000; }
+        .menu-qty-label { font-size: 11px; color: #e8e8e8; margin-bottom: 3px; white-space: nowrap; }
+        .menu-qty-value { font-size: 13px; font-weight: 600; color: #fff; }
+        .menu-qty-warning { color: #ff6b6b; font-size: 11px; margin-top: 3px; display: none; }
+        .menu-qty-warning.active {
+            display: block; background: #ff6b6b; color: #fff;
+            padding: 3px 8px; border-radius: 3px; font-weight: 600;
+        }
+
+
+
+        /* ── HAMBURGER ── */
+        .hamburger-btn {
+            background: transparent; border: none; color: #fff;
+            font-size: 22px; cursor: pointer; padding: 8px 10px;
+            min-height: 44px; min-width: 44px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; margin-left: 8px;
+            transition: background 0.2s; flex-shrink: 0;
+        }
+        .hamburger-btn:hover { background: rgba(255,255,255,0.15); }
 
         /* ── BODY ── */
         body {
             font-family: "Inter", sans-serif;
             background: linear-gradient(to right, #4facfe, #00f2fe);
-            display: flex; justify-content: flex-start; align-items: center;
+            display: flex; justify-content: center; align-items: center;
             min-height: 100vh; flex-direction: column;
-            padding: 20px 20px 60px; text-align: center; margin: 0;
+            padding: 80px 20px 60px; text-align: center; margin: 0;
         }
 
         /* ── CALCULATOR ── */
@@ -128,53 +169,9 @@
             box-shadow: 0 5px 15px rgba(0,0,0,.2); margin-bottom: 20px; position: relative;
             scroll-margin-top: 60px;
         }
-        #acbCalculator { max-width: 900px; margin: 0 auto; }
-        /* Embedded in the pull-down panel above the Formula Calculator — visibility
-           is governed by the collapsible wrapper, not the .active tab class. */
-        #acbCalculator.acb-embedded { display: block; }
+        #acbCalculator { max-width: 900px; }
         .calculator-container.active { display: block; }
         .input-group { margin-top: 10px; text-align: left; }
-        /* Formula card title + selected drug/Std Qty badge, side by side on one line */
-        .formula-header-row {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 8px; flex-wrap: nowrap;
-        }
-        .formula-header-row h2 { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        /* The input-card title style — the drug / Std Qty badge sits on its own
-           line under the card title at the top of the input card. */
-        .formula-header-row h2 {
-            font-family: "Inter", sans-serif; font-size: 18px; font-weight: 600;
-            letter-spacing: -0.2px; color: inherit; line-height: 1.3;
-        }
-        /* Drug/Std Qty badge — its own full-width line under the card title, so it
-           always has room to wrap instead of getting cropped next to the lot select. */
-        .drug-badge {
-            display: block; margin: 8px 0 0; font-size: 12px; font-weight: 600; color: #157347;
-            background: #eaf7ee; border: 1px solid #a9dfba; border-radius: 8px;
-            padding: 6px 10px; white-space: normal; overflow-wrap: break-word;
-            text-align: center; line-height: 1.4;
-        }
-        .drug-badge.hidden { display: none; }
-        /* ── QTY TRACKER (embedded in the Formula Calculator card) ── */
-        .qty-tracker-card {
-            display: flex; align-items: stretch; margin: 10px 0 0; padding: 10px 6px;
-            background: #f7f8fa; border: 1px solid #e3e7ee; border-radius: 8px;
-        }
-        .qty-tracker-item {
-            display: flex; flex-direction: column; align-items: center; gap: 2px;
-            flex: 1; min-width: 0;
-        }
-        .qty-tracker-label {
-            font-size: 11px; color: #767676; font-weight: 600;
-            text-transform: uppercase; letter-spacing: .3px;
-        }
-        .qty-tracker-value { font-size: 17px; font-weight: 700; color: #111; font-variant-numeric: tabular-nums; }
-        .qty-tracker-sep { width: 1px; background: #e3e7ee; align-self: stretch; margin: 2px 4px; }
-        .quantity-warning-banner {
-            display: none; margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 600;
-            color: #fff; background: #ff6b6b; padding: 6px 10px; border-radius: 6px;
-        }
-        .quantity-warning-banner.active { display: block; }
         label { font-weight: 600; display: block; color: #444; }
         input, select {
             width: calc(100% - 20px); padding: 10px; margin: 5px 0;
@@ -203,41 +200,32 @@
         .calculation-steps {
             margin-top: 20px; padding: 15px; width: 90%; max-width: 900px;
             background: #fff; border-radius: 0; box-shadow: 0 4px 10px rgba(0,0,0,.1);
-            color: #555; text-align: center; margin-left: auto; margin-right: auto;
-            position: relative; padding-top: 15px; will-change: transform;
-        }
-        #stepsContainer {
-            display: flex; flex-direction: column;
-            padding-top: 10px; margin-top: 5px; border-top: 1px solid #eee;
+            color: #555; text-align: left; position: relative; padding-top: 20px; will-change: transform;
         }
         .calculation-entry {
-            margin-bottom: 15px; border: 1px solid #000; padding: 0;
-            position: relative; width: 100%; font-size: 14pt;
-            border-radius: 0; box-sizing: border-box; overflow: hidden;
-            scroll-margin-top: 70px;
+            margin-bottom: 15px; border: 1px solid #000; padding: 15px;
+            position: relative; width: 100%; min-height: 200px; font-size: 14pt;
+            border-radius: 0; box-sizing: border-box; contain: content; overflow: hidden;
+            scroll-margin-top: 60px;
         }
         .calculation-entry::before {
-            content: "Assay Based Calculation"; display: block;
-            background: #f0f0f0; padding: 5mm; text-align: center;
+            content: "Assay Based Calculation"; position: absolute; top: 0; left: 0;
+            width: 100%; background: #f0f0f0; padding: 5mm; text-align: center;
             font-size: 16pt; font-weight: 600; border-bottom: 1px solid #000; box-sizing: border-box;
         }
         .calculation-entry::after {
             content: "Remarks: ______________________________________________________________";
-            display: block; background: #f0f0f0;
+            position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f0f0;
             padding: 5mm; font-size: 14pt; border-top: 1px solid #000; box-sizing: border-box;
         }
-        .calculation-entry .lot-label { display: block; padding: 4mm 15mm 0; font-size: 14pt; text-align: left; }
-        .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
-        .reference-values {
-            display: block; text-align: right; padding: 1mm 15mm 0; font-size: 10pt; color: #000;
+        .calculation-entry .lot-label::before {
+            content: "LOT: "; position: absolute; top: 24mm; left: 15mm; font-size: 14pt;
         }
-        .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
-        .acb-balance {
-            display: block; text-align: left; padding: 1mm 15mm 0; font-size: 10pt;
-            color: #000; font-weight: 600;
+        .reference-values {
+            position: absolute; top: 24mm; right: 15mm; font-size: 10pt; color: #000; z-index: 10;
         }
         .calculation-content {
-            padding: 4mm 15mm; overflow: hidden; font-size: 14pt; text-align: center;
+            margin-top: 30mm; margin-bottom: 30mm; padding: 0 15mm; overflow: hidden; font-size: 14pt;
         }
         .delete-button {
             position: absolute; top: 10px; left: 10px; background: transparent; border: none;
@@ -283,70 +271,30 @@
         .acb-prefilled { color: #1a1a1a; }
         .acb-manual-input, .acb-output { color: #00f; }
         .acb-highlight-row { background-color: #e6f3ff; }
-        .icon-btn {
-            background: transparent; border: none; cursor: pointer; font-size: 20px;
-            width: 36px; height: 36px; padding: 0; display: flex; align-items: center;
-            justify-content: center; border-radius: 6px; transition: background .15s ease;
-            flex-shrink: 0; line-height: 1;
-        }
-        .clear-all-btn { color: #dc3545; }
-        .clear-all-btn:hover { background: rgba(220,53,69,.08); }
-        /* Print button: small circular button pinned to the left-most corner of the card */
-        /* Print toolbar pinned top-RIGHT: top-left is where every calculation
-           card's delete ❌ button lives — keeping it left overlapped the newest
-           card's delete button exactly. */
-        .calc-toolbar { position: absolute; top: 10px; right: 10px; z-index: 20; padding: 0; }
         .print-btn {
-            color: #157347; font-size: 16px; width: 40px; height: 40px;
-            border-radius: 50%; background: #fff; border: 1px solid #e3e7ee;
-            box-shadow: 0 2px 6px rgba(0,0,0,.15);
+            background: #007bff; color: #fff; padding: 10px 20px; border: none;
+            border-radius: 5px; cursor: pointer; font-size: 16px; margin-bottom: 10px; display: none;
         }
-        .print-btn:hover { background: rgba(21,115,71,.08); }
+        .print-btn:hover { background: #0056b3; }
+        .calculation-steps:not(.hidden) .print-btn { display: block; }
+        .new-calc-btn {
+            display: none; position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+            background: #157347; color: #fff; border: none; border-radius: 30px;
+            padding: 14px 32px; font-size: 16px; font-weight: 600; font-family: 'Inter', sans-serif;
+            cursor: pointer; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            transition: background 0.2s, transform 0.15s; white-space: nowrap;
+        }
+        .new-calc-btn:hover { background: #125c3b; }
+        .new-calc-btn:active { transform: translateX(-50%) scale(0.96); }
+        .new-calc-btn.visible { display: block; }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
-.lot-assign-panel {
-            margin-top: 12px; padding: 8px; border: 1px solid #a9dfba; border-radius: 6px; background: #eaf7ee;
-        }
-        .lot-assign-title {
-            font-size: 13px; font-weight: 600; color: #157347; text-align: center;
-            margin: 2px 0 8px; line-height: 1.4;
-        }
-        /* Remaining = 0: hide the input card (Q/W/A fields, progress, buttons) until a lot is assigned */
-        #formulaCalculator.locked .input-group,
-        #formulaCalculator.locked .input-row,
-        #formulaCalculator.locked .progress-container,
-        #formulaCalculator.locked .button-row { display: none; }
-        .lot-assign-panel.hidden { display: none; }
-        .lot-assign-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-        .lot-assign-btn { padding: 8px 12px; font-size: 14px; flex: 0 1 auto; min-width: 64px; }
-        .archived-steps-container { margin-top: 10px; }
-        .archived-batch {
-            border: 1px solid #ddd; border-radius: 6px; margin-bottom: 12px; overflow: hidden;
-        }
-        .archived-batch summary {
-            cursor: pointer; padding: 10px 12px; background: #f5f5f5; font-size: 13px;
-            font-weight: 600; color: #555; list-style: none;
-        }
-        .archived-batch summary::-webkit-details-marker { display: none; }
-        .archived-batch summary::before {
-            content: "▼ "; color: #157347; font-size: 11px; margin-right: 5px;
-        }
-        .archived-batch[open] summary::before { content: "▲ "; }
-        .archived-batch-body { padding: 12px; opacity: .85; }
-        .archived-batch .calculation-entry { margin-bottom: 15px; }
-        .archived-batch .calculation-entry:last-child { margin-bottom: 0; }
-        .reset-acb-row { text-align: right; margin: 4px 0 14px; }
         .reset-acb-btn {
-            background: transparent; border: none;
-            cursor: pointer; font-size: 18px; color: #ff6b6b; padding: 6px;
-            width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+            position: absolute; bottom: 10px; right: 10px; background: transparent; border: none;
+            cursor: pointer; font-size: 20px; color: #ff6b6b; padding: 5px;
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
             border-radius: 50%; transition: all 0.3s ease;
         }
         .reset-acb-btn:hover { background: rgba(255,107,107,0.1); transform: rotate(90deg); }
-
-        /* ── ACB WRAPPER — centered, tucked directly under the input card ── */
-        .acb-wrapper {
-            width: 90%; max-width: 900px; margin: 10px auto 20px; text-align: left;
-        }
 
         /* ── MODALS ── */
         .info-modal {
@@ -539,135 +487,37 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── PRODUCT SETUP ── */
-        .hold-period {
-            margin-top: 14px; padding: 10px 12px; background: #f7f8fa;
-            border: 1px solid #e3e7ee; border-radius: 8px; font-size: 13px; color: #444;
-        }
-        .hold-period .hold-label { display: block; font-weight: 600; color: #157347; margin-bottom: 4px; }
-        .hold-title { font-weight: 700; text-align: center; color: #157347; font-size: 14px; margin-bottom: 10px; }
-        /* ── TOUCH-FRIENDLY DROPDOWN ── */
-        .custom-select { position: relative; text-align: left; }
-        .select-trigger {
-            width: 100%; padding: 14px 14px; border: 2px solid #ddd; border-radius: 8px;
-            background: #fff; font-size: 16px; color: #444; cursor: pointer;
-            display: flex; justify-content: space-between; align-items: center;
-            min-height: 52px; font-family: "Inter", sans-serif; flex: none; text-align: left;
-        }
-        .select-trigger:hover { background: #f7f8fa; }
-        .select-trigger::after { content: "\25BE"; color: #157347; font-size: 14px; margin-left: 10px; }
-        .select-options {
-            display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-            background: #fff; border: 2px solid #ddd; border-radius: 10px;
-            box-shadow: 0 10px 24px rgba(0,0,0,.18); z-index: 60; overflow: hidden;
-        }
-        .select-options.open { display: block; }
-        .select-option {
-            display: block; width: 100%; padding: 16px; background: #fff; color: #222;
-            font-size: 16px; text-align: left; border-bottom: 1px solid #f0f0f0;
-            cursor: pointer; min-height: 56px; flex: none; font-family: "Inter", sans-serif;
-            border-radius: 0;
-        }
-        .select-option:last-child { border-bottom: none; }
-        .select-option small { display: block; color: #767676; font-size: 12px; margin-top: 2px; }
-        .select-option:hover { background: #eaf7ee; }
-        .select-option:active { background: #d9f0e1; }
-
-        /* ── HOLD PERIOD ── */
-        .hold-dates-row { display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: wrap; }
-        .hold-date-group { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
-        /* Fixed label + fixed control heights keep the two date displays on one
-           straight line regardless of font metrics or native date-picker chrome. */
-        .hold-date-group label, .hold-date-group .hold-label {
-            display: block; height: 18px; line-height: 18px; font-weight: 600;
-            color: #157347; font-size: 12px; text-align: center; overflow: hidden;
-            white-space: nowrap;
-        }
-        .hold-date-input {
-            width: 160px; height: 40px; padding: 0 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
-            text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; background: #fff;
-            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
-        }
-        .hold-date-input:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
-        .hold-date-static {
-            display: inline-flex; align-items: center; justify-content: center; width: 160px; height: 40px;
-            padding: 0 8px; border: 1.5px solid #a9dfba; border-radius: 6px; text-align: center; font-size: 14px;
-            font-weight: 600; font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
-        }
-        .hold-sep { display: flex; align-items: center; font-weight: 700; color: #157347; font-size: 16px; }
-
-        /* ── ACTIVE LOT DROP-DOWN (manual lot control — never auto-assigned) ── */
-        .lot-select-inline {
-            width: auto; min-width: 96px; padding: 6px 10px; margin: 0; flex: none;
-            border: 2px solid #a9dfba; border-radius: 8px; background: #eaf7ee;
-            color: #157347; font-size: 13px; font-weight: 600; cursor: pointer;
-        }
-        .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
-
-        /* ── FLOATING ACTION BUTTONS (hamburger contents) ── */
-        .fab-container {
-            position: fixed; top: 70px; right: 12px; z-index: 999;
-            display: flex; flex-direction: column; gap: 10px;
-            opacity: 0; pointer-events: none; transform: translateX(24px);
-            transition: opacity .25s ease, transform .25s ease;
-        }
-        .fab-container.open { opacity: 1; pointer-events: auto; transform: none; }
-        .fab {
-            width: 46px; height: 46px; border-radius: 50%;
-            background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer; border: none; flex: none;
-            text-decoration: none; transition: transform .2s ease, background .2s ease;
-            padding: 0;
-        }
-        .fab:hover { transform: scale(1.12); background: #eaf7ee; }
-
-        /* ── COLLAPSIBLE HOLD-PERIOD CALENDAR ── */
-        /* (A+C)-B pull-down tab — minimal, left-aligned at bottom of input card */
-        .calendar-toggle {
-            width: auto; margin-top: 14px; padding: 8px 14px;
-            background: transparent; color: #157347; border: 1.5px solid #a9dfba; border-radius: 5px;
-            font-size: 13px; font-weight: 600; cursor: pointer; flex: none;
-            display: inline-flex; align-items: center; gap: 6px;
-            font-family: "Inter", sans-serif; user-select: none;
-            transition: background .2s ease;
-        }
-        .calendar-toggle:hover { background: #eaf7ee; }
-        .calendar-collapsible { max-height: 0; overflow: hidden; transition: max-height .45s ease; }
-        .calendar-collapsible.open { max-height: 1400px; }
-        .calendar-collapsible .hold-calendar { margin-top: 14px; }
-
-        /* ── PER-LOT A/C VARIATION HIGHLIGHT (light red) ── */
-        .acb-input.acb-varies { background: #ffe3e3 !important; border-color: #f1b0b0; }
-
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .calculation-entry { font-size: 12pt; }
+            .calculation-entry { min-height: 180px; font-size: 12pt; }
             .calculation-entry::before { font-size: 14pt; padding: 4mm; }
-            .calculation-entry::after { font-size: 12pt; padding: 4mm; }
-            .calculation-entry .lot-label { padding: 3mm 10mm 0; font-size: 12pt; }
-            .reference-values { font-size: 10pt; padding: 1mm 10mm 0; }
-            .acb-balance { font-size: 10pt; padding: 1mm 10mm 0; }
-            .calculation-content { font-size: 12pt; padding: 3mm 10mm; }
+            .calculation-entry::after { font-size: 12pt; padding: 4mm; bottom: 8mm; }
+            .calculation-entry .lot-label::before, .reference-values { top: 24mm; font-size: 10pt; }
+            .calculation-content { margin-top: 26mm; margin-bottom: 26mm; font-size: 12pt; padding: 0 10mm; }
             .page-number { font-size: 10pt; bottom: 2mm; right: 10mm; }
             .acb-td, .acb-th { font-size: 12px; padding: 6px; min-width: 50px; }
             .acb-input, .acb-span { font-size: 12px; padding: 4px; }
+            .menu-container { flex-wrap: wrap; gap: 10px; padding: 10px; }
+            .menu-qty-tracker { order: 3; width: 100%; justify-content: center; margin-left: 0; }
         }
         @media (max-width: 480px) {
-            .calculation-entry { font-size: 10pt; }
+            .calculation-entry { min-height: 180px; font-size: 10pt; }
             .calculation-entry::before { font-size: 12pt; padding: 3mm; }
-            .calculation-entry::after { font-size: 10pt; padding: 3mm; }
-            .calculation-entry .lot-label { padding: 3mm 8mm 0; font-size: 10pt; }
-            .reference-values { font-size: 10pt; padding: 1mm 8mm 0; }
-            .acb-balance { font-size: 10pt; padding: 1mm 8mm 0; }
-            .calculation-content { font-size: 10pt; padding: 3mm 8mm; }
+            .calculation-entry::after { font-size: 10pt; padding: 3mm; bottom: 6mm; }
+            .calculation-entry .lot-label::before {
+                content: "LOT: "; position: absolute; top: 20mm; left: 8mm;
+                font-size: 10pt; width: 100%; text-align: left; z-index: 10;
+            }
+            .reference-values { position: absolute; top: 25mm; left: 8mm; right: auto; font-size: 10pt; text-align: left; width: 100%; z-index: 11; }
+            .calculation-content { margin-top: 28mm; margin-bottom: 22mm; font-size: 10pt; padding: 0 8mm; }
             .page-number { font-size: 8pt; bottom: 1mm; right: 8mm; }
             .acb-td, .acb-th { font-size: 10px; padding: 4px; min-width: 40px; }
             .acb-input, .acb-span { font-size: 10px; padding: 3px; }
             .calculator-container { width: 100%; padding: 15px; }
             .acb-input, input { font-size: 14px; }
             button { font-size: 14px; padding: 10px; }
-            .qty-tracker-value { font-size: 15px; }
+            .menu-item { padding: 6px 10px; font-size: 14px; }
+            .menu-qty-input, .lot-select { width: 80px; }
             .sidenav, .writeus-panel { width: auto; right: 0; left: 0; max-width: 100%; }
         }
 
@@ -676,14 +526,12 @@
             @page { size: A4 landscape; margin: 8mm; }
             body { background: transparent; padding: 0; margin: 0; }
             .calculator-container,
-            .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
-            .archived-steps-container, .progress-container, footer, .reset-acb-btn, .reset-acb-row,
-            .sidenav, .sidenav-overlay, .writeus-panel, #acbToggle,
-            .hamburger-btn, .fab-container, .fab { display: none !important; }
+            .delete-button, .info-btn, .menu-bar, .print-btn, .new-calc-btn,
+            .progress-container, footer, .reset-acb-btn,
+            .sidenav, .sidenav-overlay, .writeus-panel { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
                 display: block !important; width: 100%; max-width: none; margin: 0; padding: 0; background: transparent;
-                max-height: none !important; overflow: visible !important;
             }
             .calculation-entry {
                 width: 280mm !important; height: 190mm !important; margin: 0 auto; padding: 0;
@@ -701,18 +549,10 @@
                 padding: 5mm; font-size: 14pt; border-top: 1px solid #000;
             }
             .reference-values { position: absolute; top: 20mm; right: 10mm; font-size: 10pt; color: #000; background: #fff; padding: 2px 5px; z-index: 10; }
-            .calculation-entry .lot-label {
-                position: absolute; top: 20mm; left: 10mm; padding: 2px 5px;
-                font-size: 12pt; color: #000; background: #fff; z-index: 10;
-            }
-            .calculation-entry .acb-balance {
-                position: absolute; top: 28mm; left: 10mm; padding: 2px 5px;
-                font-size: 10pt; color: #000; background: #fff; z-index: 10;
-            }
-            .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
+            .calculation-entry .lot-label::before { content: "LOT: "; position: absolute; top: 24mm; left: 15mm; font-size: 14pt; }
             .calculation-content { margin-top: 30mm; margin-bottom: 30mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
-            #stepsContainer { display: block; overflow: visible; max-height: none; }
+            #stepsContainer { display: flex; flex-direction: column-reverse; }
             .calc-step { margin-bottom: 5mm; }
             .frac .frac-num, .frac .frac-den { padding: 1.5mm 2mm; }
             .calc-result { margin-top: 3mm; padding-top: 0; }
@@ -727,56 +567,58 @@
         </div>
     </noscript>
 
-    <!-- HAMBURGER — floating circular button, top-right corner -->
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
+    <!-- MENU BAR -->
+    <div class="menu-bar">
+        <div class="menu-container">
+            <div class="menu-item active" id="menuFormula" role="button" tabindex="0"
+                data-calculator="formula"
+                aria-label="Show Formula Calculator">Formula Calculator</div>
+            <div class="menu-item" id="menuAcb" role="button" tabindex="0"
+                data-calculator="acb"
+                aria-label="Show (A+C)-B Calculator">(A+C)-B Calculator</div>
 
-    <!-- PRODUCT SETUP — shown once on page visit; the product is selected here and never asked again -->
-    <div id="productSetup" class="calculator-container active">
-        <h2>Select Product</h2>
-        <div class="input-group">
-            <label id="drugSelectorLabel">Product:</label>
-            <input type="hidden" id="drugSelector" value="">
-            <div class="custom-select">
-                <button type="button" class="select-trigger" id="drugTrigger"
-                    aria-haspopup="listbox" aria-expanded="false" aria-labelledby="drugSelectorLabel">Select product&hellip;</button>
-                <div class="select-options" id="drugOptions" role="listbox" aria-label="Select product">
-                    <button type="button" class="select-option" role="option" data-value="valacyclovir">Valacyclovir<small>Std Qty 417 kg</small></button>
-                    <button type="button" class="select-option" role="option" data-value="levetiracetam">Levetiracetam<small>Std Qty 268.750 kg</small></button>
-                    <button type="button" class="select-option" role="option" data-value="manual">Manual<small>Enter your own Std Qty (A) &amp; (C)</small></button>
+            <div class="menu-qty-tracker" id="menuQtyTracker">
+                <div class="menu-qty-group">
+                    <label for="drugSelector" class="menu-qty-label">Drug / Std Qty</label>
+                    <select id="drugSelector" class="lot-select" style="width:120px;" aria-label="Select drug preset" onchange="applyDrugPreset(this.value)">
+                        <option value="valacyclovir" selected>Vala – 417</option>
+                        <option value="levetiracetam">Lev – 268.750</option>
+                        <option value="manual">Manual</option>
+                    </select>
+                </div>
+                <!-- Hidden stdQty still needed for tracker calculations; shown only in Manual mode -->
+                <div class="menu-qty-group" id="stdQtyGroup" style="display:none">
+                    <label for="stdQty" class="menu-qty-label">Std Qty (kg)</label>
+                    <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" placeholder="Enter std qty" onchange="updateQuantityTracker()">
+                </div>
+                <div class="menu-qty-group">
+                    <label class="menu-qty-label">Dispensed</label>
+                    <div id="dispensedQty" class="menu-qty-value">0.000</div>
+                </div>
+                <div class="menu-qty-group">
+                    <label for="remainingQty" class="menu-qty-label">Remaining</label>
+                    <div id="remainingQty" class="menu-qty-value">0.000</div>
+                    <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
+                </div>
+                <div class="menu-qty-group" id="lotSelectGroup" style="display:none">
+                    <label for="lotSelect" class="menu-qty-label">Select Lot</label>
+                    <select id="lotSelect" class="menu-qty-input">
+                        <option value="" disabled selected>Select Lot</option>
+                        <option value="1">I</option>
+                        <option value="2">II</option>
+                        <option value="3">III</option>
+                        <option value="4">IV</option>
+                    </select>
                 </div>
             </div>
-        </div>
-        <div class="input-group" id="stdQtyGroup" style="display:none">
-            <label for="stdQty">Std Qty (A) kg:</label>
-            <input type="number" id="stdQty" step="0.001" min="0" placeholder="Enter Std Qty (A)" onchange="updateQuantityTracker()">
-        </div>
-        <div class="input-group" id="stdCGroup" style="display:none">
-            <label for="stdC">Std Qty (C) kg:</label>
-            <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std Qty (C)">
-        </div>
-        <div class="button-row">
-            <button type="button" id="startBtn" aria-label="Start calculations" style="display:none">Start →</button>
+            <!-- Hamburger -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
         </div>
     </div>
 
     <!-- FORMULA CALCULATOR -->
-    <div id="formulaCalculator" class="calculator-container">
-        <div class="formula-header-row">
-            <h2 id="formulaCardTitle">Formula Calculator</h2>
-        </div>
-        <div class="drug-badge hidden" id="drugBadge" title="Selected drug and standard quantity"></div>
-        <div class="qty-tracker-card" id="menuQtyTracker">
-            <div class="qty-tracker-item">
-                <span class="qty-tracker-label">Dispensed</span>
-                <span id="dispensedQty" class="qty-tracker-value">0.000</span>
-            </div>
-            <div class="qty-tracker-sep"></div>
-            <div class="qty-tracker-item">
-                <span class="qty-tracker-label">Remaining</span>
-                <span id="remainingQty" class="qty-tracker-value">0.000</span>
-            </div>
-        </div>
-        <div id="quantityWarning" class="quantity-warning-banner">Qty mismatch!</div>
+    <div id="formulaCalculator" class="calculator-container active">
+        <h2>Formula Calculator</h2>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
             <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
@@ -799,24 +641,10 @@
             <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
             <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
         </div>
-        <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible" style="width:100%;justify-content:center;">
-            <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
-        </button>
-        <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
-            <div class="lot-assign-title" id="lotAssignTitle">Remaining qty is 0 — this batch is complete. Assign it to a lot to continue:</div>
-            <div class="lot-assign-buttons">
-                <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
-                <button type="button" class="lot-assign-btn" data-lot="2">Lot-II</button>
-                <button type="button" class="lot-assign-btn" data-lot="3">Lot-III</button>
-                <button type="button" class="lot-assign-btn" data-lot="4">Lot-IV</button>
-            </div>
-        </div>
     </div>
 
-    <!-- ACB CALCULATOR — collapsible pull-down panel above the Formula Calculator -->
-    <div id="acbWrapper" class="acb-wrapper hidden">
-        <div class="calendar-collapsible" id="acbCollapsible">
-            <div id="acbCalculator" class="calculator-container acb-embedded">
+    <!-- ACB CALCULATOR -->
+    <div id="acbCalculator" class="calculator-container">
         <div class="header-row">
             <h2>(A+C)-B Calculator</h2>
         </div>
@@ -867,33 +695,13 @@
                 </tr>
             </tbody>
         </table>
-        <div class="reset-acb-row">
-            <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
-        </div>
-        <div class="hold-period" id="holdPeriod">
-            <div class="hold-title">Hold time period</div>
-            <div class="hold-dates-row">
-                <div class="hold-date-group">
-                    <label for="holdStartDate">Current date</label>
-                    <input type="date" id="holdStartDate" class="hold-date-input">
-                </div>
-                <div class="hold-date-group">
-                    <span class="hold-label">Retest date</span>
-                    <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
-                </div>
-            </div>
-        </div>
-            </div>
-        </div>
+        <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
     </div>
 
     <!-- CALCULATION STEPS -->
     <div class="calculation-steps hidden" id="calculationSteps" role="region" aria-label="Calculation steps">
-        <div class="calc-toolbar">
-            <button type="button" id="printBtn" class="icon-btn print-btn" title="Print calculations" aria-label="Print calculations">🖨️</button>
-        </div>
+        <button type="button" id="printBtn" class="print-btn" aria-label="Print calculations">Print Calculations</button>
         <div id="stepsContainer"></div>
-        <div id="archivedStepsContainer" class="archived-steps-container"></div>
     </div>
 
     <!-- INFO MODAL -->
@@ -901,10 +709,20 @@
         <div class="modal-content">
             <span class="close" id="infoModalClose" aria-label="Close">×</span>
             <div id="formulaInfo" class="info-section">
-                <h3 id="infoTitle">Help</h3>
-                <div class="info-item"><span class="info-key">F1/F2/F3 buttons:</span> Calculate the respective formula</div>
-                <div class="info-item"><span class="info-key">❌:</span> Remove a calculation</div>
-                <div class="info-item"><span class="info-key">Remaining Qty:</span> Tap it to copy into the Q field</div>
+                <h3 id="infoTitle">Formula Calculator — Shortcuts</h3>
+                <div class="info-item"><span class="info-key">F1/F2/F3:</span> Calculate respective formulas</div>
+                <div class="info-item"><span class="info-key">❌:</span> Remove individual calculations</div>
+                <div class="info-item"><span class="info-key">F5:</span> Refresh page</div>
+                <div class="info-item"><span class="info-key">F8:</span> Print calculations</div>
+                <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
+                <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
+                <div class="info-item"><span class="info-key">Lot Select:</span> Assign dispensed qty to selected lot</div>
+            </div>
+            <div id="acbInfo" class="info-section" style="display:none">
+                <h3>(A+C)-B Calculator Features</h3>
+                <div class="info-item"><span class="info-key">Enter:</span> Navigate between editable fields</div>
+                <div class="info-item"><span class="info-key">Auto-update:</span> Changes automatically update totals</div>
+                <div class="info-item"><span class="info-key">Reset Button (↻):</span> Reset all values</div>
             </div>
             <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
@@ -922,17 +740,47 @@
         </div>
     </div>
 
+    <!-- FLOATING NEW CALCULATION BUTTON -->
+    <button type="button" class="new-calc-btn" id="newCalcBtn" aria-label="Start new calculation">
+        ＋ New Calculation
+    </button>
+
     <!-- FOOTER -->
     <footer>
         This tool is continuously improving to serve you better. Results are reliable but always double-check.
         <button type="button" class="info-btn" id="infoBtn" aria-label="Help and shortcuts">ℹ️ Help &amp; Shortcuts</button>
     </footer>
 
-    <!-- FLOATING ACTION BUTTONS — hamburger contents, small circular & collapsible -->
-    <div class="fab-container" id="fabContainer">
-        <button type="button" class="fab" id="fabWriteUs" aria-label="Write us" title="Write us">✍️</button>
-        <a class="fab" href="vault" target="_blank" rel="noopener noreferrer" aria-label="Vault" title="Vault">🔐</a>
-    </div>
+    <!-- SIDENAV OVERLAY -->
+    <div class="sidenav-overlay" id="sidenavOverlay"></div>
+
+    <!-- SIDENAV -->
+    <nav class="sidenav" id="sidenav" aria-label="Site navigation">
+        <div class="sidenav-header">
+            <span class="sn-logo">NIR8<span> Calculators</span></span>
+            <button class="sidenav-close" id="sidenavClose" aria-label="Close menu">×</button>
+        </div>
+        <div class="sidenav-nav">
+            <button class="sidenav-item" id="openWriteUs">
+                <div class="sn-icon purple">✍️</div>
+                <div class="sn-text">
+                    <strong>Write Us</strong>
+                    <small>Share feedback or report a bug</small>
+                </div>
+                <span class="sn-arrow">›</span>
+            </button>
+            <div class="sidenav-divider"></div>
+            <a class="sidenav-item" href="vault" target="_blank" rel="noopener noreferrer">
+                <div class="sn-icon" style="background:#fff3e0;">🔐</div>
+                <div class="sn-text">
+                    <strong>Vault</strong>
+                    <small>Secure password manager</small>
+                </div>
+                <span class="sn-arrow">›</span>
+            </a>
+        </div>
+        <div class="sidenav-footer">NIR8 Calculators · Results are reliable but always double-check.</div>
+    </nav>
 
     <!-- WRITE US PANEL -->
     <div class="writeus-panel" id="writeusPanel" role="dialog" aria-modal="true" aria-label="Write us">
@@ -980,21 +828,21 @@
             assayInput: document.getElementById("assay"),
             waterGroup: document.querySelector("#water").parentElement,
             assayGroup: document.querySelector("#assay").parentElement,
-            buttons: document.querySelector("#formulaCalculator .button-row"),
+            buttons: document.querySelector(".button-row"),
             progressBar: document.getElementById("progressBar"),
             calculationSteps: document.getElementById("calculationSteps"),
             stepsContainer: document.getElementById("stepsContainer"),
-            archivedStepsContainer: document.getElementById("archivedStepsContainer"),
             formulaCalculator: document.getElementById("formulaCalculator"),
-            productSetup: document.getElementById("productSetup"),
-            stdCInput: document.getElementById("stdC"),
-            stdCGroup: document.getElementById("stdCGroup"),
             acbCalculator: document.getElementById("acbCalculator"),
+            menuFormula: document.getElementById("menuFormula"),
+            menuAcb: document.getElementById("menuAcb"),
             menuQtyTracker: document.getElementById("menuQtyTracker"),
             stdQtyInput: document.getElementById("stdQty"),
             dispensedQty: document.getElementById("dispensedQty"),
             remainingQty: document.getElementById("remainingQty"),
             quantityWarning: document.getElementById("quantityWarning"),
+            lotSelect: document.getElementById("lotSelect"),
+            lotSelectGroup: document.getElementById("lotSelectGroup"),
             acbInputs: {
                 a: ['lot1-a','lot2-a','lot3-a','lot4-a'].map(id => document.getElementById(id)),
                 b: ['lot1-b','lot2-b','lot3-b','lot4-b'].map(id => document.getElementById(id)),
@@ -1007,44 +855,8 @@
             }
         };
 
-        let calculationCount = 0, hasCalculated = false, batchComplete = false;
+        let calculationCount = 0, hasCalculated = false;
         let calculations = [];
-        let sessionStarted = false;
-        let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null, pendingArchiveLot = null;
-        let selectedDrugLabel = '';
-        const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
-
-        // ── (A+C)-B PANEL ── Single open/close path shared by the toggle, the
-        //    auto-hide on scroll, and auto-collapse when the user proceeds with
-        //    a calculation.
-        const acbToggleEl       = document.getElementById('acbToggle');
-        const acbCollapsibleEl  = document.getElementById('acbCollapsible');
-        const acbArrowEl        = document.getElementById('acbArrow');
-        const acbWrapperEl      = document.getElementById('acbWrapper');
-        let acbScrollAccum = 0, acbLastScrollY = 0, acbOpenGraceUntil = 0;
-        function acbPanelIsOpen() { return !!acbCollapsibleEl && acbCollapsibleEl.classList.contains('open'); }
-        function setAcbPanel(open) {
-            if (!acbCollapsibleEl) return;
-            acbCollapsibleEl.classList.toggle('open', open);
-            acbToggleEl.setAttribute('aria-expanded', String(open));
-            acbArrowEl.textContent = open ? '▲' : '▼';
-            acbScrollAccum = 0;
-            acbLastScrollY = window.scrollY;
-            // Brief grace period after opening: the smooth scrollIntoView that
-            // follows would otherwise trip the heavy-scroll auto-hide instantly.
-            acbOpenGraceUntil = open ? Date.now() + 800 : 0;
-        }
-        // Heavy scrolling while the panel is out of focus tucks it away.
-        window.addEventListener('scroll', () => {
-            if (!acbPanelIsOpen()) { acbLastScrollY = window.scrollY; return; }
-            if (Date.now() < acbOpenGraceUntil) { acbLastScrollY = window.scrollY; return; }
-            const dy = Math.abs(window.scrollY - acbLastScrollY);
-            acbLastScrollY = window.scrollY;
-            const focusInside = acbWrapperEl.contains(document.activeElement) || acbToggleEl.contains(document.activeElement);
-            if (focusInside) { acbScrollAccum = 0; return; }
-            acbScrollAccum += dy;
-            if (acbScrollAccum > 250) setAcbPanel(false);
-        }, { passive: true });
 
         function truncateTo12Digits(num) {
             try {
@@ -1123,93 +935,6 @@
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
 
-        function getCurrentBatchDispensed() {
-            let d = new Decimal(0);
-            calculations.forEach(calc => {
-                if (calc.lot !== undefined && calc.lot !== currentLot) return; // already tagged to another lot
-                if (calc.formulaType === 'F2') d = d.plus(calc.Q);
-                else d = d.plus(calc.result);
-            });
-            return d;
-        }
-
-        // Parse any field value safely — a half-typed "-" or stray character must
-        // never propagate a Decimal.js exception into the UI.
-        function safeDec(v) { try { const d = new Decimal(v || 0); return d.isNaN() ? new Decimal(0) : d; } catch { return new Decimal(0); } }
-
-        // Effective (A+C)-B for a lot: the table's B cell holds every batch already
-        // committed to this lot (see assignLotAndContinue, which accumulates rather
-        // than overwrites). On top of that we subtract whatever the *current*,
-        // still-unassigned batch has dispensed against this lot so far — so the
-        // balance is correct the instant a calculation is made, with no need to
-        // wait for the batch to be assigned to a lot.
-        function getEffectiveLotBalance(lotIndex) {
-            try {
-                const a = safeDec(domCache.acbInputs.a[lotIndex]?.value);
-                const c = safeDec(domCache.acbInputs.c[lotIndex]?.value);
-                const b = safeDec(domCache.acbInputs.b[lotIndex]?.value);
-                const lotNumber = lotIndex + 1;
-                let liveDispensed = new Decimal(0);
-                // If this lot's batch is already committed (pendingArchiveLot), its
-                // total is already inside b — counting it again would double-subtract.
-                if (pendingArchiveLot !== lotNumber) {
-                    calculations.forEach(calc => {
-                        if (calc.lot !== lotNumber) return;
-                        liveDispensed = liveDispensed.plus(new Decimal(calc.formulaType === 'F2' ? calc.Q : calc.result));
-                    });
-                }
-                return a.plus(c).minus(b).minus(liveDispensed);
-            } catch { return new Decimal(0); }
-        }
-
-        const pad2 = n => String(n).padStart(2, "0");
-        const fmtDDMMYYYY = d => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
-        const toISODate = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-        const parseISODate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
-        const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-
-        function updateHoldPeriod() {
-            const startInput = document.getElementById("holdStartDate");
-            if (!startInput) return;
-            if (!startInput.value) startInput.value = toISODate(new Date());
-            const start = parseISODate(startInput.value);
-            if (isNaN(start)) return;
-            const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 15);
-            const endEl = document.getElementById("holdEndDateStatic");
-            if (endEl) endEl.textContent = fmtDDMMYYYY(end);
-        }
-
-        function startSession() {
-            const preset = document.getElementById('drugSelector').value;
-            if (preset === 'manual') {
-                const a = parseFloat(domCache.stdQtyInput.value);
-                const c = parseFloat(domCache.stdCInput.value);
-                if (!(a > 0)) { alert('Please enter a valid Std Qty (A).'); domCache.stdQtyInput.focus(); return; }
-                if (!(c > 0)) { alert('Please enter a valid Std Qty (C).'); domCache.stdCInput.focus(); return; }
-            }
-            sessionStarted = true;
-            applyDrugPreset(preset);
-            domCache.productSetup.classList.remove('active');
-            showCalculator('formula');
-        }
-
-        // Keeps the "<Drug> · Std Qty (A): X kg" badge beside the Formula Calculator
-        // Keeps the drug badge (its own line under the card title) in sync with the
-        // selected product and the current Std Qty (A) value (including live edits
-        // in Manual mode). Full card width to wrap into, so it never gets cropped.
-        function updateDrugBadge() {
-            const badgeEl = document.getElementById('drugBadge');
-            if (!badgeEl) return;
-            if (!selectedDrugLabel) { badgeEl.textContent = ''; badgeEl.classList.add('hidden'); return; }
-            const raw = domCache.stdQtyInput.value;
-            let qtyText = '—';
-            if (raw && raw.trim() !== '') {
-                try { qtyText = new Decimal(raw).toFixed(3); } catch { qtyText = raw; }
-            }
-            badgeEl.textContent = `${selectedDrugLabel} · Std Qty (A): ${qtyText} kg* · Lot-${LOT_NAMES[currentLot]}`;
-            badgeEl.classList.remove('hidden');
-        }
-
         function updateQuantityTracker() {
             const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
             let dispensed = new Decimal(0), remainingCalc = new Decimal(0), hasFinal = false;
@@ -1219,153 +944,24 @@
             });
             domCache.dispensedQty.textContent = formatNumber(dispensed);
             if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
-                domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active');
-                batchComplete = false; awaitingLotAssignment = false;
+                domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active'); domCache.lotSelectGroup.style.display = 'none';
             } else {
                 const remaining = stdQty.minus(remainingCalc);
                 domCache.remainingQty.textContent = formatNumber(remaining);
+                domCache.lotSelectGroup.style.display = remaining.eq(0) ? 'block' : 'none';
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
-                // Standard quantity fully accounted for: entry is locked until the batch
-                // is assigned to a lot (see assignLotAndContinue()). Once assigned
-                // (pendingArchiveLot set), the card stays unlocked until the next
-                // calculation archives the batch.
-                batchComplete = remaining.eq(0) && calculationCount > 0;
-                awaitingLotAssignment = batchComplete && pendingArchiveLot === null;
             }
-            // Lot assignment sits in the input card: the input fields are locked
-            // (hidden) until the finished batch is assigned to a lot.
-            domCache.formulaCalculator.classList.toggle('locked', awaitingLotAssignment);
-            const lotPanel = document.getElementById('lotAssignPanel');
-            if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
-
-            // Keep every visible card's (A+C)-B line accurate in real time, without
-            // waiting for the batch to be assigned to a lot.
-            syncLotBalanceLines();
-            updateDrugBadge();
         }
 
-        function refreshStepsPanelVisibility() {
-            const hasContent = calculationCount > 0 || domCache.archivedStepsContainer.children.length > 0;
-            domCache.calculationSteps.classList.toggle('hidden', !hasContent);
-        }
-
-        function archiveCurrentBatch() {
-            if (calculationCount === 0) return;
-            const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
-            const details = document.createElement('details');
-            details.className = 'archived-batch';
-            const summary = document.createElement('summary');
-            const lotTag = lastAssignedLot ? `Lot-${LOT_NAMES[lastAssignedLot]} · ` : '';
-            summary.textContent = `Archived batch — ${lotTag}${calculationCount} calculation${calculationCount > 1 ? 's' : ''} (Std Qty: ${formatNumber(stdQty)})`;
-            details.appendChild(summary);
-            const body = document.createElement('div');
-            body.className = 'archived-batch-body';
-            // Move (not clone) the existing cards into the archive, and strip their
-            // delete buttons since archived entries are a fixed historical record.
-            while (domCache.stepsContainer.firstChild) {
-                const entry = domCache.stepsContainer.firstChild;
-                entry.querySelector('.delete-button')?.remove();
-                body.appendChild(entry);
+        function updateLotDispensedQty() {
+            const lotIndex = parseInt(domCache.lotSelect.value) - 1;
+            if (lotIndex >= 0 && lotIndex < domCache.acbInputs.b.length) {
+                const input = domCache.acbInputs.b[lotIndex];
+                input.value = domCache.dispensedQty.textContent; input.classList.add('acb-manual-input');
+                updateACB(input, lotIndex, 'b'); showCalculator('acb'); input.focus();
+                domCache.lotSelect.value = ''; domCache.lotSelectGroup.style.display = 'none';
             }
-            details.appendChild(body);
-            domCache.archivedStepsContainer.insertBefore(details, domCache.archivedStepsContainer.firstChild);
-            calculations = []; calculationCount = 0;
-            updatePageNumbers();
-        }
-
-        function assignLotAndContinue(lotNumber) {
-            const lotIndex = lotNumber - 1;
-            if (lotIndex < 0 || lotIndex >= domCache.acbInputs.b.length) return;
-            // Already assigned to this lot — nothing to do.
-            if (pendingArchiveLot === lotNumber) {
-                document.getElementById('lotAssignPanel')?.classList.add('hidden');
-                return;
-            }
-
-            const thisBatchAmt = safeDec(domCache.dispensedQty.textContent);
-
-            // If this batch was already committed to a different lot, undo that
-            // first. B is a running cumulative total across every batch ever
-            // assigned to a lot, so we only subtract this batch's own share.
-            const oldLot = pendingArchiveLot;
-            if (oldLot && oldLot !== lotNumber) {
-                const oldIndex = oldLot - 1;
-                const oldInput = domCache.acbInputs.b[oldIndex];
-                const revertedB = safeDec(oldInput.value).minus(thisBatchAmt);
-                oldInput.value = revertedB.gt(0) ? revertedB.toFixed(3) : '';
-                if (!oldInput.value) oldInput.classList.remove('acb-manual-input');
-                updateACB(oldInput, oldIndex, 'b');
-            }
-
-            // 1. Add the dispensed qty into the chosen lot's Issued Qty (B) cell —
-            //    B accumulates across every batch assigned to this lot over time.
-            const input = domCache.acbInputs.b[lotIndex];
-            const existingB = safeDec(input.value);
-            input.value = existingB.plus(thisBatchAmt).toFixed(3);
-            input.classList.add('acb-manual-input');
-
-            // 2. Tag the finished batch with this lot — archiving happens only when
-            //    the user proceeds with the next calculation (see calculate()).
-            calculations.forEach(c => c.lot = lotNumber);
-            domCache.stepsContainer.querySelectorAll('.calculation-entry').forEach(entry => {
-                const lotLabel = entry.querySelector('.lot-label');
-                if (lotLabel) lotLabel.textContent = LOT_NAMES[lotNumber];
-                // Update data-lot-balance on cards so syncLotBalanceLines targets the right lot
-                const balEl = entry.querySelector('[data-lot-balance]');
-                if (balEl) balEl.dataset.lotBalance = lotNumber;
-            });
-            pendingArchiveLot = lotNumber;
-
-            // 3. The user explicitly picked this lot — make it the active lot.
-            currentLot = lotNumber;
-            syncLotSelect();
-            awaitingLotAssignment = false; batchComplete = false;
-            document.getElementById('lotAssignPanel').classList.add('hidden');
-
-            // 4. Sync the table (and card balance lines) with the tagged batch
-            updateACB(input, lotIndex, 'b');
-            updateQuantityTracker();
-            refreshStepsPanelVisibility();
-            showCalculator('formula'); domCache.QInput.focus();
-        }
-
-        function syncLotSelect() { /* active lot is shown as plain text in the drug badge */ }
-
-        // Lots are assigned manually only. Switching is blocked while a batch has
-        // unassigned calculations, but allowed when the batch is complete and waiting
-        // for lot assignment — the user may want to assign to a different lot.
-        function setActiveLot(n) {
-            if (n < 1 || n > 4 || n === currentLot) return true;
-            if (calculationCount > 0 && !awaitingLotAssignment) {
-                alert('Finish or assign the current batch to a lot before switching the active lot.');
-                return false;
-            }
-            currentLot = n;
-            syncLotSelect();
-            syncLotBalanceLines();
-            updateQuantityTracker();
-            return true;
-        }
-
-        function syncLotBalanceLines() {
-            domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
-                el.textContent = `(A+C)-B = ${getEffectiveLotBalance(parseInt(el.dataset.lotBalance, 10) - 1).toFixed(3)}`;
-            });
-        }
-
-        // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
-        // C: 14.674 vs 14.673). Any deviation from Lot-I — even by 0.001 — is
-        // highlighted light red so the user sees it before entering quantities.
-        function highlightACBVariations() {
-            ['a', 'c'].forEach(type => {
-                const inputs = domCache.acbInputs[type];
-                const base = new Decimal(inputs[0].value || 0);
-                inputs.forEach((input, i) => {
-                    const v = new Decimal(input.value || 0);
-                    input.classList.toggle('acb-varies', i > 0 && !v.eq(base));
-                });
-            });
         }
 
         function copyRemainingToQ() {
@@ -1407,9 +1003,6 @@
             domCache.acbInputs.totals.b.textContent = '0.000';
             domCache.acbInputs.totals.result.textContent = '0.000';
             domCache.acbInputs.results.forEach(r => { r.textContent = '-'; r.classList.remove('acb-output','acb-prefilled'); });
-            // Keep any already-displayed calculation cards' (A+C)-B lines in sync
-            // with the values just reset.
-            syncLotBalanceLines();
         }
 
         function handleInput(event) {
@@ -1451,19 +1044,22 @@
         }
 
         function showCalculator(calculator) {
-            if (!sessionStarted && calculator !== 'setup') return; // product must be selected first
-            domCache.productSetup.classList.remove('active');
-            // Single-page layout: the Formula Calculator is always the main view and the
-            // (A+C)-B Calculator sits above it as a pull-down panel (never a separate page).
-            domCache.formulaCalculator.classList.add('active');
-            document.getElementById('acbWrapper')?.classList.remove('hidden');
-            refreshStepsPanelVisibility();
-            requestAnimationFrame(() => domCache.QInput?.focus());
+            domCache.formulaCalculator.classList.toggle('active', calculator === 'formula');
+            domCache.acbCalculator.classList.toggle('active', calculator === 'acb');
+            domCache.menuFormula.classList.toggle('active', calculator === 'formula');
+            domCache.menuAcb.classList.toggle('active', calculator === 'acb');
+            domCache.menuQtyTracker.classList.toggle('hidden', calculator === 'acb');
+            domCache.calculationSteps.classList.toggle('hidden', calculator !== 'formula' || calculationCount === 0);
+            requestAnimationFrame(() => {
+                if (calculator === 'formula') domCache.QInput?.focus();
+                else domCache.acbInputs?.b?.[0]?.focus();
+            });
         }
 
         function showInfo() {
             const modal = document.getElementById('infoModal');
-            document.getElementById('formulaInfo').style.display = 'block';
+            document.getElementById('formulaInfo').style.display = domCache.formulaCalculator.classList.contains('active') ? 'block' : 'none';
+            document.getElementById('acbInfo').style.display = domCache.formulaCalculator.classList.contains('active') ? 'none' : 'block';
             modal.style.display = 'flex';
             requestAnimationFrame(() => document.querySelector('#infoModal .close').focus());
         }
@@ -1479,7 +1075,7 @@
             const idx = calculations.length - 1 - entries.indexOf(entry);
             if (idx >= 0 && idx < calculations.length) calculations.splice(idx, 1);
             entry.remove(); calculationCount--;
-            refreshStepsPanelVisibility();
+            if (calculationCount === 0) domCache.calculationSteps.classList.add("hidden");
             updatePageNumbers(); updateQuantityTracker(); domCache.QInput.focus();
         }
 
@@ -1532,7 +1128,7 @@
 
             let tA = new Decimal(0), tB = new Decimal(0), tC = new Decimal(0), tR = new Decimal(0);
             domCache.acbInputs.a.forEach((aIn, i) => {
-                const a = safeDec(aIn.value), b = safeDec(domCache.acbInputs.b[i].value), c = safeDec(domCache.acbInputs.c[i].value);
+                const a = new Decimal(aIn.value || 0), b = new Decimal(domCache.acbInputs.b[i].value || 0), c = new Decimal(domCache.acbInputs.c[i].value || 0);
                 const re = domCache.acbInputs.results[i];
                 if (b.isZero() || !domCache.acbInputs.b[i].value.trim()) { re.textContent = '-'; re.classList.remove('acb-output','acb-prefilled'); }
                 else { const r = a.plus(c).minus(b); re.textContent = formatNumber(r); re.classList.add('acb-output'); re.classList.remove('acb-prefilled'); tR = tR.plus(r); }
@@ -1545,12 +1141,6 @@
             [domCache.acbInputs.totals.a, domCache.acbInputs.totals.b, domCache.acbInputs.totals.c].forEach(el => { el.classList.add('acb-output'); el.classList.remove('acb-prefilled'); });
             domCache.acbInputs.totals.result.classList.toggle('acb-prefilled', tR.isZero());
             domCache.acbInputs.totals.result.classList.toggle('acb-output', !tR.isZero());
-
-            // Keep F1/F3 cards' (A+C)-B lines in sync — effective balance reflects the
-            // current batch's dispensed qty even before the lot's B cell is written.
-            syncLotBalanceLines();
-            // Flag per-lot A/C deviations (even 0.001) in light red.
-            highlightACBVariations();
         }
 
         function printWithCheck() {
@@ -1590,10 +1180,6 @@
         }
 
         async function calculate(formulaType) {
-            if (awaitingLotAssignment) {
-                document.getElementById('lotAssignPanel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
             if (calculationCount >= CONSTANTS.MAX_CALCULATIONS) { alert(`Maximum of ${CONSTANTS.MAX_CALCULATIONS} calculations reached.`); return; }
             let Q, W, A;
             try { Q = new Decimal(domCache.QInput.value || 0); W = new Decimal(domCache.waterInput.value || 0); A = new Decimal(domCache.assayInput.value || 0); }
@@ -1610,37 +1196,19 @@
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
             if (!isConfirmed) return;
 
-            // User is proceeding with calculations — tuck the (A+C)-B panel away.
-            setAcbPanel(false);
-
-            // The previous batch was fully dispensed and assigned to a lot — archive it
-            // now, only as the user proceeds with the next calculation.
-            if (pendingArchiveLot !== null && calculationCount > 0) {
-                lastAssignedLot = pendingArchiveLot;
-                archiveCurrentBatch();
-                pendingArchiveLot = null;
-            }
-
-            calculationResult.lot = currentLot; // tagged at creation — lots are user-assigned, never auto
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry"; newEntry.setAttribute("tabindex", "0");
             newEntry.setAttribute("role", "region"); newEntry.setAttribute("aria-label", `Calculation ${formulaType}`);
-            // F1/F3 are the issued-qty results — show the lot's (A+C)-B balance
-            // directly on the card, in the space below the W/A reference values.
-            const acbBalanceLine = (formulaType === 'F1' || formulaType === 'F3')
-                ? `<div class="acb-balance" data-lot-balance="${currentLot}">(A+C)-B = ${getEffectiveLotBalance(currentLot - 1).toFixed(3)}</div>`
-                : '';
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
-                <div class="lot-label">${LOT_NAMES[currentLot]}</div>
-                ${acbBalanceLine}
+                <div class="lot-label"></div>
                 <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 <div class="calculation-content">${calculationResult.html}</div>
                 <div class="page-number">${calculationCount+1}/${calculationCount+1}</div>
             `;
             domCache.stepsContainer.insertBefore(newEntry, domCache.stepsContainer.firstChild);
-            calculationCount++; refreshStepsPanelVisibility();
+            calculationCount++; domCache.calculationSteps.classList.remove("hidden");
             updatePageNumbers(); updateQuantityTracker();
 
             // Clear inputs immediately so they're ready for the next entry
@@ -1649,14 +1217,11 @@
             domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             updateQuantityTracker();
 
-            // New entries are always prepended to the top of the list, right below the
-            // sticky toolbar — so unlike the old bottom-appended layout, this scroll
-            // position stays the same for every future calculation (no creeping further
-            // down the page as the list grows), and scroll-margin-top keeps it clear of
-            // the fixed menu bar and sticky toolbar above it.
+            // Scroll the new card so it fills the screen, then focus it for keyboard users
             requestAnimationFrame(() => {
                 newEntry.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 newEntry.focus({ preventScroll: true });
+                document.getElementById('newCalcBtn').classList.add('visible');
             });
         }
 
@@ -1672,25 +1237,23 @@
             const isVala   = preset === 'valacyclovir';
 
             if (isManual) {
-                // Manual mode: A and C both come from the setup card; fields stay editable
-                const aVal = domCache.stdQtyInput.value || '';
-                const cVal = domCache.stdCInput.value || '';
+                // Manual mode: all A and C fields empty, fully editable
                 domCache.acbInputs.a.forEach(input => {
-                    input.value = aVal; input.readOnly = false;
+                    input.value = ''; input.readOnly = false;
                     input.classList.remove('acb-prefilled', 'acb-manual-input', 'edited');
-                    if (aVal) input.classList.add('acb-manual-input');
                     input.placeholder = 'Std Qty A';
                 });
                 domCache.acbInputs.c.forEach(input => {
-                    input.value = cVal; input.readOnly = false;
+                    input.value = ''; input.readOnly = false;
                     input.classList.remove('acb-prefilled', 'acb-manual-input', 'edited');
-                    if (cVal) input.classList.add('acb-manual-input');
                     input.placeholder = 'Std Qty C';
                 });
-                domCache.acbInputs.totals.a.textContent = new Decimal(aVal || 0).times(domCache.acbInputs.a.length).toFixed(3);
-                domCache.acbInputs.totals.c.textContent = new Decimal(cVal || 0).times(domCache.acbInputs.c.length).toFixed(3);
+                domCache.acbInputs.totals.a.textContent = '0.000';
+                domCache.acbInputs.totals.c.textContent = '0.000';
                 domCache.acbInputs.results.forEach(span => { span.textContent = '-'; span.classList.remove('acb-output','acb-prefilled'); });
                 domCache.acbInputs.totals.result.textContent = '0.000';
+                domCache.stdQtyInput.value = '';
+                document.getElementById('stdQtyGroup').style.display = 'flex';
                 updateQuantityTracker();
 
             } else if (isLeva) {
@@ -1708,6 +1271,7 @@
                 domCache.acbInputs.totals.a.textContent = CONSTANTS.LEVA_TOTAL_A.toFixed(3);
                 domCache.acbInputs.totals.c.textContent = CONSTANTS.LEVA_TOTAL_C.toFixed(3);
                 domCache.stdQtyInput.value = CONSTANTS.LEVA_A.toFixed(3);
+                document.getElementById('stdQtyGroup').style.display = 'none';
                 updateQuantityTracker();
 
             } else {
@@ -1725,6 +1289,7 @@
                 domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
                 domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
                 domCache.stdQtyInput.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
+                document.getElementById('stdQtyGroup').style.display = 'none';
                 updateQuantityTracker();
             }
 
@@ -1751,7 +1316,7 @@
             // fire after the user has already begun entering values).
             const userAlreadyTyping = document.activeElement !== document.body ||
                 domCache.QInput.value || domCache.waterInput.value || domCache.assayInput.value;
-            if (!userAlreadyTyping) requestAnimationFrame(() => document.getElementById('drugTrigger').focus());
+            if (!userAlreadyTyping) requestAnimationFrame(() => domCache.QInput.focus());
 
             [domCache.QInput, domCache.waterInput, domCache.assayInput].forEach(input => {
                 input.addEventListener("input", e => { validateInput(input); handleInput(e); });
@@ -1759,6 +1324,7 @@
             });
             domCache.QInput.addEventListener("focus", () => {
                 requestAnimationFrame(() => domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                document.getElementById('newCalcBtn').classList.remove('visible');
             });
 
             domCache.acbCalculator.addEventListener("input", e => {
@@ -1787,40 +1353,15 @@
                 btn.addEventListener('click', () => calculate(btn.dataset.formula));
             });
 
-            document.getElementById('resetAcbBtn').addEventListener('click', resetACBCalculator);
-            document.getElementById('startBtn').addEventListener('click', startSession);
-            // Touch-friendly product dropdown: tapping an option selects it AND
-            // proceeds immediately (no separate Start tap needed on touch screens).
-            const drugTrigger = document.getElementById('drugTrigger');
-            const drugOptions = document.getElementById('drugOptions');
-            const closeDrugOptions = () => { drugOptions.classList.remove('open'); drugTrigger.setAttribute('aria-expanded', 'false'); };
-            drugTrigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const open = drugOptions.classList.toggle('open');
-                drugTrigger.setAttribute('aria-expanded', open);
-            });
-            document.addEventListener('click', (e) => { if (!e.target.closest('.custom-select')) closeDrugOptions(); });
-            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrugOptions(); });
-            drugOptions.querySelectorAll('.select-option').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    const val = opt.dataset.value;
-                    document.getElementById('drugSelector').value = val;
-                    selectedDrugLabel = opt.childNodes[0].textContent.trim();
-                    drugTrigger.textContent = selectedDrugLabel;
-                    closeDrugOptions();
-                    const manual = val === 'manual';
-                    document.getElementById('stdQtyGroup').style.display = manual ? 'block' : 'none';
-                    document.getElementById('stdCGroup').style.display = manual ? 'block' : 'none';
-                    document.getElementById('startBtn').style.display = manual ? 'block' : 'none';
-                    if (manual) { domCache.stdQtyInput.focus(); }
-                    else { startSession(); } // presets proceed immediately
+            // Menu tabs (click + keyboard, since these are role="button" divs, not <button>)
+            document.querySelectorAll('[data-calculator]').forEach(el => {
+                el.addEventListener('click', () => showCalculator(el.dataset.calculator));
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showCalculator(el.dataset.calculator); }
                 });
             });
-            [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
-                if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); startSession(); } });
-            });
-            document.getElementById('holdStartDate').addEventListener('change', updateHoldPeriod);
-            updateHoldPeriod();
+
+            document.getElementById('resetAcbBtn').addEventListener('click', resetACBCalculator);
             document.getElementById('printBtn').addEventListener('click', printWithCheck);
             document.getElementById('infoBtn').addEventListener('click', showInfo);
             document.getElementById('infoModalClose').addEventListener('click', closeModal);
@@ -1834,6 +1375,15 @@
                 if (btn) deleteCalculation(btn);
             });
 
+            document.addEventListener("keydown", e => {
+                switch (e.key) {
+                    case "F1": e.preventDefault(); calculate("F1"); break;
+                    case "F2": e.preventDefault(); calculate("F2"); break;
+                    case "F3": e.preventDefault(); calculate("F3"); break;
+                    case "F8": e.preventDefault(); if (calculationCount > 0) printWithCheck(); break;
+                }
+            });
+
             domCache.stdQtyInput.addEventListener('input', () => { validateInput(domCache.stdQtyInput); updateQuantityTracker(); });
             domCache.stdQtyInput.addEventListener("change", () => {
                 const preset = document.getElementById('drugSelector')?.value || 'valacyclovir';
@@ -1843,18 +1393,18 @@
                 updateQuantityTracker();
             });
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
-            document.querySelectorAll('.lot-assign-btn').forEach(btn =>
-                btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
-            // (A+C)-B pull-down panel: down arrow opens it above the Formula
-            // Calculator, up arrow pushes it back. Opening also arms the
-            // scroll-away / proceed-with-calculation auto-hide (setAcbPanel).
-            acbToggleEl.addEventListener('click', () => {
-                const open = !acbPanelIsOpen();
-                setAcbPanel(open);
-                if (open) acbCollapsibleEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
+            domCache.lotSelect.addEventListener('change', updateLotDispensedQty);
+
+            // Apply default preset (Valacyclovir) on load
+            applyDrugPreset('valacyclovir');
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
+
+            // Floating new calculation button
+            document.getElementById('newCalcBtn').addEventListener('click', () => {
+                domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                requestAnimationFrame(() => setTimeout(() => domCache.QInput.focus(), 400));
+            });
 
             // PWA — register service worker
             if ('serviceWorker' in navigator) {
@@ -1869,8 +1419,10 @@
     <script>
     (function () {
         const hamburger    = document.getElementById('hamburgerBtn');
-        const fabContainer = document.getElementById('fabContainer');
-        const fabWriteUs   = document.getElementById('fabWriteUs');
+        const sidenav      = document.getElementById('sidenav');
+        const overlay      = document.getElementById('sidenavOverlay');
+        const sidenavClose = document.getElementById('sidenavClose');
+        const openWriteUs  = document.getElementById('openWriteUs');
         const writeusPanel = document.getElementById('writeusPanel');
         const wpBack       = document.getElementById('wpBack');
         const wpMsg        = document.getElementById('wpMsg');
@@ -1881,14 +1433,15 @@
         const wpSuccess    = document.getElementById('wpSuccess');
         const writeusForm  = document.getElementById('writeusForm');
 
-        // Hamburger toggles the small circular floating buttons; they collapse
-        // back into the hamburger on second tap, Escape, or after Write Us closes.
-        function openNav() { fabContainer.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); hamburger.textContent = '✕'; }
-        function closeNav() { fabContainer.classList.remove('open'); writeusPanel.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.textContent = '☰'; }
+        function openNav() { sidenav.classList.add('open'); overlay.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); sidenavClose.focus(); }
+        function closeNav() { sidenav.classList.remove('open'); overlay.classList.remove('open'); writeusPanel.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.focus(); }
 
-        hamburger.addEventListener('click', () => fabContainer.classList.contains('open') ? closeNav() : openNav());
-        fabWriteUs.addEventListener('click', () => { writeusPanel.classList.add('open'); setTimeout(() => wpMsg.focus(), 300); });
+        hamburger.addEventListener('click', openNav);
+        sidenavClose.addEventListener('click', closeNav);
+        overlay.addEventListener('click', closeNav);
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+
+        openWriteUs.addEventListener('click', () => { writeusPanel.classList.add('open'); setTimeout(() => wpMsg.focus(), 300); });
         wpBack.addEventListener('click', () => { writeusPanel.classList.remove('open'); });
 
         wpMsg.addEventListener('input', () => {
