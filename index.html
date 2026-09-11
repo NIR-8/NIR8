@@ -169,7 +169,7 @@
             box-shadow: 0 5px 15px rgba(0,0,0,.2); margin-bottom: 20px; position: relative;
             scroll-margin-top: 60px;
         }
-        #acbCalculator { max-width: 900px; }
+        #acbCalculator { max-width: 900px; margin: 0 auto; }
         /* Embedded in the pull-down panel above the Formula Calculator — visibility
            is governed by the collapsible wrapper, not the .active tab class. */
         #acbCalculator.acb-embedded { display: block; }
@@ -223,7 +223,8 @@
         .calculation-steps {
             margin-top: 20px; padding: 15px; width: 90%; max-width: 900px;
             background: #fff; border-radius: 0; box-shadow: 0 4px 10px rgba(0,0,0,.1);
-            color: #555; text-align: left; position: relative; padding-top: 15px; will-change: transform;
+            color: #555; text-align: center; margin-left: auto; margin-right: auto;
+            position: relative; padding-top: 15px; will-change: transform;
         }
         #stepsContainer {
             display: flex; flex-direction: column;
@@ -255,7 +256,7 @@
             color: #000; font-weight: 600;
         }
         .calculation-content {
-            padding: 4mm 15mm; overflow: hidden; font-size: 14pt;
+            padding: 4mm 15mm; overflow: hidden; font-size: 14pt; text-align: center;
         }
         .delete-button {
             position: absolute; top: 10px; left: 10px; background: transparent; border: none;
@@ -335,8 +336,10 @@
             font-weight: 600; color: #555; list-style: none;
         }
         .archived-batch summary::-webkit-details-marker { display: none; }
-        .archived-batch summary::before { content: "▸ "; }
-        .archived-batch[open] summary::before { content: "▾ "; }
+        .archived-batch summary::before {
+            content: "▼ "; color: #157347; font-size: 11px; margin-right: 5px;
+        }
+        .archived-batch[open] summary::before { content: "▲ "; }
         .archived-batch-body { padding: 12px; opacity: .85; }
         .archived-batch .calculation-entry { margin-bottom: 15px; }
         .archived-batch .calculation-entry:last-child { margin-bottom: 0; }
@@ -347,6 +350,11 @@
             border-radius: 50%; transition: all 0.3s ease;
         }
         .reset-acb-btn:hover { background: rgba(255,107,107,0.1); transform: rotate(90deg); }
+
+        /* ── ACB WRAPPER — centered, tucked directly under the input card ── */
+        .acb-wrapper {
+            width: 90%; max-width: 900px; margin: -10px auto 20px; text-align: left;
+        }
 
         /* ── MODALS ── */
         .info-modal {
@@ -642,14 +650,15 @@
         .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
 
         /* ── COLLAPSIBLE HOLD-PERIOD CALENDAR ── */
+        /* Minimal pull-down tab — small, quiet, hugging the left edge below the input card */
         .calendar-toggle {
-            width: 100%; margin-top: 14px; padding: 10px 14px;
-            background: #eaf7ee; color: #157347; border: 1px solid #a9dfba; border-radius: 8px;
-            font-size: 14px; font-weight: 600; cursor: pointer; flex: none;
-            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            width: auto; margin: 0 0 6px; padding: 5px 10px;
+            background: transparent; color: #157347; border: none; border-radius: 6px;
+            font-size: 13px; font-weight: 600; cursor: pointer; flex: none;
+            display: inline-flex; align-items: center; gap: 6px;
             font-family: "Inter", sans-serif; user-select: none;
         }
-        .calendar-toggle:hover { background: #d9f0e1; }
+        .calendar-toggle:hover { background: #eaf7ee; text-decoration: underline; }
         .calendar-collapsible { max-height: 0; overflow: hidden; transition: max-height .45s ease; }
         .calendar-collapsible.open { max-height: 1400px; }
         .calendar-collapsible .hold-calendar { margin-top: 14px; }
@@ -896,7 +905,6 @@
                     <label for="holdStartDate">Current date</label>
                     <input type="date" id="holdStartDate" class="hold-date-input">
                 </div>
-                <div class="hold-sep">/</div>
                 <div class="hold-date-group">
                     <span class="hold-label">Hold time period (15 days)</span>
                     <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
