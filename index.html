@@ -119,29 +119,6 @@
         .menu-item:hover { background: rgba(255,255,255,.2); }
         .menu-item.active { background: #157347; }
 
-        /* ── QTY TRACKER ── */
-        .menu-qty-tracker {
-            display: flex; align-items: center; gap: 10px; margin-left: auto;
-            flex-shrink: 1; min-width: 0; overflow: hidden;
-        }
-        .menu-qty-tracker.hidden { display: none; }
-        .menu-qty-group { display: flex; flex-direction: column; align-items: flex-start; flex-shrink: 0; }
-        .menu-qty-input, .lot-select {
-            width: 90px; padding: 5px; border: 1px solid #ddd; border-radius: 3px;
-            text-align: center; background: #fff; color: #000; font-size: 13px;
-        }
-        .menu-qty-input:focus, .lot-select:focus { outline: 0; border-color: #28a745; }
-        .lot-select option { background: #fff; color: #000; }
-        .menu-qty-label { font-size: 11px; color: #e8e8e8; margin-bottom: 3px; white-space: nowrap; }
-        .menu-qty-value { font-size: 13px; font-weight: 600; color: #fff; }
-        .menu-qty-warning { color: #ff6b6b; font-size: 11px; margin-top: 3px; display: none; }
-        .menu-qty-warning.active {
-            display: block; background: #ff6b6b; color: #fff;
-            padding: 3px 8px; border-radius: 3px; font-weight: 600;
-        }
-
-
-
         /* ── HAMBURGER ── */
         .hamburger-btn {
             background: transparent; border: none; color: #fff;
@@ -169,9 +146,55 @@
             box-shadow: 0 5px 15px rgba(0,0,0,.2); margin-bottom: 20px; position: relative;
             scroll-margin-top: 60px;
         }
-        #acbCalculator { max-width: 900px; }
+        #acbCalculator { max-width: 900px; margin: 0 auto; }
+        /* Embedded in the pull-down panel above the Formula Calculator — visibility
+           is governed by the collapsible wrapper, not the .active tab class. */
+        #acbCalculator.acb-embedded { display: block; }
         .calculator-container.active { display: block; }
         .input-group { margin-top: 10px; text-align: left; }
+        /* Formula card title + selected drug/Std Qty badge, side by side on one line */
+        .formula-header-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; flex-wrap: nowrap;
+        }
+        .formula-header-row h2 { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* The menu-bar title and the input-card title share one style — the drug /
+           Std Qty badge moved onto the card (where "Formula Calculator" used to be)
+           and "Formula Calculator" moved to the menu bar, in identical type. */
+        .menu-title, .formula-header-row h2 {
+            font-family: "Inter", sans-serif; font-size: 18px; font-weight: 600;
+            letter-spacing: -0.2px; color: inherit; line-height: 1.3;
+        }
+        .menu-title { color: #fff; flex-shrink: 0; margin: 0; }
+        /* Drug/Std Qty badge — its own full-width line under the card title, so it
+           always has room to wrap instead of getting cropped next to the lot select. */
+        .drug-badge {
+            display: block; margin: 8px 0 0; font-size: 12px; font-weight: 600; color: #157347;
+            background: #eaf7ee; border: 1px solid #a9dfba; border-radius: 8px;
+            padding: 6px 10px; white-space: normal; overflow-wrap: break-word;
+            text-align: center; line-height: 1.4;
+        }
+        .drug-badge.hidden { display: none; }
+        /* ── QTY TRACKER (embedded in the Formula Calculator card) ── */
+        .qty-tracker-card {
+            display: flex; align-items: stretch; margin: 10px 0 0; padding: 10px 6px;
+            background: #f7f8fa; border: 1px solid #e3e7ee; border-radius: 8px;
+        }
+        .qty-tracker-item {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            flex: 1; min-width: 0;
+        }
+        .qty-tracker-label {
+            font-size: 11px; color: #767676; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .3px;
+        }
+        .qty-tracker-value { font-size: 17px; font-weight: 700; color: #111; font-variant-numeric: tabular-nums; }
+        .qty-tracker-sep { width: 1px; background: #e3e7ee; align-self: stretch; margin: 2px 4px; }
+        .quantity-warning-banner {
+            display: none; margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 600;
+            color: #fff; background: #ff6b6b; padding: 6px 10px; border-radius: 6px;
+        }
+        .quantity-warning-banner.active { display: block; }
         label { font-weight: 600; display: block; color: #444; }
         input, select {
             width: calc(100% - 20px); padding: 10px; margin: 5px 0;
@@ -200,7 +223,8 @@
         .calculation-steps {
             margin-top: 20px; padding: 15px; width: 90%; max-width: 900px;
             background: #fff; border-radius: 0; box-shadow: 0 4px 10px rgba(0,0,0,.1);
-            color: #555; text-align: left; position: relative; padding-top: 15px; will-change: transform;
+            color: #555; text-align: center; margin-left: auto; margin-right: auto;
+            position: relative; padding-top: 15px; will-change: transform;
         }
         #stepsContainer {
             display: flex; flex-direction: column;
@@ -222,17 +246,18 @@
             display: block; background: #f0f0f0;
             padding: 5mm; font-size: 14pt; border-top: 1px solid #000; box-sizing: border-box;
         }
-        .calculation-entry .lot-label { display: block; padding: 4mm 15mm 0; font-size: 14pt; }
+        .calculation-entry .lot-label { display: block; padding: 4mm 15mm 0; font-size: 14pt; text-align: left; }
         .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
         .reference-values {
             display: block; text-align: right; padding: 1mm 15mm 0; font-size: 10pt; color: #000;
         }
+        .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
         .acb-balance {
             display: block; text-align: right; padding: 1mm 15mm 0; font-size: 10pt;
             color: #000; font-weight: 600;
         }
         .calculation-content {
-            padding: 4mm 15mm; overflow: hidden; font-size: 14pt;
+            padding: 4mm 15mm; overflow: hidden; font-size: 14pt; text-align: center;
         }
         .delete-button {
             position: absolute; top: 10px; left: 10px; background: transparent; border: none;
@@ -284,13 +309,15 @@
             justify-content: center; border-radius: 6px; transition: background .15s ease;
             flex-shrink: 0; line-height: 1;
         }
-        .print-btn { color: #007bff; }
-        .print-btn:hover { background: rgba(0,123,255,.08); }
         .clear-all-btn { color: #dc3545; }
         .clear-all-btn:hover { background: rgba(220,53,69,.08); }
         .calc-toolbar {
-            display: flex; gap: 6px; align-items: center; padding-bottom: 8px;
+            display: flex; gap: 6px; align-items: center; padding-bottom: 8px; justify-content: flex-start;
         }
+        .print-btn {
+            color: #157347; font-size: 16px; width: 32px; height: 32px;
+        }
+        .print-btn:hover { background: rgba(21,115,71,.08); }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
 .lot-assign-panel {
             margin-top: 12px; padding: 8px; border: 1px solid #a9dfba; border-radius: 6px; background: #eaf7ee;
@@ -312,18 +339,26 @@
             font-weight: 600; color: #555; list-style: none;
         }
         .archived-batch summary::-webkit-details-marker { display: none; }
-        .archived-batch summary::before { content: "▸ "; }
-        .archived-batch[open] summary::before { content: "▾ "; }
+        .archived-batch summary::before {
+            content: "▼ "; color: #157347; font-size: 11px; margin-right: 5px;
+        }
+        .archived-batch[open] summary::before { content: "▲ "; }
         .archived-batch-body { padding: 12px; opacity: .85; }
         .archived-batch .calculation-entry { margin-bottom: 15px; }
         .archived-batch .calculation-entry:last-child { margin-bottom: 0; }
+        .reset-acb-row { text-align: right; margin: 4px 0 14px; }
         .reset-acb-btn {
-            position: absolute; bottom: 10px; right: 10px; background: transparent; border: none;
-            cursor: pointer; font-size: 20px; color: #ff6b6b; padding: 5px;
-            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: none;
+            cursor: pointer; font-size: 18px; color: #ff6b6b; padding: 6px;
+            width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
             border-radius: 50%; transition: all 0.3s ease;
         }
         .reset-acb-btn:hover { background: rgba(255,107,107,0.1); transform: rotate(90deg); }
+
+        /* ── ACB WRAPPER — centered, tucked directly under the input card ── */
+        .acb-wrapper {
+            width: 90%; max-width: 900px; margin: 10px auto 20px; text-align: left;
+        }
 
         /* ── MODALS ── */
         .info-modal {
@@ -550,21 +585,29 @@
         .select-option:active { background: #d9f0e1; }
 
         /* ── HOLD PERIOD ── */
-        .hold-dates-row { display: flex; align-items: flex-end; justify-content: center; gap: 14px; flex-wrap: wrap; }
-        .hold-date-group { display: flex; flex-direction: column; gap: 4px; }
-        .hold-date-group label { font-weight: 600; color: #157347; font-size: 12px; text-align: center; }
+        .hold-dates-row { display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: wrap; }
+        .hold-date-group { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+        /* Fixed label + fixed control heights keep the two date displays on one
+           straight line regardless of font metrics or native date-picker chrome. */
+        .hold-date-group label, .hold-date-group .hold-label {
+            display: block; height: 18px; line-height: 18px; font-weight: 600;
+            color: #157347; font-size: 12px; text-align: center; overflow: hidden;
+            white-space: nowrap;
+        }
         .hold-date-input {
-            width: 160px; padding: 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
+            width: 160px; height: 40px; padding: 0 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
             text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; background: #fff;
+            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
         }
         .hold-date-input:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
         .hold-date-static {
-            display: inline-block; width: 160px; padding: 8px; border: 1.5px solid #a9dfba;
-            border-radius: 6px; text-align: center; font-size: 14px; font-weight: 600;
-            font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
+            display: inline-flex; align-items: center; justify-content: center; width: 160px; height: 40px;
+            padding: 0 8px; border: 1.5px solid #a9dfba; border-radius: 6px; text-align: center; font-size: 14px;
+            font-weight: 600; font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
         }
-        .hold-sep { font-weight: 700; color: #157347; padding-bottom: 9px; font-size: 16px; }
-        .hold-calendar { margin-top: 14px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+        .hold-sep { display: flex; align-items: center; font-weight: 700; color: #157347; font-size: 16px; }
+        /* Calendar renders first, dates row sits below it — always visible, no collapsible. */
+        .hold-calendar { margin: 0 0 14px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
         .hold-month { background: #fff; border: 1px solid #e3e7ee; border-radius: 10px; padding: 10px; }
         .hold-month-title { font-weight: 600; text-align: center; margin-bottom: 8px; font-size: 13px; color: #111; }
         .hold-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 3px; }
@@ -584,14 +627,49 @@
         }
         .hold-day:hover { transform: scale(1.15); font-weight: 600; }
         .hold-day.cal-out {
-            background: #fff; border-color: transparent; color: #c9c9c9;
-            opacity: .3; cursor: default;
+            background: #fff; border: 1px solid #ececec; color: #9a9a9a;
+            opacity: .7; cursor: default;
         }
         .hold-day.cal-out:hover { transform: none; font-weight: 400; }
+        /* The 3-day buffer on each side of the hold period (today-3 .. today-1, and
+           end+1 .. end+3) stays green like the rest of the in-window days — it just
+           breathes with a slow fade in/out instead of sitting static or being grayed
+           out like .cal-out. */
+        .hold-day.cal-edge {
+            animation: dayFade .4s ease backwards, edgePulse 2.4s ease-in-out .4s infinite;
+        }
+        .hold-day.cal-edge:hover { animation-play-state: paused; }
         @keyframes dayFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes edgePulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
         @keyframes holdMonthIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         .hold-day.cal-today { background: #157347; border-color: #157347; color: #fff; font-weight: 700; }
         .hold-day.cal-hold { background: #ff9800; border-color: #ff9800; color: #fff; font-weight: 700; }
+
+        /* ── ACTIVE LOT DROP-DOWN (manual lot control — never auto-assigned) ── */
+        .lot-select-inline {
+            width: auto; min-width: 96px; padding: 6px 10px; margin: 0; flex: none;
+            border: 2px solid #a9dfba; border-radius: 8px; background: #eaf7ee;
+            color: #157347; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
+
+        /* ── COLLAPSIBLE HOLD-PERIOD CALENDAR ── */
+        /* (A+C)-B pull-down tab — minimal, left-aligned at bottom of input card */
+        .calendar-toggle {
+            width: auto; margin-top: 14px; padding: 8px 14px;
+            background: transparent; color: #157347; border: 1.5px solid #a9dfba; border-radius: 5px;
+            font-size: 13px; font-weight: 600; cursor: pointer; flex: none;
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: "Inter", sans-serif; user-select: none;
+            transition: background .2s ease;
+        }
+        .calendar-toggle:hover { background: #eaf7ee; }
+        .calendar-collapsible { max-height: 0; overflow: hidden; transition: max-height .45s ease; }
+        .calendar-collapsible.open { max-height: 1400px; }
+        .calendar-collapsible .hold-calendar { margin-top: 14px; }
+
+        /* ── PER-LOT A/C VARIATION HIGHLIGHT (light red) ── */
+        .acb-input.acb-varies { background: #ffe3e3 !important; border-color: #f1b0b0; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
@@ -606,7 +684,6 @@
             .acb-td, .acb-th { font-size: 12px; padding: 6px; min-width: 50px; }
             .acb-input, .acb-span { font-size: 12px; padding: 4px; }
             .menu-container { flex-wrap: wrap; gap: 10px; padding: 10px; }
-            .menu-qty-tracker { order: 3; width: 100%; justify-content: center; margin-left: 0; }
         }
         @media (max-width: 480px) {
             .calculation-entry { font-size: 10pt; }
@@ -623,7 +700,7 @@
             .acb-input, input { font-size: 14px; }
             button { font-size: 14px; padding: 10px; }
             .menu-item { padding: 6px 10px; font-size: 14px; }
-            .menu-qty-input, .lot-select { width: 80px; }
+            .qty-tracker-value { font-size: 15px; }
             .sidenav, .writeus-panel { width: auto; right: 0; left: 0; max-width: 100%; }
         }
 
@@ -633,8 +710,8 @@
             body { background: transparent; padding: 0; margin: 0; }
             .calculator-container,
             .delete-button, .info-btn, .menu-bar, .print-btn, .clear-all-btn, .calc-toolbar,
-            .archived-steps-container, .progress-container, footer, .reset-acb-btn,
-            .sidenav, .sidenav-overlay, .writeus-panel { display: none !important; }
+            .archived-steps-container, .progress-container, footer, .reset-acb-btn, .reset-acb-row,
+            .sidenav, .sidenav-overlay, .writeus-panel, #acbToggle { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
                 display: block !important; width: 100%; max-width: none; margin: 0; padding: 0; background: transparent;
@@ -656,7 +733,7 @@
                 padding: 5mm; font-size: 14pt; border-top: 1px solid #000;
             }
             .reference-values { position: absolute; top: 20mm; right: 10mm; font-size: 10pt; color: #000; background: #fff; padding: 2px 5px; z-index: 10; }
-            .calculation-entry .lot-label::before { content: "LOT: "; position: absolute; top: 24mm; left: 15mm; font-size: 14pt; }
+            .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
             .calculation-content { margin-top: 30mm; margin-bottom: 30mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
             #stepsContainer { display: block; overflow: visible; max-height: none; }
@@ -677,24 +754,7 @@
     <!-- MENU BAR -->
     <div class="menu-bar">
         <div class="menu-container">
-            <div class="menu-item active" id="menuFormula" role="button" tabindex="0"
-                data-calculator="formula"
-                aria-label="Show Formula Calculator">Formula Calculator</div>
-            <div class="menu-item" id="menuAcb" role="button" tabindex="0"
-                data-calculator="acb"
-                aria-label="Show (A+C)-B Calculator">(A+C)-B Calculator</div>
-
-            <div class="menu-qty-tracker" id="menuQtyTracker">
-                <div class="menu-qty-group">
-                    <label class="menu-qty-label">Dispensed</label>
-                    <div id="dispensedQty" class="menu-qty-value">0.000</div>
-                </div>
-                <div class="menu-qty-group">
-                    <label for="remainingQty" class="menu-qty-label">Remaining</label>
-                    <div id="remainingQty" class="menu-qty-value">0.000</div>
-                    <div id="quantityWarning" class="menu-qty-warning">Qty mismatch!</div>
-                </div>
-            </div>
+            <h2 class="menu-title" id="menuTitle">Formula Calculator</h2>
             <!-- Hamburger -->
             <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
         </div>
@@ -731,7 +791,28 @@
 
     <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container">
-        <h2 id="formulaCardTitle">Formula Calculator</h2>
+        <div class="formula-header-row">
+            <h2 id="formulaCardTitle">Formula Calculator</h2>
+            <select id="activeLotSelect" class="lot-select-inline" aria-label="Active Lot">
+                <option value="1" selected>Lot-I</option>
+                <option value="2">Lot-II</option>
+                <option value="3">Lot-III</option>
+                <option value="4">Lot-IV</option>
+            </select>
+        </div>
+        <div class="drug-badge hidden" id="drugBadge" title="Selected drug and standard quantity"></div>
+        <div class="qty-tracker-card" id="menuQtyTracker">
+            <div class="qty-tracker-item">
+                <span class="qty-tracker-label">Dispensed</span>
+                <span id="dispensedQty" class="qty-tracker-value">0.000</span>
+            </div>
+            <div class="qty-tracker-sep"></div>
+            <div class="qty-tracker-item">
+                <span class="qty-tracker-label">Remaining</span>
+                <span id="remainingQty" class="qty-tracker-value">0.000</span>
+            </div>
+        </div>
+        <div id="quantityWarning" class="quantity-warning-banner">Qty mismatch!</div>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
             <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
@@ -754,6 +835,9 @@
             <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
             <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
         </div>
+        <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible">
+            <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
+        </button>
         <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
             <div class="lot-assign-buttons">
                 <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
@@ -764,8 +848,10 @@
         </div>
     </div>
 
-    <!-- ACB CALCULATOR -->
-    <div id="acbCalculator" class="calculator-container">
+    <!-- ACB CALCULATOR — collapsible pull-down panel above the Formula Calculator -->
+    <div id="acbWrapper" class="acb-wrapper hidden">
+        <div class="calendar-collapsible" id="acbCollapsible">
+            <div id="acbCalculator" class="calculator-container acb-embedded">
         <div class="header-row">
             <h2>(A+C)-B Calculator</h2>
         </div>
@@ -816,21 +902,25 @@
                 </tr>
             </tbody>
         </table>
+        <div class="reset-acb-row">
+            <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
+        </div>
         <div class="hold-period" id="holdPeriod">
+            <!-- Calendar first (always visible — no collapsible), dates row below -->
+            <div class="hold-calendar" id="holdCalendar"></div>
             <div class="hold-dates-row">
                 <div class="hold-date-group">
                     <label for="holdStartDate">Current date</label>
                     <input type="date" id="holdStartDate" class="hold-date-input">
                 </div>
-                <div class="hold-sep">/</div>
                 <div class="hold-date-group">
                     <span class="hold-label">Hold time period (15 days)</span>
                     <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
                 </div>
             </div>
-            <div class="hold-calendar" id="holdCalendar"></div>
         </div>
-        <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
+            </div>
+        </div>
     </div>
 
     <!-- CALCULATION STEPS -->
@@ -855,7 +945,9 @@
                 <div class="info-item"><span class="info-key">F8:</span> Print calculations</div>
                 <div class="info-item"><span class="info-key">Enter:</span> Navigate between fields</div>
                 <div class="info-item"><span class="info-key">Click Remaining Qty:</span> Copy to Q field</div>
-                <div class="info-item"><span class="info-key">Lot Assignment:</span> Appears in the input card when Remaining = 0 — pick a lot to archive the batch &amp; continue</div>
+                <div class="info-item"><span class="info-key">Lot Assignment:</span> When Remaining = 0 the batch auto-assigns to the first free lot (or the lot with the largest balance) — the lot buttons are a manual override</div>
+                <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown in the input-card title</div>
+                <div class="info-item"><span class="info-key">Active Lot:</span> Drop-down beside the Formula Calculator title — starts at Lot-I; lots are never auto-assigned. A/C values that differ between lots are highlighted in light red</div>
             </div>
             <div id="acbInfo" class="info-section" style="display:none">
                 <h3>(A+C)-B Calculator Features</h3>
@@ -972,8 +1064,6 @@
             stdCInput: document.getElementById("stdC"),
             stdCGroup: document.getElementById("stdCGroup"),
             acbCalculator: document.getElementById("acbCalculator"),
-            menuFormula: document.getElementById("menuFormula"),
-            menuAcb: document.getElementById("menuAcb"),
             menuQtyTracker: document.getElementById("menuQtyTracker"),
             stdQtyInput: document.getElementById("stdQty"),
             dispensedQty: document.getElementById("dispensedQty"),
@@ -995,6 +1085,7 @@
         let calculations = [];
         let sessionStarted = false;
         let currentLot = 1, awaitingLotAssignment = false, lastAssignedLot = null, pendingArchiveLot = null;
+        let selectedDrugLabel = '';
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
         function truncateTo12Digits(num) {
@@ -1084,15 +1175,33 @@
             return d;
         }
 
-        // Effective (A+C)-B for a lot: the table's Issued Qty (B) if present, plus the
-        // current batch's dispensed qty when the lot is the active one. This keeps the
-        // F1/F3 cards up to date immediately — no waiting for lot assignment.
+        // Parse any field value safely — a half-typed "-" or stray character must
+        // never propagate a Decimal.js exception into the UI.
+        function safeDec(v) { try { const d = new Decimal(v || 0); return d.isNaN() ? new Decimal(0) : d; } catch { return new Decimal(0); } }
+
+        // Effective (A+C)-B for a lot: the table's B cell holds every batch already
+        // committed to this lot (see assignLotAndContinue, which accumulates rather
+        // than overwrites). On top of that we subtract whatever the *current*,
+        // still-unassigned batch has dispensed against this lot so far — so the
+        // balance is correct the instant a calculation is made, with no need to
+        // wait for the batch to be assigned to a lot.
         function getEffectiveLotBalance(lotIndex) {
-            const a = new Decimal(domCache.acbInputs.a[lotIndex]?.value || 0);
-            const c = new Decimal(domCache.acbInputs.c[lotIndex]?.value || 0);
-            let b = new Decimal(domCache.acbInputs.b[lotIndex]?.value || 0);
-            if (lotIndex === currentLot - 1) b = b.plus(getCurrentBatchDispensed());
-            return a.plus(c).minus(b);
+            try {
+                const a = safeDec(domCache.acbInputs.a[lotIndex]?.value);
+                const c = safeDec(domCache.acbInputs.c[lotIndex]?.value);
+                const b = safeDec(domCache.acbInputs.b[lotIndex]?.value);
+                const lotNumber = lotIndex + 1;
+                let liveDispensed = new Decimal(0);
+                // If this lot's batch is already committed (pendingArchiveLot), its
+                // total is already inside b — counting it again would double-subtract.
+                if (pendingArchiveLot !== lotNumber) {
+                    calculations.forEach(calc => {
+                        if (calc.lot !== lotNumber) return;
+                        liveDispensed = liveDispensed.plus(new Decimal(calc.formulaType === 'F2' ? calc.Q : calc.result));
+                    });
+                }
+                return a.plus(c).minus(b).minus(liveDispensed);
+            } catch { return new Decimal(0); }
         }
 
         const pad2 = n => String(n).padStart(2, "0");
@@ -1102,7 +1211,12 @@
         const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
         function dayClasses(cell, day, winStart, winEnd, start, end) {
-            cell.classList.toggle("cal-out", day < winStart || day > winEnd);
+            const isOut = day < winStart || day > winEnd;
+            // The ±3-day buffer sits inside the render window but outside the actual
+            // hold period [start, end] — these are the tiles that should pulse.
+            const isEdge = !isOut && (day < start || day > end);
+            cell.classList.toggle("cal-out", isOut);
+            cell.classList.toggle("cal-edge", isEdge);
             cell.classList.toggle("cal-today", sameDay(day, start));
             cell.classList.toggle("cal-hold", sameDay(day, end));
         }
@@ -1191,6 +1305,23 @@
             showCalculator('formula');
         }
 
+        // Keeps the "<Drug> · Std Qty (A): X kg" badge beside the Formula Calculator
+        // Keeps the drug badge (its own line under the card title) in sync with the
+        // selected product and the current Std Qty (A) value (including live edits
+        // in Manual mode). Full card width to wrap into, so it never gets cropped.
+        function updateDrugBadge() {
+            const badgeEl = document.getElementById('drugBadge');
+            if (!badgeEl) return;
+            if (!selectedDrugLabel) { badgeEl.textContent = ''; badgeEl.classList.add('hidden'); return; }
+            const raw = domCache.stdQtyInput.value;
+            let qtyText = '—';
+            if (raw && raw.trim() !== '') {
+                try { qtyText = new Decimal(raw).toFixed(3); } catch { qtyText = raw; }
+            }
+            badgeEl.textContent = `${selectedDrugLabel} · Std Qty (A): ${qtyText} kg*`;
+            badgeEl.classList.remove('hidden');
+        }
+
         function updateQuantityTracker() {
             const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
             let dispensed = new Decimal(0), remainingCalc = new Decimal(0), hasFinal = false;
@@ -1217,10 +1348,13 @@
             // Lot assignment sits in the input card: the input fields are locked
             // (hidden) until the finished batch is assigned to a lot.
             domCache.formulaCalculator.classList.toggle('locked', awaitingLotAssignment);
-            document.getElementById('formulaCardTitle').textContent =
-                awaitingLotAssignment ? 'Assign Lot' : 'Formula Calculator';
             const lotPanel = document.getElementById('lotAssignPanel');
             if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
+
+            // Keep every visible card's (A+C)-B line accurate in real time, without
+            // waiting for the batch to be assigned to a lot.
+            syncLotBalanceLines();
+            updateDrugBadge();
         }
 
         function refreshStepsPanelVisibility() {
@@ -1254,24 +1388,50 @@
 
         function assignLotAndContinue(lotNumber) {
             const lotIndex = lotNumber - 1;
-            if (lotIndex < 0 || lotIndex >= domCache.acbInputs.b.length || !awaitingLotAssignment) return;
+            if (lotIndex < 0 || lotIndex >= domCache.acbInputs.b.length) return;
+            // Already assigned to this lot — nothing to do.
+            if (pendingArchiveLot === lotNumber) {
+                document.getElementById('lotAssignPanel')?.classList.add('hidden');
+                return;
+            }
 
-            // 1. Record the dispensed qty in the chosen lot's Issued Qty (B) cell
+            const thisBatchAmt = safeDec(domCache.dispensedQty.textContent);
+
+            // If this batch was already committed to a different lot, undo that
+            // first. B is a running cumulative total across every batch ever
+            // assigned to a lot, so we only subtract this batch's own share.
+            const oldLot = pendingArchiveLot;
+            if (oldLot && oldLot !== lotNumber) {
+                const oldIndex = oldLot - 1;
+                const oldInput = domCache.acbInputs.b[oldIndex];
+                const revertedB = safeDec(oldInput.value).minus(thisBatchAmt);
+                oldInput.value = revertedB.gt(0) ? revertedB.toFixed(3) : '';
+                if (!oldInput.value) oldInput.classList.remove('acb-manual-input');
+                updateACB(oldInput, oldIndex, 'b');
+            }
+
+            // 1. Add the dispensed qty into the chosen lot's Issued Qty (B) cell —
+            //    B accumulates across every batch assigned to this lot over time.
             const input = domCache.acbInputs.b[lotIndex];
-            input.value = domCache.dispensedQty.textContent;
+            const existingB = safeDec(input.value);
+            input.value = existingB.plus(thisBatchAmt).toFixed(3);
             input.classList.add('acb-manual-input');
 
             // 2. Tag the finished batch with this lot — archiving happens only when
             //    the user proceeds with the next calculation (see calculate()).
-            //    Tagging happens BEFORE the balance sync so the effective-balance
-            //    math doesn't double-count the just-assigned qty.
             calculations.forEach(c => c.lot = lotNumber);
-            domCache.stepsContainer.querySelectorAll('.calculation-entry .lot-label')
-                .forEach(el => el.textContent = LOT_NAMES[lotNumber]);
+            domCache.stepsContainer.querySelectorAll('.calculation-entry').forEach(entry => {
+                const lotLabel = entry.querySelector('.lot-label');
+                if (lotLabel) lotLabel.textContent = LOT_NAMES[lotNumber];
+                // Update data-lot-balance on cards so syncLotBalanceLines targets the right lot
+                const balEl = entry.querySelector('[data-lot-balance]');
+                if (balEl) balEl.dataset.lotBalance = lotNumber;
+            });
             pendingArchiveLot = lotNumber;
 
-            // 3. Advance to the next lot for auto-allotment and unlock entry
-            currentLot = Math.min(lotNumber + 1, 4);
+            // 3. The user explicitly picked this lot — make it the active lot.
+            currentLot = lotNumber;
+            syncLotSelect();
             awaitingLotAssignment = false; batchComplete = false;
             document.getElementById('lotAssignPanel').classList.add('hidden');
 
@@ -1280,6 +1440,47 @@
             updateQuantityTracker();
             refreshStepsPanelVisibility();
             showCalculator('formula'); domCache.QInput.focus();
+        }
+
+        function syncLotSelect() {
+            const sel = document.getElementById('activeLotSelect');
+            if (sel) sel.value = String(currentLot);
+        }
+
+        // Lots are assigned manually only. Switching is blocked while a batch has
+        // unassigned calculations, but allowed when the batch is complete and waiting
+        // for lot assignment — the user may want to assign to a different lot.
+        function setActiveLot(n) {
+            if (n < 1 || n > 4 || n === currentLot) return true;
+            if (calculationCount > 0 && !awaitingLotAssignment) {
+                alert('Finish or assign the current batch to a lot before switching the active lot.');
+                return false;
+            }
+            currentLot = n;
+            syncLotSelect();
+            syncLotBalanceLines();
+            updateQuantityTracker();
+            return true;
+        }
+
+        function syncLotBalanceLines() {
+            domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
+                el.textContent = `(A+C)-B = ${getEffectiveLotBalance(parseInt(el.dataset.lotBalance, 10) - 1).toFixed(3)}`;
+            });
+        }
+
+        // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
+        // C: 14.674 vs 14.673). Any deviation from Lot-I — even by 0.001 — is
+        // highlighted light red so the user sees it before entering quantities.
+        function highlightACBVariations() {
+            ['a', 'c'].forEach(type => {
+                const inputs = domCache.acbInputs[type];
+                const base = new Decimal(inputs[0].value || 0);
+                inputs.forEach((input, i) => {
+                    const v = new Decimal(input.value || 0);
+                    input.classList.toggle('acb-varies', i > 0 && !v.eq(base));
+                });
+            });
         }
 
         function copyRemainingToQ() {
@@ -1321,6 +1522,9 @@
             domCache.acbInputs.totals.b.textContent = '0.000';
             domCache.acbInputs.totals.result.textContent = '0.000';
             domCache.acbInputs.results.forEach(r => { r.textContent = '-'; r.classList.remove('acb-output','acb-prefilled'); });
+            // Keep any already-displayed calculation cards' (A+C)-B lines in sync
+            // with the values just reset.
+            syncLotBalanceLines();
         }
 
         function handleInput(event) {
@@ -1364,22 +1568,18 @@
         function showCalculator(calculator) {
             if (!sessionStarted && calculator !== 'setup') return; // product must be selected first
             domCache.productSetup.classList.remove('active');
-            domCache.formulaCalculator.classList.toggle('active', calculator === 'formula');
-            domCache.acbCalculator.classList.toggle('active', calculator === 'acb');
-            domCache.menuFormula.classList.toggle('active', calculator === 'formula');
-            domCache.menuAcb.classList.toggle('active', calculator === 'acb');
-            domCache.menuQtyTracker.classList.toggle('hidden', calculator === 'acb');
-            domCache.calculationSteps.classList.toggle('hidden', calculator !== 'formula' || (calculationCount === 0 && domCache.archivedStepsContainer.children.length === 0));
-            requestAnimationFrame(() => {
-                if (calculator === 'formula') domCache.QInput?.focus();
-                else domCache.acbInputs?.b?.[0]?.focus();
-            });
+            // Single-page layout: the Formula Calculator is always the main view and the
+            // (A+C)-B Calculator sits above it as a pull-down panel (never a separate page).
+            domCache.formulaCalculator.classList.add('active');
+            document.getElementById('acbWrapper')?.classList.remove('hidden');
+            refreshStepsPanelVisibility();
+            requestAnimationFrame(() => domCache.QInput?.focus());
         }
 
         function showInfo() {
             const modal = document.getElementById('infoModal');
-            document.getElementById('formulaInfo').style.display = domCache.formulaCalculator.classList.contains('active') ? 'block' : 'none';
-            document.getElementById('acbInfo').style.display = domCache.formulaCalculator.classList.contains('active') ? 'none' : 'block';
+            document.getElementById('formulaInfo').style.display = 'block';
+            document.getElementById('acbInfo').style.display = 'block';
             modal.style.display = 'flex';
             requestAnimationFrame(() => document.querySelector('#infoModal .close').focus());
         }
@@ -1448,7 +1648,7 @@
 
             let tA = new Decimal(0), tB = new Decimal(0), tC = new Decimal(0), tR = new Decimal(0);
             domCache.acbInputs.a.forEach((aIn, i) => {
-                const a = new Decimal(aIn.value || 0), b = new Decimal(domCache.acbInputs.b[i].value || 0), c = new Decimal(domCache.acbInputs.c[i].value || 0);
+                const a = safeDec(aIn.value), b = safeDec(domCache.acbInputs.b[i].value), c = safeDec(domCache.acbInputs.c[i].value);
                 const re = domCache.acbInputs.results[i];
                 if (b.isZero() || !domCache.acbInputs.b[i].value.trim()) { re.textContent = '-'; re.classList.remove('acb-output','acb-prefilled'); }
                 else { const r = a.plus(c).minus(b); re.textContent = formatNumber(r); re.classList.add('acb-output'); re.classList.remove('acb-prefilled'); tR = tR.plus(r); }
@@ -1464,9 +1664,9 @@
 
             // Keep F1/F3 cards' (A+C)-B lines in sync — effective balance reflects the
             // current batch's dispensed qty even before the lot's B cell is written.
-            domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
-                el.textContent = `(A+C)-B = ${getEffectiveLotBalance(parseInt(el.dataset.lotBalance, 10) - 1).toFixed(3)}`;
-            });
+            syncLotBalanceLines();
+            // Flag per-lot A/C deviations (even 0.001) in light red.
+            highlightACBVariations();
         }
 
         function printWithCheck() {
@@ -1534,6 +1734,7 @@
                 pendingArchiveLot = null;
             }
 
+            calculationResult.lot = currentLot; // tagged at creation — lots are user-assigned, never auto
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry"; newEntry.setAttribute("tabindex", "0");
@@ -1699,14 +1900,6 @@
                 btn.addEventListener('click', () => calculate(btn.dataset.formula));
             });
 
-            // Menu tabs (click + keyboard, since these are role="button" divs, not <button>)
-            document.querySelectorAll('[data-calculator]').forEach(el => {
-                el.addEventListener('click', () => showCalculator(el.dataset.calculator));
-                el.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showCalculator(el.dataset.calculator); }
-                });
-            });
-
             document.getElementById('resetAcbBtn').addEventListener('click', resetACBCalculator);
             document.getElementById('startBtn').addEventListener('click', startSession);
             // Touch-friendly product dropdown: tapping an option selects it AND
@@ -1725,7 +1918,8 @@
                 opt.addEventListener('click', () => {
                     const val = opt.dataset.value;
                     document.getElementById('drugSelector').value = val;
-                    drugTrigger.textContent = opt.childNodes[0].textContent.trim();
+                    selectedDrugLabel = opt.childNodes[0].textContent.trim();
+                    drugTrigger.textContent = selectedDrugLabel;
                     closeDrugOptions();
                     const manual = val === 'manual';
                     document.getElementById('stdQtyGroup').style.display = manual ? 'block' : 'none';
@@ -1783,6 +1977,23 @@
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.querySelectorAll('.lot-assign-btn').forEach(btn =>
                 btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
+            const activeLotSelect = document.getElementById('activeLotSelect');
+            activeLotSelect.addEventListener('change', () => {
+                const requested = parseInt(activeLotSelect.value, 10);
+                if (!setActiveLot(requested)) activeLotSelect.value = String(currentLot);
+            });
+
+            // (A+C)-B pull-down panel: down arrow opens it above the Formula
+            // Calculator, up arrow pushes it back.
+            const acbToggle = document.getElementById('acbToggle');
+            const acbCollapsible = document.getElementById('acbCollapsible');
+            const acbArrow = document.getElementById('acbArrow');
+            acbToggle.addEventListener('click', () => {
+                const open = acbCollapsible.classList.toggle('open');
+                acbToggle.setAttribute('aria-expanded', String(open));
+                acbArrow.textContent = open ? '▲' : '▼';
+                if (open) acbCollapsible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
 
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
