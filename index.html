@@ -637,6 +637,33 @@
         }
         .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
 
+        /* ── ACB-MODE: while (A+C)-B is open, only the calendar shows in the input card ── */
+        #formulaCalculator.acb-mode .input-group,
+        #formulaCalculator.acb-mode .input-row,
+        #formulaCalculator.acb-mode .progress-container,
+        #formulaCalculator.acb-mode .button-row,
+        #formulaCalculator.acb-mode .qty-tracker-card,
+        #formulaCalculator.acb-mode .quantity-warning-banner,
+        #formulaCalculator.acb-mode .lot-assign-panel { display: none !important; }
+
+        /* ── FLOATING ACTION BUTTONS (hamburger contents) ── */
+        .fab-container {
+            position: fixed; top: 70px; right: 12px; z-index: 999;
+            display: flex; flex-direction: column; gap: 10px;
+            opacity: 0; pointer-events: none; transform: translateX(24px);
+            transition: opacity .25s ease, transform .25s ease;
+        }
+        .fab-container.open { opacity: 1; pointer-events: auto; transform: none; }
+        .fab {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; border: none; flex: none;
+            text-decoration: none; transition: transform .2s ease, background .2s ease;
+            padding: 0;
+        }
+        .fab:hover { transform: scale(1.12); background: #eaf7ee; }
+
         /* ── COLLAPSIBLE HOLD-PERIOD CALENDAR ── */
         /* (A+C)-B pull-down tab — minimal, left-aligned at bottom of input card */
         .calendar-toggle {
@@ -693,7 +720,8 @@
             .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .archived-steps-container, .progress-container, footer, .reset-acb-btn, .reset-acb-row,
-            .sidenav, .sidenav-overlay, .writeus-panel, #acbToggle { display: none !important; }
+            .sidenav, .sidenav-overlay, .writeus-panel, #acbToggle,
+            .hamburger-btn, .fab-container, .fab { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
                 display: block !important; width: 100%; max-width: none; margin: 0; padding: 0; background: transparent;
@@ -715,6 +743,14 @@
                 padding: 5mm; font-size: 14pt; border-top: 1px solid #000;
             }
             .reference-values { position: absolute; top: 20mm; right: 10mm; font-size: 10pt; color: #000; background: #fff; padding: 2px 5px; z-index: 10; }
+            .calculation-entry .lot-label {
+                position: absolute; top: 20mm; left: 10mm; padding: 2px 5px;
+                font-size: 12pt; color: #000; background: #fff; z-index: 10;
+            }
+            .calculation-entry .acb-balance {
+                position: absolute; top: 28mm; left: 10mm; padding: 2px 5px;
+                font-size: 10pt; color: #000; background: #fff; z-index: 10;
+            }
             .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
             .calculation-content { margin-top: 30mm; margin-bottom: 30mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
@@ -769,12 +805,6 @@
     <div id="formulaCalculator" class="calculator-container">
         <div class="formula-header-row">
             <h2 id="formulaCardTitle">Formula Calculator</h2>
-            <select id="activeLotSelect" class="lot-select-inline" aria-label="Active Lot">
-                <option value="1" selected>Lot-I</option>
-                <option value="2">Lot-II</option>
-                <option value="3">Lot-III</option>
-                <option value="4">Lot-IV</option>
-            </select>
         </div>
         <div class="drug-badge hidden" id="drugBadge" title="Selected drug and standard quantity"></div>
         <div class="qty-tracker-card" id="menuQtyTracker">
@@ -811,7 +841,7 @@
             <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
             <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
         </div>
-        <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible">
+        <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible" style="width:100%;justify-content:center;">
             <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
         </button>
         <!-- Hold-period calendar lives here while the (A+C)-B panel is open -->
@@ -921,9 +951,6 @@
                 <div class="info-item"><span class="info-key">F1/F2/F3 buttons:</span> Calculate the respective formula</div>
                 <div class="info-item"><span class="info-key">❌:</span> Remove a calculation</div>
                 <div class="info-item"><span class="info-key">Remaining Qty:</span> Tap it to copy into the Q field</div>
-                <div class="info-item"><span class="info-key">Lot Assignment:</span> When Remaining = 0, assign the finished batch to a lot — the lot buttons are a manual override</div>
-                <div class="info-item"><span class="info-key">* Std Qty:</span> The Std Qty (A) reference shown on the card</div>
-                <div class="info-item"><span class="info-key">Active Lot:</span> Drop-down beside the card title; A/C values that differ between lots are highlighted in light red</div>
             </div>
             <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
@@ -947,36 +974,11 @@
         <button type="button" class="info-btn" id="infoBtn" aria-label="Help and shortcuts">ℹ️ Help &amp; Shortcuts</button>
     </footer>
 
-    <!-- SIDENAV OVERLAY -->
-    <div class="sidenav-overlay" id="sidenavOverlay"></div>
-
-    <!-- SIDENAV -->
-    <nav class="sidenav" id="sidenav" aria-label="Site navigation">
-        <div class="sidenav-header">
-            <span class="sn-logo">NIR8<span> Calculators</span></span>
-            <button class="sidenav-close" id="sidenavClose" aria-label="Close menu">×</button>
-        </div>
-        <div class="sidenav-nav">
-            <button class="sidenav-item" id="openWriteUs">
-                <div class="sn-icon purple">✍️</div>
-                <div class="sn-text">
-                    <strong>Write Us</strong>
-                    <small>Share feedback or report a bug</small>
-                </div>
-                <span class="sn-arrow">›</span>
-            </button>
-            <div class="sidenav-divider"></div>
-            <a class="sidenav-item" href="vault" target="_blank" rel="noopener noreferrer">
-                <div class="sn-icon" style="background:#fff3e0;">🔐</div>
-                <div class="sn-text">
-                    <strong>Vault</strong>
-                    <small>Secure password manager</small>
-                </div>
-                <span class="sn-arrow">›</span>
-            </a>
-        </div>
-        <div class="sidenav-footer">NIR8 Calculators · Results are reliable but always double-check.</div>
-    </nav>
+    <!-- FLOATING ACTION BUTTONS — hamburger contents, small circular & collapsible -->
+    <div class="fab-container" id="fabContainer">
+        <button type="button" class="fab" id="fabWriteUs" aria-label="Write us" title="Write us">✍️</button>
+        <a class="fab" href="vault" target="_blank" rel="noopener noreferrer" aria-label="Vault" title="Vault">🔐</a>
+    </div>
 
     <!-- WRITE US PANEL -->
     <div class="writeus-panel" id="writeusPanel" role="dialog" aria-modal="true" aria-label="Write us">
@@ -1288,7 +1290,7 @@
             if (raw && raw.trim() !== '') {
                 try { qtyText = new Decimal(raw).toFixed(3); } catch { qtyText = raw; }
             }
-            badgeEl.textContent = `${selectedDrugLabel} · Std Qty (A): ${qtyText} kg*`;
+            badgeEl.textContent = `${selectedDrugLabel} · Std Qty (A): ${qtyText} kg* · Lot-${LOT_NAMES[currentLot]}`;
             badgeEl.classList.remove('hidden');
         }
 
@@ -1412,10 +1414,7 @@
             showCalculator('formula'); domCache.QInput.focus();
         }
 
-        function syncLotSelect() {
-            const sel = document.getElementById('activeLotSelect');
-            if (sel) sel.value = String(currentLot);
-        }
+        function syncLotSelect() { /* active lot is shown as plain text in the drug badge */ }
 
         // Lots are assigned manually only. Switching is blocked while a batch has
         // unassigned calculations, but allowed when the batch is complete and waiting
@@ -1716,8 +1715,8 @@
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="lot-label">${LOT_NAMES[currentLot]}</div>
-                <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 ${acbBalanceLine}
+                <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 <div class="calculation-content">${calculationResult.html}</div>
                 <div class="page-number">${calculationCount+1}/${calculationCount+1}</div>
             `;
@@ -1937,12 +1936,6 @@
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.querySelectorAll('.lot-assign-btn').forEach(btn =>
                 btn.addEventListener('click', () => assignLotAndContinue(parseInt(btn.dataset.lot, 10))));
-            const activeLotSelect = document.getElementById('activeLotSelect');
-            activeLotSelect.addEventListener('change', () => {
-                const requested = parseInt(activeLotSelect.value, 10);
-                if (!setActiveLot(requested)) activeLotSelect.value = String(currentLot);
-            });
-
             // (A+C)-B pull-down panel: down arrow opens it above the Formula
             // Calculator, up arrow pushes it back.
             const acbToggle = document.getElementById('acbToggle');
@@ -1955,6 +1948,9 @@
                 const open = acbCollapsible.classList.toggle('open');
                 acbToggle.setAttribute('aria-expanded', String(open));
                 acbArrow.textContent = open ? '▲' : '▼';
+                // While open, the calendar completely occupies the input card —
+                // all Q/W/A fields, buttons and trackers are hidden until collapsed.
+                domCache.formulaCalculator.classList.toggle('acb-mode', open);
                 if (open) {
                     // The hold calendar moves into the input card so the opened
                     // (A+C)-B panel can use the freed space for its table.
@@ -1984,10 +1980,8 @@
     <script>
     (function () {
         const hamburger    = document.getElementById('hamburgerBtn');
-        const sidenav      = document.getElementById('sidenav');
-        const overlay      = document.getElementById('sidenavOverlay');
-        const sidenavClose = document.getElementById('sidenavClose');
-        const openWriteUs  = document.getElementById('openWriteUs');
+        const fabContainer = document.getElementById('fabContainer');
+        const fabWriteUs   = document.getElementById('fabWriteUs');
         const writeusPanel = document.getElementById('writeusPanel');
         const wpBack       = document.getElementById('wpBack');
         const wpMsg        = document.getElementById('wpMsg');
@@ -1998,15 +1992,14 @@
         const wpSuccess    = document.getElementById('wpSuccess');
         const writeusForm  = document.getElementById('writeusForm');
 
-        function openNav() { sidenav.classList.add('open'); overlay.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); sidenavClose.focus(); }
-        function closeNav() { sidenav.classList.remove('open'); overlay.classList.remove('open'); writeusPanel.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.focus(); }
+        // Hamburger toggles the small circular floating buttons; they collapse
+        // back into the hamburger on second tap, Escape, or after Write Us closes.
+        function openNav() { fabContainer.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); hamburger.textContent = '✕'; }
+        function closeNav() { fabContainer.classList.remove('open'); writeusPanel.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.textContent = '☰'; }
 
-        hamburger.addEventListener('click', openNav);
-        sidenavClose.addEventListener('click', closeNav);
-        overlay.addEventListener('click', closeNav);
+        hamburger.addEventListener('click', () => fabContainer.classList.contains('open') ? closeNav() : openNav());
+        fabWriteUs.addEventListener('click', () => { writeusPanel.classList.add('open'); setTimeout(() => wpMsg.focus(), 300); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
-
-        openWriteUs.addEventListener('click', () => { writeusPanel.classList.add('open'); setTimeout(() => wpMsg.focus(), 300); });
         wpBack.addEventListener('click', () => { writeusPanel.classList.remove('open'); });
 
         wpMsg.addEventListener('input', () => {
