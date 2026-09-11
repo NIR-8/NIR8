@@ -112,10 +112,6 @@
         }
         .hamburger-btn:hover { background: #157347; transform: scale(1.06); }
 
-        /* ── CALENDAR SLOT — lives inside the input card while (A+C)-B is open ── */
-        #holdPeriodSlot { display: none; margin-top: 14px; }
-        #holdPeriodSlot.open { display: block; }
-
         /* ── BODY ── */
         body {
             font-family: "Inter", sans-serif;
@@ -237,7 +233,7 @@
         }
         .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
         .acb-balance {
-            display: block; text-align: right; padding: 1mm 15mm 0; font-size: 10pt;
+            display: block; text-align: left; padding: 1mm 15mm 0; font-size: 10pt;
             color: #000; font-weight: 600;
         }
         .calculation-content {
@@ -295,11 +291,12 @@
         }
         .clear-all-btn { color: #dc3545; }
         .clear-all-btn:hover { background: rgba(220,53,69,.08); }
-        .calc-toolbar {
-            display: flex; gap: 6px; align-items: center; padding-bottom: 8px; justify-content: flex-start;
-        }
+        /* Print button: small circular button pinned to the left-most corner of the card */
+        .calc-toolbar { position: absolute; top: 10px; left: 10px; z-index: 20; padding: 0; }
         .print-btn {
-            color: #157347; font-size: 16px; width: 32px; height: 32px;
+            color: #157347; font-size: 16px; width: 40px; height: 40px;
+            border-radius: 50%; background: #fff; border: 1px solid #e3e7ee;
+            box-shadow: 0 2px 6px rgba(0,0,0,.15);
         }
         .print-btn:hover { background: rgba(21,115,71,.08); }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
@@ -541,6 +538,7 @@
             border: 1px solid #e3e7ee; border-radius: 8px; font-size: 13px; color: #444;
         }
         .hold-period .hold-label { display: block; font-weight: 600; color: #157347; margin-bottom: 4px; }
+        .hold-title { font-weight: 700; text-align: center; color: #157347; font-size: 14px; margin-bottom: 10px; }
         /* ── TOUCH-FRIENDLY DROPDOWN ── */
         .custom-select { position: relative; text-align: left; }
         .select-trigger {
@@ -590,8 +588,14 @@
             font-weight: 600; font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
         }
         .hold-sep { display: flex; align-items: center; font-weight: 700; color: #157347; font-size: 16px; }
-        /* Calendar renders first, dates row sits below it — always visible, no collapsible. */
-        .hold-calendar { margin: 0 0 14px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+
+        /* ── HOLD TIME PERIOD CARD — below the (A+C)-B calculator, collapsible calendar ── */
+        .hold-period-card {
+            margin-top: 2px; background: #fff; padding: 15px; border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.1);
+        }
+        .hold-toggle { width: 100%; justify-content: center; }
+        .hold-calendar { margin: 14px 0 14px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
         .hold-month { background: #fff; border: 1px solid #e3e7ee; border-radius: 10px; padding: 10px; }
         .hold-month-title { font-weight: 600; text-align: center; margin-bottom: 8px; font-size: 13px; color: #111; }
         .hold-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 3px; }
@@ -604,7 +608,7 @@
             border-radius: 6px; font-size: 12px; font-variant-numeric: tabular-nums;
             background: #eaf7ee; border: 1px solid #d9ecdf; color: #333;
             cursor: pointer; user-select: none; -webkit-user-select: none;
-            /* Fade in/out as days enter or leave the \00b133-day window */
+            /* Fade in/out as days enter or leave the ±3-day window */
             transition: opacity .5s ease, background-color .5s ease, color .5s ease,
                         border-color .5s ease, transform .18s ease, font-weight .18s ease;
             animation: dayFade .4s ease backwards;
@@ -617,8 +621,7 @@
         .hold-day.cal-out:hover { transform: none; font-weight: 400; }
         /* The 3-day buffer on each side of the hold period (today-3 .. today-1, and
            end+1 .. end+3) stays green like the rest of the in-window days — it just
-           breathes with a slow fade in/out instead of sitting static or being grayed
-           out like .cal-out. */
+           breathes with a slow fade in/out instead of being grayed out like .cal-out. */
         .hold-day.cal-edge {
             animation: dayFade .4s ease backwards, edgePulse 2.4s ease-in-out .4s infinite;
         }
@@ -636,15 +639,6 @@
             color: #157347; font-size: 13px; font-weight: 600; cursor: pointer;
         }
         .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
-
-        /* ── ACB-MODE: while (A+C)-B is open, only the calendar shows in the input card ── */
-        #formulaCalculator.acb-mode .input-group,
-        #formulaCalculator.acb-mode .input-row,
-        #formulaCalculator.acb-mode .progress-container,
-        #formulaCalculator.acb-mode .button-row,
-        #formulaCalculator.acb-mode .qty-tracker-card,
-        #formulaCalculator.acb-mode .quantity-warning-banner,
-        #formulaCalculator.acb-mode .lot-assign-panel { display: none !important; }
 
         /* ── FLOATING ACTION BUTTONS (hamburger contents) ── */
         .fab-container {
@@ -720,6 +714,7 @@
             .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .archived-steps-container, .progress-container, footer, .reset-acb-btn, .reset-acb-row,
+            .hold-period-card,
             .sidenav, .sidenav-overlay, .writeus-panel, #acbToggle,
             .hamburger-btn, .fab-container, .fab { display: none !important; }
             .calculation-steps {
@@ -844,8 +839,6 @@
         <button type="button" id="acbToggle" class="calendar-toggle acb-toggle" aria-expanded="false" aria-controls="acbCollapsible" style="width:100%;justify-content:center;">
             <span>(A+C)-B Calculator</span><span id="acbArrow">▼</span>
         </button>
-        <!-- Hold-period calendar lives here while the (A+C)-B panel is open -->
-        <div id="holdPeriodSlot"></div>
         <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
             <div class="lot-assign-buttons">
                 <button type="button" class="lot-assign-btn" data-lot="1">Lot-I</button>
@@ -913,22 +906,27 @@
         <div class="reset-acb-row">
             <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
         </div>
-        <div id="holdPeriodHome">
-        <div class="hold-period" id="holdPeriod">
-            <!-- Calendar first (always visible — no collapsible), dates row below -->
-            <div class="hold-calendar" id="holdCalendar"></div>
-            <div class="hold-dates-row">
-                <div class="hold-date-group">
-                    <label for="holdStartDate">Current date</label>
-                    <input type="date" id="holdStartDate" class="hold-date-input">
-                </div>
-                <div class="hold-date-group">
-                    <span class="hold-label">Hold time period (15 days)</span>
-                    <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
-                </div>
+
             </div>
         </div>
-        </div>
+        <!-- HOLD TIME PERIOD — sits below the (A+C)-B calculator as its own card,
+             with a collapsible calendar (restored from the previous version). -->
+        <div class="hold-period-card" id="holdPeriod">
+            <button type="button" class="calendar-toggle hold-toggle" id="holdToggle" aria-expanded="true" aria-controls="holdCollapsible">
+                <span>Hold time period</span><span id="holdArrow">▲</span>
+            </button>
+            <div class="calendar-collapsible open" id="holdCollapsible">
+                <div class="hold-calendar" id="holdCalendar"></div>
+                <div class="hold-dates-row">
+                    <div class="hold-date-group">
+                        <label for="holdStartDate">Current date</label>
+                        <input type="date" id="holdStartDate" class="hold-date-input">
+                    </div>
+                    <div class="hold-date-group">
+                        <span class="hold-label">Hold time period (15 days)</span>
+                        <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1235,7 +1233,7 @@
                 if (!needed.some(([ny, nm]) => ny === y && nm === m)) el.remove();
             });
             // Reuse existing grids and only toggle classes — the CSS transitions on
-            // .hold-day produce the fade in / fade away of the \00b13-day edges.
+            // .hold-day produce the fade in / fade away of the ±3-day edges.
             // Brand-new grids (window reached a new month) fade in as a whole.
             needed.forEach(([y, m]) => {
                 let el = Array.from(wrap.children).find(c => c.dataset.month === `${y}-${m}`);
@@ -1910,6 +1908,16 @@
                 document.getElementById('holdStartDate').value = toISODate(d);
                 updateHoldPeriod();
             });
+            // Collapsible hold-period calendar: toggle folds the calendar and the
+            // dates row away, leaving only the toggle button visible.
+            const holdToggle = document.getElementById('holdToggle');
+            const holdCollapsible = document.getElementById('holdCollapsible');
+            const holdArrow = document.getElementById('holdArrow');
+            holdToggle.addEventListener('click', () => {
+                const open = holdCollapsible.classList.toggle('open');
+                holdToggle.setAttribute('aria-expanded', String(open));
+                holdArrow.textContent = open ? '▲' : '▼';
+            });
             document.getElementById('holdStartDate').addEventListener('change', updateHoldPeriod);
             updateHoldPeriod();
             document.getElementById('printBtn').addEventListener('click', printWithCheck);
@@ -1941,27 +1949,10 @@
             const acbToggle = document.getElementById('acbToggle');
             const acbCollapsible = document.getElementById('acbCollapsible');
             const acbArrow = document.getElementById('acbArrow');
-            const holdPeriod = document.getElementById('holdPeriod');
-            const holdPeriodSlot = document.getElementById('holdPeriodSlot');
-            const holdPeriodHome = document.getElementById('holdPeriodHome');
             acbToggle.addEventListener('click', () => {
                 const open = acbCollapsible.classList.toggle('open');
                 acbToggle.setAttribute('aria-expanded', String(open));
                 acbArrow.textContent = open ? '▲' : '▼';
-                // While open, the calendar completely occupies the input card —
-                // all Q/W/A fields, buttons and trackers are hidden until collapsed.
-                domCache.formulaCalculator.classList.toggle('acb-mode', open);
-                if (open) {
-                    // The hold calendar moves into the input card so the opened
-                    // (A+C)-B panel can use the freed space for its table.
-                    holdPeriodSlot.appendChild(holdPeriod);
-                    holdPeriodSlot.classList.add('open');
-                } else {
-                    // Collapsed: the calendar goes back home and the input card
-                    // is restored to its normal layout.
-                    holdPeriodHome.appendChild(holdPeriod);
-                    holdPeriodSlot.classList.remove('open');
-                }
                 if (open) acbCollapsible.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
