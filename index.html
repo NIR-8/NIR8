@@ -315,11 +315,6 @@
 .lot-assign-panel {
             margin-top: 12px; padding: 12px; border: 1px solid #e3e7ee; border-radius: 8px; background: #f7f8fa;
         }
-        /* Remaining = 0: hide the input card (Q/W/A fields, progress, buttons) until a lot is assigned */
-        #formulaCalculator.locked .input-group,
-        #formulaCalculator.locked .input-row,
-        #formulaCalculator.locked .progress-container,
-        #formulaCalculator.locked .button-row { display: none; }
         .lot-assign-panel.hidden { display: none; }
         .reset-acb-row { text-align: right; margin: 4px 0 14px; }
         .reset-acb-btn {
@@ -521,15 +516,13 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── HOLD TIME PERIOD (standalone minimal card below the ACB calculator) ── */
-        .hold-period-card { text-align: center; }
+        /* ── HOLD TIME PERIOD — plain, no card box, bottom of the (A+C)-B Calculator only ── */
+        .hold-period-card {
+            background: transparent; box-shadow: none; border: none; margin-top: 16px;
+            padding-top: 14px; border-top: 1px solid #eef1f4; text-align: center;
+        }
         .hold-period-card .hold-label { display: block; font-weight: 600; color: #157347; margin-bottom: 4px; }
         .hold-title { font-weight: 700; text-align: center; color: #157347; font-size: 14px; margin-bottom: 10px; }
-        /* ── HOLD PERIOD — plain, no card box, sits just above the footer ── */
-        .hold-period-card {
-            background: transparent; box-shadow: none; border: none; padding: 0 20px 10px;
-            width: 90%; max-width: 400px; margin: 0 auto; text-align: center;
-        }
         .hold-dates-row { display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: wrap; }
         .hold-date-group { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
         /* Fixed label + fixed control heights keep the two date displays on one
@@ -632,7 +625,7 @@
         @media print {
             @page { size: A4 landscape; margin: 8mm; }
             body { background: transparent; padding: 0; margin: 0; }
-            .calculator-container, .hold-period-card,
+            .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .progress-container, footer, .reset-acb-btn, .reset-acb-row,
             .sidenav, .sidenav-overlay, .writeus-panel, .tab-bar,
@@ -810,6 +803,21 @@
         <div class="reset-acb-row">
             <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
         </div>
+
+        <!-- HOLD TIME PERIOD — plain, no card styling, bottom of the (A+C)-B Calculator only -->
+        <div id="holdPeriodCard" class="hold-period-card">
+            <div class="hold-title">Hold time period</div>
+            <div class="hold-dates-row">
+                <div class="hold-date-group">
+                    <label for="holdStartDate">Current date</label>
+                    <input type="date" id="holdStartDate" class="hold-date-input">
+                </div>
+                <div class="hold-date-group">
+                    <span class="hold-label">Retest date</span>
+                    <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- CALCULATION STEPS -->
@@ -842,21 +850,6 @@
             <div style="margin-top:15px;display:flex;justify-content:center;gap:20px;">
                 <button id="verifyCancelBtn" class="cancel-btn">Cancel</button>
                 <button id="confirmBtn" class="confirm-btn">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- HOLD TIME PERIOD — plain, no card styling, sits just above the footer -->
-    <div id="holdPeriodCard" class="hold-period-card">
-        <div class="hold-title">Hold time period</div>
-        <div class="hold-dates-row">
-            <div class="hold-date-group">
-                <label for="holdStartDate">Current date</label>
-                <input type="date" id="holdStartDate" class="hold-date-input">
-            </div>
-            <div class="hold-date-group">
-                <span class="hold-label">Retest date</span>
-                <span id="holdEndDateStatic" class="hold-date-static">&mdash;</span>
             </div>
         </div>
     </div>
@@ -945,9 +938,8 @@
             }
         };
 
-        let calculationCount = 0, hasCalculated = false, batchComplete = false;
+        let calculationCount = 0, hasCalculated = false;
         let calculations = [];
-        let currentLot = 1, awaitingLotAssignment = false, pendingArchiveLot = null;
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
         function truncateTo12Digits(num) {
@@ -1027,44 +1019,9 @@
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
 
-        function getCurrentBatchDispensed() {
-            let d = new Decimal(0);
-            calculations.forEach(calc => {
-                if (calc.lot !== undefined && calc.lot !== currentLot) return; // already tagged to another lot
-                if (calc.formulaType === 'F2') d = d.plus(calc.Q);
-                else d = d.plus(calc.result);
-            });
-            return d;
-        }
-
         // Parse any field value safely — a half-typed "-" or stray character must
         // never propagate a Decimal.js exception into the UI.
         function safeDec(v) { try { const d = new Decimal(v || 0); return d.isNaN() ? new Decimal(0) : d; } catch { return new Decimal(0); } }
-
-        // Effective (A+C)-B for a lot: the table's B cell holds every batch already
-        // committed to this lot (see assignLotAndContinue, which accumulates rather
-        // than overwrites). On top of that we subtract whatever the *current*,
-        // still-unassigned batch has dispensed against this lot so far — so the
-        // balance is correct the instant a calculation is made, with no need to
-        // wait for the batch to be assigned to a lot.
-        function getEffectiveLotBalance(lotIndex) {
-            try {
-                const a = safeDec(domCache.acbInputs.a[lotIndex]?.value);
-                const c = safeDec(domCache.acbInputs.c[lotIndex]?.value);
-                const b = safeDec(domCache.acbInputs.b[lotIndex]?.value);
-                const lotNumber = lotIndex + 1;
-                let liveDispensed = new Decimal(0);
-                // If this lot's batch is already committed (pendingArchiveLot), its
-                // total is already inside b — counting it again would double-subtract.
-                if (pendingArchiveLot !== lotNumber) {
-                    calculations.forEach(calc => {
-                        if (calc.lot !== lotNumber) return;
-                        liveDispensed = liveDispensed.plus(new Decimal(calc.formulaType === 'F2' ? calc.Q : calc.result));
-                    });
-                }
-                return a.plus(c).minus(b).minus(liveDispensed);
-            } catch { return new Decimal(0); }
-        }
 
         const pad2 = n => String(n).padStart(2, "0");
         const fmtDDMMYYYY = d => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
@@ -1096,30 +1053,17 @@
                 else { dispensed = dispensed.plus(calc.result); remainingCalc = remainingCalc.plus(calc.Q); hasFinal = true; }
             });
             domCache.dispensedQty.textContent = formatNumber(dispensed);
+            const lotPanel = document.getElementById('lotAssignPanel');
             if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
                 domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active');
-                batchComplete = false; awaitingLotAssignment = false;
+                if (lotPanel) lotPanel.classList.add('hidden');
             } else {
                 const remaining = stdQty.minus(remainingCalc);
                 domCache.remainingQty.textContent = formatNumber(remaining);
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
-                // Standard quantity fully accounted for: entry is locked until the batch
-                // is assigned to a lot (see assignLotAndContinue()). Once assigned
-                // (pendingArchiveLot set), the card stays unlocked until the next
-                // calculation archives the batch.
-                batchComplete = remaining.eq(0) && calculationCount > 0;
-                awaitingLotAssignment = batchComplete && pendingArchiveLot === null;
+                if (lotPanel) lotPanel.classList.toggle('hidden', !remaining.eq(0));
             }
-            // Lot assignment sits in the input card: the input fields are locked
-            // (hidden) until the finished batch is assigned to a lot.
-            domCache.formulaCalculator.classList.toggle('locked', awaitingLotAssignment);
-            const lotPanel = document.getElementById('lotAssignPanel');
-            if (lotPanel) lotPanel.classList.toggle('hidden', !awaitingLotAssignment);
-
-            // Keep every visible card's (A+C)-B line accurate in real time, without
-            // waiting for the batch to be assigned to a lot.
-            syncLotBalanceLines();
         }
 
         function refreshStepsPanelVisibility() {
@@ -1128,91 +1072,20 @@
             domCache.calculationSteps.classList.toggle('hidden', !(hasContent && onFormula));
         }
 
-        function clearFinishedBatch() {
-            if (calculationCount === 0) return;
-            domCache.stepsContainer.innerHTML = '';
-            calculations = []; calculationCount = 0;
-            updatePageNumbers();
-        }
-
-        function assignLotAndContinue(lotNumber) {
+        // Selecting a lot copies the currently dispensed amount into that lot's
+        // Issued Qty (B) cell in the (A+C)-B table — a one-off manual transfer,
+        // not a lock on the calculation cards.
+        function updateLotDispensedQty(lotNumber) {
             const lotIndex = lotNumber - 1;
             if (lotIndex < 0 || lotIndex >= domCache.acbInputs.b.length) return;
-            // Already assigned to this lot — nothing to do.
-            if (pendingArchiveLot === lotNumber) {
-                document.getElementById('lotAssignPanel')?.classList.add('hidden');
-                return;
-            }
-
-            const thisBatchAmt = safeDec(domCache.dispensedQty.textContent);
-
-            // If this batch was already committed to a different lot, undo that
-            // first. B is a running cumulative total across every batch ever
-            // assigned to a lot, so we only subtract this batch's own share.
-            const oldLot = pendingArchiveLot;
-            if (oldLot && oldLot !== lotNumber) {
-                const oldIndex = oldLot - 1;
-                const oldInput = domCache.acbInputs.b[oldIndex];
-                const revertedB = safeDec(oldInput.value).minus(thisBatchAmt);
-                oldInput.value = revertedB.gt(0) ? revertedB.toFixed(3) : '';
-                if (!oldInput.value) oldInput.classList.remove('acb-manual-input');
-                updateACB(oldInput, oldIndex, 'b');
-            }
-
-            // 1. Add the dispensed qty into the chosen lot's Issued Qty (B) cell —
-            //    B accumulates across every batch assigned to this lot over time.
             const input = domCache.acbInputs.b[lotIndex];
-            const existingB = safeDec(input.value);
-            input.value = existingB.plus(thisBatchAmt).toFixed(3);
+            input.value = domCache.dispensedQty.textContent;
             input.classList.add('acb-manual-input');
-
-            // 2. Tag the finished batch with this lot — archiving happens only when
-            //    the user proceeds with the next calculation (see calculate()).
-            calculations.forEach(c => c.lot = lotNumber);
-            domCache.stepsContainer.querySelectorAll('.calculation-entry').forEach(entry => {
-                const lotLabel = entry.querySelector('.lot-label');
-                if (lotLabel) lotLabel.textContent = LOT_NAMES[lotNumber];
-                // Update data-lot-balance on cards so syncLotBalanceLines targets the right lot
-                const balEl = entry.querySelector('[data-lot-balance]');
-                if (balEl) balEl.dataset.lotBalance = lotNumber;
-            });
-            pendingArchiveLot = lotNumber;
-
-            // 3. The user explicitly picked this lot — make it the active lot.
-            currentLot = lotNumber;
-            syncLotSelect();
-            awaitingLotAssignment = false; batchComplete = false;
-            document.getElementById('lotAssignPanel').classList.add('hidden');
-
-            // 4. Sync the table (and card balance lines) with the tagged batch
             updateACB(input, lotIndex, 'b');
-            updateQuantityTracker();
-            refreshStepsPanelVisibility();
-            showCalculator('formula'); domCache.QInput.focus();
-        }
-
-        function syncLotSelect() { /* active lot is shown as plain text in the drug badge */ }
-
-        // Lots are assigned manually only. Switching is blocked while a batch has
-        // unassigned calculations, but allowed when the batch is complete and waiting
-        // for lot assignment — the user may want to assign to a different lot.
-        function setActiveLot(n) {
-            if (n < 1 || n > 4 || n === currentLot) return true;
-            if (calculationCount > 0 && !awaitingLotAssignment) {
-                alert('Finish or assign the current batch to a lot before switching the active lot.');
-                return false;
-            }
-            currentLot = n;
-            syncLotSelect();
-            syncLotBalanceLines();
-            updateQuantityTracker();
-            return true;
-        }
-
-        function syncLotBalanceLines() {
-            domCache.stepsContainer.querySelectorAll('[data-lot-balance]').forEach(el => {
-                el.textContent = `(A+C)-B = ${getEffectiveLotBalance(parseInt(el.dataset.lotBalance, 10) - 1).toFixed(3)}`;
-            });
+            showCalculator('acb');
+            input.focus();
+            document.getElementById('lotAssignSelect').value = '';
+            document.getElementById('lotAssignPanel')?.classList.add('hidden');
         }
 
         // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
@@ -1268,9 +1141,6 @@
             domCache.acbInputs.totals.b.textContent = '0.000';
             domCache.acbInputs.totals.result.textContent = '0.000';
             domCache.acbInputs.results.forEach(r => { r.textContent = '-'; r.classList.remove('acb-output','acb-prefilled'); });
-            // Keep any already-displayed calculation cards' (A+C)-B lines in sync
-            // with the values just reset.
-            syncLotBalanceLines();
         }
 
         function handleInput(event) {
@@ -1408,9 +1278,6 @@
             domCache.acbInputs.totals.result.classList.toggle('acb-prefilled', tR.isZero());
             domCache.acbInputs.totals.result.classList.toggle('acb-output', !tR.isZero());
 
-            // Keep F1/F3 cards' (A+C)-B lines in sync — effective balance reflects the
-            // current batch's dispensed qty even before the lot's B cell is written.
-            syncLotBalanceLines();
             // Flag per-lot A/C deviations (even 0.001) in light red.
             highlightACBVariations();
         }
@@ -1452,10 +1319,6 @@
         }
 
         async function calculate(formulaType) {
-            if (awaitingLotAssignment) {
-                document.getElementById('lotAssignPanel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
             if (calculationCount >= CONSTANTS.MAX_CALCULATIONS) { alert(`Maximum of ${CONSTANTS.MAX_CALCULATIONS} calculations reached.`); return; }
             let Q, W, A;
             try { Q = new Decimal(domCache.QInput.value || 0); W = new Decimal(domCache.waterInput.value || 0); A = new Decimal(domCache.assayInput.value || 0); }
@@ -1472,14 +1335,6 @@
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
             if (!isConfirmed) return;
 
-            // The previous batch was fully dispensed and assigned to a lot — clear it
-            // now, only as the user proceeds with the next calculation.
-            if (pendingArchiveLot !== null && calculationCount > 0) {
-                clearFinishedBatch();
-                pendingArchiveLot = null;
-            }
-
-            calculationResult.lot = currentLot; // tagged at creation — lots are user-assigned, never auto
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry"; newEntry.setAttribute("tabindex", "0");
@@ -1487,7 +1342,7 @@
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="entry-meta-row">
-                    <div class="lot-label">${LOT_NAMES[currentLot]}</div>
+                    <div class="lot-label"></div>
                     <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 </div>
                 <div class="calculation-content">${calculationResult.html}</div>
@@ -1650,6 +1505,7 @@
             drugSelector.addEventListener('change', () => {
                 const val = drugSelector.value;
                 toggleManualStdRow(val);
+                if (val === 'manual') { domCache.stdQtyInput.value = ''; domCache.stdCInput.value = ''; }
                 applyDrugPreset(val);
                 if (val === 'manual') domCache.stdQtyInput.focus();
             });
@@ -1689,8 +1545,7 @@
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.getElementById('lotAssignSelect').addEventListener('change', function () {
                 if (!this.value) return;
-                assignLotAndContinue(parseInt(this.value, 10));
-                this.value = '';
+                updateLotDispensedQty(parseInt(this.value, 10));
             });
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
