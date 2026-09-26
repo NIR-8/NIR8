@@ -894,7 +894,7 @@
             }
         };
 
-        let calculationCount = 0, hasCalculated = false;
+        let calculationCount = 0, hasCalculated = false, calcIdCounter = 0, printMode = false;
         let calculations = [];
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
@@ -1163,19 +1163,37 @@
         function deleteCalculation(button) {
             if (!confirm("Delete this calculation?")) return;
             const entry = button.parentElement;
-            const entries = Array.from(domCache.stepsContainer.children);
-            const idx = calculations.length - 1 - entries.indexOf(entry);
-            if (idx >= 0 && idx < calculations.length) calculations.splice(idx, 1);
+            const idx = calculations.findIndex(c => String(c.id) === entry.dataset.calcId);
+            if (idx >= 0) calculations.splice(idx, 1);
             entry.remove(); calculationCount--;
             refreshStepsPanelVisibility();
             updatePageNumbers(); updateQuantityTracker(); domCache.QInput.focus();
         }
 
         function updatePageNumbers() {
-            const entries = domCache.stepsContainer.getElementsByClassName("calculation-entry");
+            const entries = Array.from(domCache.stepsContainer.getElementsByClassName("calculation-entry"));
             const total = entries.length;
-            Array.from(entries).forEach((entry, i) => { const pn = entry.querySelector(".page-number"); if (pn) pn.textContent = `${total - i}/${total}`; });
+            entries.forEach((entry, i) => {
+                const pn = entry.querySelector(".page-number");
+                if (!pn) return;
+                // Screen: newest first, numbered from the end. Print: entries are
+                // swapped to ascending (oldest first) and numbered 1..N in DOM order.
+                pn.textContent = printMode ? `${i + 1}/${total}` : `${total - i}/${total}`;
+            });
         }
+
+        // On screen the newest calculation sits on top; on paper the batch reads
+        // oldest → newest (page 1/2, 2/2, ...). Reorder the live nodes before
+        // printing and restore them after — beforeprint/afterprint cover Ctrl+P,
+        // and printWithCheck() covers the in-app button (Safari fires neither).
+        function setPrintOrder(on) {
+            printMode = on;
+            const entries = Array.from(domCache.stepsContainer.querySelectorAll(".calculation-entry"));
+            entries.slice().reverse().forEach(el => domCache.stepsContainer.appendChild(el));
+            updatePageNumbers();
+        }
+        window.addEventListener('beforeprint', () => setPrintOrder(true));
+        window.addEventListener('afterprint', () => setPrintOrder(false));
 
         function validateInput(input) {
             const value = input.value;
@@ -1240,7 +1258,10 @@
 
         function printWithCheck() {
             if (window.innerWidth <= 768 && !confirm("For optimal printing, use a larger screen or PC. Continue?")) return;
+            setPrintOrder(true);
             window.print();
+            // afterprint restores order; fall back to a timer for browsers that skip it
+            setTimeout(() => { if (printMode) setPrintOrder(false); }, 1500);
         }
 
         function verifyCalculation(calculation, Q, W, A) {
@@ -1291,9 +1312,11 @@
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
             if (!isConfirmed) return;
 
+            calculationResult.id = ++calcIdCounter;
             calculations.push(calculationResult);
             const newEntry = document.createElement("div");
             newEntry.className = "calculation-entry"; newEntry.setAttribute("tabindex", "0");
+            newEntry.dataset.calcId = calculationResult.id;
             newEntry.setAttribute("role", "region"); newEntry.setAttribute("aria-label", `Calculation ${formulaType}`);
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
