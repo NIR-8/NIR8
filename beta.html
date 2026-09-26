@@ -571,7 +571,12 @@
         /* ── PRINT ── */
         @media print {
             @page { size: A4 landscape; margin: 8mm; }
-            body { background: transparent; padding: 0; margin: 0; }
+            /* CRITICAL: body must be a plain block in print — Chrome's print engine
+               fragments flex layouts across pages, splitting cards, duplicating
+               content lines and clipping the ::before title bar. */
+            body { background: transparent; padding: 0; margin: 0;
+                   display: block !important; min-height: 0 !important;
+                   align-items: stretch !important; justify-content: flex-start !important; }
             .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .progress-container, footer, .reset-acb-btn, .reset-acb-row, .hold-period-card,
@@ -588,6 +593,7 @@
                 background: #fff; overflow: hidden;
                 break-inside: avoid; page-break-inside: avoid;
                 break-after: page; page-break-after: always;
+                print-color-adjust: exact; -webkit-print-color-adjust: exact;
             }
             .calculation-entry::before {
                 content: "Assay Based Calculation"; position: absolute; top: 0; left: 0;
@@ -605,7 +611,7 @@
             .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
             .calculation-content { margin-top: 8mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
-            #stepsContainer { display: block; overflow: visible; max-height: none; }
+            #stepsContainer { display: block !important; overflow: visible; max-height: none; }
             /* (A+C)-B tab: print the table too instead of a blank page */
             #acbCalculator.active { display: block !important; width: 100%; max-width: none; box-shadow: none; border: none; padding: 0; }
             #acbCalculator .reset-acb-row, #acbCalculator .hold-period-card { display: none !important; }
@@ -1192,8 +1198,30 @@
             entries.slice().reverse().forEach(el => domCache.stepsContainer.appendChild(el));
             updatePageNumbers();
         }
+        // Apply the swap for the whole duration of printing and revert ONLY when
+        // printing has truly finished. Reverting on a timer corrupts the output:
+        // the print dialog keeps the document alive while the preview renders, so
+        // a restore timer can fire before the PDF is generated (numbers flipped
+        // but card order stayed newest-first). Signals used, in order of reliability:
+        //   1. matchMedia('print') transition — fires exactly with print rendering
+        //   2. beforeprint / afterprint — classic fallback
+        //   3. first click/keypress after the dialog — last-resort for browsers
+        //      that fire neither (the dialog blocks page input while open, so the
+        //      first interaction can only happen after it closes)
+        const mqPrint = window.matchMedia('print');
+        if (mqPrint.addEventListener) {
+            mqPrint.addEventListener('change', e => setPrintOrder(e.matches));
+        }
         window.addEventListener('beforeprint', () => setPrintOrder(true));
         window.addEventListener('afterprint', () => setPrintOrder(false));
+
+        function armPrintRestoreFallback() {
+            const restore = () => setPrintOrder(false);
+            setTimeout(() => {
+                ['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
+                    document.addEventListener(ev, restore, { once: true }));
+            }, 500);
+        }
 
         function validateInput(input) {
             const value = input.value;
@@ -1259,9 +1287,10 @@
         function printWithCheck() {
             if (window.innerWidth <= 768 && !confirm("For optimal printing, use a larger screen or PC. Continue?")) return;
             setPrintOrder(true);
+            armPrintRestoreFallback();
             window.print();
-            // afterprint restores order; fall back to a timer for browsers that skip it
-            setTimeout(() => { if (printMode) setPrintOrder(false); }, 1500);
+            // order is restored by: matchMedia('print') flipping back, afterprint,
+            // or the armed first-interaction fallback — never by a bare timer.
         }
 
         function verifyCalculation(calculation, Q, W, A) {
