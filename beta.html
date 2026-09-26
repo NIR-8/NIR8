@@ -91,10 +91,7 @@
     <!-- Formulas render as plain HTML/CSS — no math-rendering engine needed -->
 
     <!-- Decimal.js — separate cache-first asset instead of inlined in network-first HTML -->
-    <script src="/assets/js/decimal.min.js"></script>
-    <script>
-        Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
-    </script>
+    <script defer src="/assets/js/decimal.min.js"></script>
 
     <style>
         /* ── GLOBAL ── */
@@ -216,7 +213,7 @@
             margin-top: 20px; padding: 15px; width: 90%; max-width: 900px;
             background: #fff; border-radius: 0; box-shadow: 0 4px 10px rgba(0,0,0,.1);
             color: #555; text-align: center; margin-left: auto; margin-right: auto;
-            position: relative; padding-top: 15px; will-change: transform;
+            position: relative; padding-top: 15px;
         }
         #stepsContainer {
             display: flex; flex-direction: column;
@@ -404,56 +401,6 @@
         #remainingQty { cursor: pointer; transition: all 0.2s ease; }
         #remainingQty:hover { color: #4facfe; text-decoration: underline; }
 
-        /* ── SIDENAV OVERLAY ── */
-        .sidenav-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.35); z-index: 400;
-            backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
-            opacity: 0; transition: opacity 0.25s ease;
-        }
-        .sidenav-overlay.open { display: block; opacity: 1; }
-
-        /* ── SIDENAV PANEL ── */
-        .sidenav {
-            position: fixed; top: 0; right: 0; width: 280px; max-width: 85vw;
-            height: 100%; background: #fff; z-index: 500;
-            display: flex; flex-direction: column;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-            box-shadow: -8px 0 40px rgba(0,0,0,0.12);
-        }
-        .sidenav.open { transform: translateX(0); }
-        .sidenav-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 20px 20px 16px; border-bottom: 1px solid #f0f0f0;
-        }
-        .sidenav-header .sn-logo { font-size: 15px; font-weight: 700; color: #111; letter-spacing: -0.2px; }
-        .sidenav-header .sn-logo span { color: #4facfe; }
-        .sidenav-close {
-            background: none; border: none; font-size: 22px; color: #bbb;
-            cursor: pointer; padding: 4px; border-radius: 4px; line-height: 1; transition: color 0.2s;
-        }
-        .sidenav-close:hover { color: #333; }
-        .sidenav-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-        .sidenav-item {
-            display: flex; align-items: center; gap: 14px; padding: 13px 20px;
-            text-decoration: none; color: #222; font-size: 14px; font-weight: 500;
-            transition: background 0.15s; cursor: pointer; border: none;
-            background: none; width: 100%; text-align: left; font-family: "Inter", sans-serif;
-        }
-        .sidenav-item:hover { background: #f7f8fa; }
-        .sn-icon {
-            width: 36px; height: 36px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 17px; flex-shrink: 0;
-        }
-        .sn-text { flex: 1; }
-        .sn-text strong { display: block; font-size: 14px; font-weight: 600; color: #111; margin-bottom: 1px; }
-        .sn-text small { font-size: 11px; color: #767676; font-weight: 400; }
-        .sn-arrow { font-size: 14px; color: #999; }
-        .sn-icon.purple { background: #ede9fb; }
-        .sidenav-divider { height: 1px; background: #f0f0f0; margin: 6px 20px; }
-        .sidenav-footer { padding: 16px 20px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #999; text-align: center; }
 
         /* ── WRITE US PANEL ── */
         .writeus-panel {
@@ -627,7 +574,7 @@
             body { background: transparent; padding: 0; margin: 0; }
             .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
-            .progress-container, footer, .reset-acb-btn, .reset-acb-row,
+            .progress-container, footer, .reset-acb-btn, .reset-acb-row, .hold-period-card,
             .sidenav, .sidenav-overlay, .writeus-panel, .tab-bar,
             .hamburger-btn, .fab-container, .fab { display: none !important; }
             .calculation-steps {
@@ -636,9 +583,11 @@
                 max-height: none !important; overflow: visible !important;
             }
             .calculation-entry {
-                width: 280mm !important; min-height: 190mm !important; margin: 0 auto; padding: 0;
+                width: 100%; height: 186mm; margin: 0 auto; padding: 0;
                 border: 1px solid #000; font-size: 12pt; position: relative;
-                background: #fff; overflow: visible; page-break-after: always; page-break-inside: avoid;
+                background: #fff; overflow: hidden;
+                break-inside: avoid; page-break-inside: avoid;
+                break-after: page; page-break-after: always;
             }
             .calculation-entry::before {
                 content: "Assay Based Calculation"; position: absolute; top: 0; left: 0;
@@ -650,13 +599,19 @@
                 position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f0f0;
                 padding: 5mm; font-size: 14pt; border-top: 1px solid #000;
             }
-            .entry-meta-row { margin-top: 22mm; padding: 0 10mm; font-size: 12pt; }
+            .entry-meta-row { margin-top: 24mm; padding: 0 10mm; font-size: 12pt; }
             .calculation-entry .lot-label { font-size: 12pt; color: #000; }
             .reference-values { font-size: 10pt; color: #000; }
             .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
-            .calculation-content { margin-top: 6mm; margin-bottom: 30mm; padding: 0 15mm; font-size: 14pt; overflow: visible; text-align: left; }
+            .calculation-content { margin-top: 8mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
             #stepsContainer { display: block; overflow: visible; max-height: none; }
+            /* (A+C)-B tab: print the table too instead of a blank page */
+            #acbCalculator.active { display: block !important; width: 100%; max-width: none; box-shadow: none; border: none; padding: 0; }
+            #acbCalculator .reset-acb-row, #acbCalculator .hold-period-card { display: none !important; }
+            .acb-table { font-size: 12pt; }
+            .acb-td, .acb-th { font-size: 12pt; padding: 6px; }
+            .acb-input, .acb-span { font-size: 12pt; padding: 4px; border-width: 1px; }
             .calc-step { margin-bottom: 5mm; }
             .frac .frac-num, .frac .frac-den { padding: 1.5mm 2mm; }
             .calc-result { margin-top: 3mm; padding-top: 0; }
@@ -837,6 +792,7 @@
                 <div class="info-item"><span class="info-key">F1/F2/F3 buttons:</span> Calculate the respective formula</div>
                 <div class="info-item"><span class="info-key">❌:</span> Remove a calculation</div>
                 <div class="info-item"><span class="info-key">Remaining Qty:</span> Tap it to copy into the Q field</div>
+                <div class="info-item"><span class="info-key">F1 / F2 / F3 keys:</span> Calculate F1 / F2 / F3 directly from the keyboard</div>
             </div>
             <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
@@ -1350,7 +1306,7 @@
             `;
             domCache.stepsContainer.insertBefore(newEntry, domCache.stepsContainer.firstChild);
             calculationCount++; refreshStepsPanelVisibility();
-            updatePageNumbers(); updateQuantityTracker();
+            updatePageNumbers();
 
             // Clear inputs immediately so they're ready for the next entry
             domCache.QInput.value = ""; domCache.waterInput.value = ""; domCache.assayInput.value = "";
@@ -1453,6 +1409,7 @@
         }, { passive: true });
 
         document.addEventListener("DOMContentLoaded", () => {
+            Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
             domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             domCache.buttons.style.display = "none"; domCache.calculationSteps.classList.add("hidden");
             // Only steal focus to Q if the user hasn't already started typing somewhere
@@ -1494,6 +1451,24 @@
             // Formula buttons
             document.querySelectorAll('[data-formula]').forEach(btn => {
                 btn.addEventListener('click', () => calculate(btn.dataset.formula));
+            });
+
+            // F1 / F2 / F3 keyboard shortcuts — must preventDefault or the browser
+            // opens its own help (F1) / finds nothing. Ignored while typing in a
+            // field, while the (A+C)-B tab is showing, or when a modal is open.
+            const FORMULA_KEYS = { F1: 'F1', F2: 'F2', F3: 'F3' };
+            document.addEventListener('keydown', (e) => {
+                const formulaType = FORMULA_KEYS[e.key];
+                if (!formulaType) return;
+                if (!domCache.formulaCalculator.classList.contains('active')) return;
+                const ae = document.activeElement;
+                const tag = ae ? ae.tagName : '';
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                if (document.getElementById('verifyModal').style.display === 'flex') return;
+                if (document.getElementById('infoModal').style.display === 'flex') return;
+                if (writeusIsOpen && writeusIsOpen()) return;
+                e.preventDefault();
+                calculate(formulaType);
             });
 
             document.getElementById('resetAcbBtn').addEventListener('click', resetACBCalculator);
@@ -1578,6 +1553,9 @@
         // back into the hamburger on second tap, Escape, or after Write Us closes.
         function openNav() { fabContainer.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); hamburger.textContent = '✕'; }
         function closeNav() { fabContainer.classList.remove('open'); writeusPanel.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.textContent = '☰'; }
+
+        // Expose panel state so the F1/F2/F3 shortcut handler can ignore keys while writing.
+        window.writeusIsOpen = () => writeusPanel.classList.contains('open');
 
         hamburger.addEventListener('click', () => fabContainer.classList.contains('open') ? closeNav() : openNav());
         fabWriteUs.addEventListener('click', () => { writeusPanel.classList.add('open'); setTimeout(() => wpMsg.focus(), 300); });
