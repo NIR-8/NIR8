@@ -568,6 +568,8 @@
             .calculation-steps { max-width: 760px; }
         }
 
+        #printArea { display: none; }
+
         /* ── PRINT ── */
         @media print {
             @page { size: A4 landscape; margin: 8mm; }
@@ -611,7 +613,11 @@
             .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
             .calculation-content { margin-top: 8mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
-            #stepsContainer { display: block !important; overflow: visible; max-height: none; }
+            /* Paper uses the oldest-first copy; the live list stays as on screen */
+            .calculation-steps { display: none !important; }
+            #printArea { display: block !important; width: 100%; }
+            #printArea .calculation-entry { display: block; }
+            #printArea .calculation-entry:last-child { break-after: auto; page-break-after: auto; }
             /* (A+C)-B tab: print the table too instead of a blank page */
             #acbCalculator.active { display: block !important; width: 100%; max-width: none; box-shadow: none; border: none; padding: 0; }
             #acbCalculator .reset-acb-row, #acbCalculator .hold-period-card { display: none !important; }
@@ -782,6 +788,9 @@
     </div>
 
     <!-- CALCULATION STEPS -->
+    <!-- Print-only copy of the cards (oldest first); filled just before printing -->
+    <div id="printArea" aria-hidden="true"></div>
+
     <div class="calculation-steps hidden" id="calculationSteps" role="region" aria-label="Calculation steps">
         <div class="calc-toolbar">
             <button type="button" id="printBtn" class="icon-btn print-btn" title="Print calculations" aria-label="Print calculations">🖨️</button>
@@ -900,7 +909,7 @@
             }
         };
 
-        let calculationCount = 0, hasCalculated = false, calcIdCounter = 0, printMode = false;
+        let calculationCount = 0, hasCalculated = false, calcIdCounter = 0;
         let calculations = [];
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
@@ -1056,9 +1065,9 @@
         function highlightACBVariations() {
             ['a', 'c'].forEach(type => {
                 const inputs = domCache.acbInputs[type];
-                const base = new Decimal(inputs[0].value || 0);
+                const base = safeDec(inputs[0].value);
                 inputs.forEach((input, i) => {
-                    const v = new Decimal(input.value || 0);
+                    const v = safeDec(input.value);
                     input.classList.toggle('acb-varies', i > 0 && !v.eq(base));
                 });
             });
@@ -1179,49 +1188,45 @@
         function updatePageNumbers() {
             const entries = Array.from(domCache.stepsContainer.getElementsByClassName("calculation-entry"));
             const total = entries.length;
+            // Screen: newest first, numbered from the end (N/N at top, 1/N at bottom).
             entries.forEach((entry, i) => {
                 const pn = entry.querySelector(".page-number");
-                if (!pn) return;
-                // Screen: newest first, numbered from the end. Print: entries are
-                // swapped to ascending (oldest first) and numbered 1..N in DOM order.
-                pn.textContent = printMode ? `${i + 1}/${total}` : `${total - i}/${total}`;
+                if (pn) pn.textContent = `${total - i}/${total}`;
             });
         }
 
-        // On screen the newest calculation sits on top; on paper the batch reads
-        // oldest → newest (page 1/2, 2/2, ...). Reorder the live nodes before
-        // printing and restore them after — beforeprint/afterprint cover Ctrl+P,
-        // and printWithCheck() covers the in-app button (Safari fires neither).
-        function setPrintOrder(on) {
-            printMode = on;
-            const entries = Array.from(domCache.stepsContainer.querySelectorAll(".calculation-entry"));
-            entries.slice().reverse().forEach(el => domCache.stepsContainer.appendChild(el));
-            updatePageNumbers();
+        // PRINT ORDER — the live cards on screen are NEVER reordered. On print we
+        // build a throw-away copy in #printArea (oldest first, numbered 1/N..N/N)
+        // and CSS shows only that copy on paper. Building is idempotent, so it is
+        // safe that several events (button, beforeprint, print media query) all
+        // call it, and tearing it down cannot disturb the on-screen order.
+        function buildPrintArea() {
+            const area = document.getElementById('printArea');
+            if (!area) return;
+            area.innerHTML = '';
+            if (domCache.calculationSteps.classList.contains('hidden')) return; // e.g. (A+C)-B tab: no cards
+            const entries = Array.from(domCache.stepsContainer.querySelectorAll(".calculation-entry")).reverse();
+            const total = entries.length;
+            entries.forEach((el, i) => {
+                const copy = el.cloneNode(true);
+                copy.removeAttribute('tabindex'); copy.removeAttribute('data-calc-id');
+                copy.removeAttribute('role'); copy.removeAttribute('aria-label');
+                copy.querySelector('.delete-button')?.remove();
+                const pn = copy.querySelector('.page-number');
+                if (pn) pn.textContent = `${i + 1}/${total}`;
+                area.appendChild(copy);
+            });
         }
-        // Apply the swap for the whole duration of printing and revert ONLY when
-        // printing has truly finished. Reverting on a timer corrupts the output:
-        // the print dialog keeps the document alive while the preview renders, so
-        // a restore timer can fire before the PDF is generated (numbers flipped
-        // but card order stayed newest-first). Signals used, in order of reliability:
-        //   1. matchMedia('print') transition — fires exactly with print rendering
-        //   2. beforeprint / afterprint — classic fallback
-        //   3. first click/keypress after the dialog — last-resort for browsers
-        //      that fire neither (the dialog blocks page input while open, so the
-        //      first interaction can only happen after it closes)
-        const mqPrint = window.matchMedia('print');
-        if (mqPrint.addEventListener) {
-            mqPrint.addEventListener('change', e => setPrintOrder(e.matches));
+        function clearPrintArea() {
+            const area = document.getElementById('printArea');
+            if (area) area.innerHTML = '';
         }
-        window.addEventListener('beforeprint', () => setPrintOrder(true));
-        window.addEventListener('afterprint', () => setPrintOrder(false));
-
-        function armPrintRestoreFallback() {
-            const restore = () => setPrintOrder(false);
-            setTimeout(() => {
-                ['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
-                    document.addEventListener(ev, restore, { once: true }));
-            }, 500);
-        }
+        window.addEventListener('beforeprint', buildPrintArea);
+        window.addEventListener('afterprint', clearPrintArea);
+        (function () {
+            const mq = window.matchMedia && window.matchMedia('print');
+            if (mq && mq.addEventListener) mq.addEventListener('change', e => e.matches ? buildPrintArea() : clearPrintArea());
+        })();
 
         function validateInput(input) {
             const value = input.value;
@@ -1286,11 +1291,8 @@
 
         function printWithCheck() {
             if (window.innerWidth <= 768 && !confirm("For optimal printing, use a larger screen or PC. Continue?")) return;
-            setPrintOrder(true);
-            armPrintRestoreFallback();
+            buildPrintArea();   // safe to repeat; also covers browsers that skip beforeprint
             window.print();
-            // order is restored by: matchMedia('print') flipping back, afterprint,
-            // or the armed first-interaction fallback — never by a bare timer.
         }
 
         function verifyCalculation(calculation, Q, W, A) {
