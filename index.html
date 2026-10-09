@@ -551,7 +551,18 @@
         .spec-row-body .frac { font-size: 13px; }
         .spec-edit-row { padding: 8px 0; border-top: 1px solid #eef1f4; }
         .spec-edit-top { display: flex; align-items: center; gap: 10px; }
-        .spec-edit-top input { flex: 1; font-family: ui-monospace, Menlo, Consolas, monospace; text-align: left; }
+        .frac-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .frac-edit input { width: 100%; text-align: center; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px;
+            border: 1px solid transparent; background: #fffdf5; border-radius: 4px; padding: 7px 6px; box-sizing: border-box; }
+        .frac-edit input:focus { outline: none; border-color: #d98300; background: #fff; }
+        .frac-edit .fe-num { border-bottom: 2px solid #111; border-radius: 4px 4px 0 0; }   /* the fraction line */
+        .frac-edit .fe-den { border-radius: 0 0 4px 4px; }
+        .frac-edit input.bad { background: #ffeaea; }
+        .std-pill { display: inline-block; background: #fff3a8; color: #5a4500; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid #e8cf55; font-size: 12px; }
+        .gate-btn .std-pill { margin-top: 5px; }
+        @keyframes flashStd { 0%,100% { box-shadow: 0 0 0 0 rgba(255,200,0,0); } 30% { box-shadow: 0 0 0 6px rgba(255,200,0,.6); } }
+        .flash-highlight { animation: flashStd 1.4s ease 2; border-radius: 20px; }
+        #manualStdRow.flash-highlight { border-radius: 10px; }
         .spec-preview { margin: 6px 0 0 36px; overflow-x: auto; font-size: 13px; min-height: 0; }
         .spec-error { margin: 4px 0 0 36px; font-size: 12px; color: #c0392b; }
         .spec-hint { margin-top: 8px; font-size: 12px; color: #6b7480; line-height: 1.4; }
@@ -684,6 +695,7 @@
         <div class="spec-head">
             <h2>Formula</h2>
             <span class="spec-product" id="specProduct"></span>
+            <span class="std-pill" id="specStd"></span>
             <span class="spec-badge" id="specBadge"></span>
         </div>
         <div id="specRows"></div>
@@ -848,10 +860,9 @@
             <span class="close" id="infoModalClose" aria-label="Close">×</span>
             <div id="formulaInfo" class="info-section">
                 <h3 id="infoTitle">Help</h3>
-                <div class="info-item"><span class="info-key">F1/F2/F3 buttons:</span> Calculate the respective formula</div>
+                <div class="info-item"><span class="info-key">F1 / F2 / F3:</span> Calculate that formula — tap the button or press the F1 / F2 / F3 key</div>
                 <div class="info-item"><span class="info-key">❌:</span> Remove a calculation</div>
                 <div class="info-item"><span class="info-key">Remaining Qty:</span> Tap it to copy into the Q field</div>
-                <div class="info-item"><span class="info-key">F1 / F2 / F3 keys:</span> Calculate F1 / F2 / F3 directly from the keyboard</div>
             </div>
             <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
@@ -863,9 +874,9 @@
         <div class="product-gate-card">
             <h2 id="gateTitle">Select product</h2>
             <p>Choose the product first. Its formulas are then shown above the input card — check them against the BMR before dispensing.</p>
-            <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<small>Std Qty 417 kg · fixed formulas</small></button>
-            <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<small>Std Qty 268.750 kg · fixed formulas</small></button>
-            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · enter your own formulas</small></button>
+            <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<small>Fixed formulas</small><span class="std-pill" data-std="valacyclovir"></span></button>
+            <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<small>Fixed formulas</small><span class="std-pill" data-std="levetiracetam"></span></button>
+            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · editable formulas</small><span class="std-pill" data-std="manual">Std Qty: enter your own</span></button>
         </div>
     </div>
 
@@ -1031,7 +1042,7 @@
             const text = String(src || '').trim();
             if (!text) throw new Error('Formula is empty.');
             if (text.length > 80) throw new Error('Formula is too long (max 80 characters).');
-            const norm = text.replace(/[×·]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-');
+            const norm = text.replace(/[×·xX]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-');
             const tokens = [];
             const re = /\s*(\d+\.?\d*|\.\d+|[QWAqwa]|[-+*\/()])\s*/y;
             let pos = 0;
@@ -1147,6 +1158,18 @@
         }
         const prettyFormula = src => { try { return renderAst(parseFormula(src)); } catch { return String(src); } };
 
+        // Manual formulas are edited as a stacked fraction (top / bottom) and start
+        // as a copy of the standard formulas.
+        const composeFormula = p => { const n = p.n.trim(), d = p.d.trim(); return d ? `(${n})/(${d})` : n; };
+        function splitFormula(src) {
+            const root = stripGrp(parseFormula(src));
+            return (root.t === 'bin' && root.op === '/')
+                ? { n: renderAst(stripGrp(root.l)), d: renderAst(stripGrp(root.r)) }
+                : { n: renderAst(root), d: '' };
+        }
+        const manualParts = {};
+        ['F1', 'F2', 'F3'].forEach(t => { manualParts[t] = splitFormula(STD_FORMULAS[t]); manualFormulas[t] = composeFormula(manualParts[t]); });
+
         function createCalculation(formulaType, Q, W, A) {
             try {
                 const exprText = getFormulaText(formulaType);
@@ -1208,8 +1231,11 @@
             card.classList.toggle('is-manual', manual);
             document.getElementById('specProduct').textContent = PRODUCTS[currentProduct].name;
             document.getElementById('specBadge').textContent = manual ? '✎ Editable' : '🔒 Fixed';
+            const stdPill = document.getElementById('specStd');
+            const stdVal = currentProduct === 'valacyclovir' ? CONSTANTS.ACB_DEFAULT_A : currentProduct === 'levetiracetam' ? CONSTANTS.LEVA_A : null;
+            stdPill.textContent = stdVal !== null ? `Std Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std Qty: enter below';
             document.getElementById('specHint').textContent = manual
-                ? 'Type each formula using Q, W, A, numbers, + − × ÷ and brackets, e.g. Q*100*100/(A*(100-W)). Check them against the BMR.'
+                ? 'Starts with the standard formulas — edit the top and bottom of each as per the new BMR (Q, W, A, numbers, + − × ÷ and brackets; × can be typed as *). Leave the bottom empty if there is no division.'
                 : 'Fixed for this product — cannot be changed here. Check against the BMR before dispensing; choose Manual for a different formula.';
             rows.innerHTML = '';
             ['F1', 'F2', 'F3'].forEach(type => {
@@ -1220,21 +1246,23 @@
                     rows.appendChild(row);
                 } else {
                     const row = document.createElement('div'); row.className = 'spec-edit-row';
-                    row.innerHTML = `<div class="spec-edit-top"><span class="spec-row-label">${type}</span>
-                        <input type="text" id="manualInput${type}" autocomplete="off" spellcheck="false" inputmode="text"
-                               placeholder="e.g. Q*100*100/(A*(100-W))" aria-label="Formula ${type}" maxlength="80"></div>
-                        <div class="spec-preview" id="manualPreview${type}"></div><div class="spec-error" id="manualError${type}"></div>`;
+                    row.innerHTML = `<div class="spec-edit-top"><span class="spec-row-label">${type} =</span>
+                        <div class="frac-edit">
+                            <input type="text" class="fe-num" id="manualInput${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} top part (numerator)" placeholder="top">
+                            <input type="text" class="fe-den" id="manualDen${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} bottom part (denominator)" placeholder="bottom (optional)">
+                        </div></div><div class="spec-error" id="manualError${type}"></div>`;
                     rows.appendChild(row);
-                    const input = row.querySelector('input');
-                    input.value = manualFormulas[type];
+                    const nI = row.querySelector('.fe-num'), dI = row.querySelector('.fe-den'), err = row.querySelector('.spec-error');
+                    nI.value = manualParts[type].n; dI.value = manualParts[type].d;
                     const refresh = () => {
-                        manualFormulas[type] = input.value.trim();
-                        const prev = row.querySelector('.spec-preview'), err = row.querySelector('.spec-error');
-                        if (!manualFormulas[type]) { prev.innerHTML = ''; err.textContent = ''; return; }
-                        try { prev.innerHTML = '= ' + showAst(validateFormulaText(manualFormulas[type])); err.textContent = ''; }
-                        catch (e) { prev.innerHTML = ''; err.textContent = e.message; }
+                        manualParts[type] = { n: nI.value, d: dI.value };
+                        manualFormulas[type] = composeFormula(manualParts[type]);
+                        let msg = '';
+                        if (!nI.value.trim()) msg = 'Top part is empty.';
+                        else { try { validateFormulaText(manualFormulas[type]); } catch (e) { msg = e.message; } }
+                        err.textContent = msg; nI.classList.toggle('bad', !!msg); dI.classList.toggle('bad', !!msg);
                     };
-                    input.addEventListener('input', refresh); refresh();
+                    nI.addEventListener('input', refresh); dI.addEventListener('input', refresh); refresh();
                 }
             });
             updateSheetScale();
@@ -1264,7 +1292,10 @@
             applyDrugPreset(val);
             renderFormulaCard();
             document.getElementById('productGate').style.display = 'none';
-            requestAnimationFrame(() => (val === 'manual' ? document.getElementById('manualInputF1') : domCache.QInput)?.focus());
+            // Draw the eye to the Std Qty that came with this product
+            const flashEl = val === 'manual' ? document.getElementById('manualStdRow') : document.getElementById('specStd');
+            flashEl.classList.remove('flash-highlight'); void flashEl.offsetWidth; flashEl.classList.add('flash-highlight');
+            requestAnimationFrame(() => (val === 'manual' ? domCache.stdQtyInput : domCache.QInput)?.focus());
             return true;
         }
 
@@ -1781,21 +1812,25 @@
                 btn.addEventListener('click', () => calculate(btn.dataset.formula));
             });
 
-            // F1 / F2 / F3 keyboard shortcuts — must preventDefault or the browser
-            // opens its own help (F1) / finds nothing. Ignored while typing in a
-            // field, while the (A+C)-B tab is showing, or when a modal is open.
+            // F1 / F2 / F3 keyboard shortcuts. They work while focus is in the Q / W / A
+            // number fields or a dropdown (that is where focus normally is). They are
+            // ignored only while typing free text (manual formula boxes, Write Us), on the
+            // (A+C)-B tab, or when a pop-up is open. F1 is always kept away from the
+            // browser's own help page.
             const FORMULA_KEYS = { F1: 'F1', F2: 'F2', F3: 'F3' };
             document.addEventListener('keydown', (e) => {
                 const formulaType = FORMULA_KEYS[e.key];
-                if (!formulaType) return;
+                if (!formulaType || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
                 if (!domCache.formulaCalculator.classList.contains('active')) return;
+                e.preventDefault();
+                if (e.repeat) return;
                 const ae = document.activeElement;
                 const tag = ae ? ae.tagName : '';
-                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-                if (document.getElementById('verifyModal').style.display === 'flex') return;
-                if (document.getElementById('infoModal').style.display === 'flex') return;
+                if (tag === 'TEXTAREA' || (tag === 'INPUT' && ae.type === 'text')) return;
+                for (const id of ['verifyModal', 'infoModal', 'productGate']) {
+                    if (document.getElementById(id).style.display === 'flex') return;
+                }
                 if (writeusIsOpen && writeusIsOpen()) return;
-                e.preventDefault();
                 calculate(formulaType);
             });
 
@@ -1807,6 +1842,8 @@
             const drugSelector = document.getElementById('drugSelector');
             drugSelector.addEventListener('change', () => { if (drugSelector.value) selectProduct(drugSelector.value); });
             document.querySelectorAll('#productGate .gate-btn').forEach(btn => btn.addEventListener('click', () => selectProduct(btn.dataset.product)));
+            const stdFor = { valacyclovir: CONSTANTS.ACB_DEFAULT_A, levetiracetam: CONSTANTS.LEVA_A };
+            document.querySelectorAll('.std-pill[data-std]').forEach(p => { const v = stdFor[p.dataset.std]; if (v !== undefined) p.textContent = `Std Qty ${formatNumber(new Decimal(v))} kg`; });
             openProductGate();
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (!el) return;
