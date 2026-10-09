@@ -343,11 +343,12 @@
         }
         .verify-label {
             font-weight: 700; color: #000; display: inline-block;
-            width: 140px; flex-shrink: 0; text-align: right; margin-right: 10px;
+            width: 160px; flex-shrink: 0; text-align: right; margin-right: 10px;
         }
         .verify-value {
             font-weight: 700; background-color: #d4edda; color: #155724; padding: 3px 6px; border-radius: 5px;
         }
+        .verify-formula { display: inline-flex; align-items: center; }
         .verify-row { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 10px; }
         .verify-rows { display: inline-flex; flex-direction: column; margin: 0 auto; }
         .verify-details-wrap { display: flex; justify-content: center; }
@@ -493,6 +494,7 @@
             text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; background: #fff;
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
         }
+        .hold-days-input { width: 80px; }
         .hold-date-input:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
         .hold-date-static {
             display: inline-flex; align-items: center; justify-content: center; width: 160px; height: 40px;
@@ -533,24 +535,30 @@
 
         /* ── FORMULA CARD (above the input card) + PRODUCT GATE ── */
         .formula-spec-card {
-            display: none; background: #fff; padding: 18px 22px; width: 90%; max-width: 400px;
+            display: none; background: #fff; padding: 12px 16px; width: 90%; max-width: 760px;
             border-radius: 16px; box-shadow: 0 8px 24px rgba(20,40,60,.08); margin-bottom: 14px;
             border: 1px solid rgba(20,40,60,.05); border-left: 5px solid #157347; text-align: left;
         }
         .formula-spec-card.show { display: block; }
         .formula-spec-card.is-manual { border-left-color: #d98300; }
-        .spec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .spec-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
         .spec-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
         .spec-product { font-size: 13px; font-weight: 600; color: #157347; }
         .is-manual .spec-product { color: #b86e00; }
         .spec-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: #e7f5ec; color: #157347; white-space: nowrap; }
         .is-manual .spec-badge { background: #fff3dd; color: #b86e00; }
-        .spec-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #eef1f4; }
-        .spec-row-label { font-weight: 700; min-width: 26px; font-size: 14px; }
-        .spec-row-body { flex: 1; min-width: 0; overflow-x: auto; font-size: 14px; }
-        .spec-row-body .frac { font-size: 13px; }
-        .spec-edit-row { padding: 8px 0; border-top: 1px solid #eef1f4; }
-        .spec-edit-top { display: flex; align-items: center; gap: 10px; }
+        #specRows { display: flex; align-items: stretch; overflow-x: auto; padding-bottom: 2px; }
+        .spec-cell { flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 2px 14px; border-left: 1px solid #e3e7ee; }
+        .spec-cell:first-child { border-left: none; padding-left: 0; }
+        .spec-cell:last-child { padding-right: 0; }
+        .spec-cell-label { font-weight: 700; font-size: 13px; margin-bottom: 2px; white-space: nowrap; }
+        .spec-cell-label small { font-weight: 500; color: #6b7480; font-size: 11px; margin-left: 4px; }
+        .spec-cell-body { font-size: 13px; }
+        .spec-cell-body .frac { font-size: 13px; line-height: 1.45; margin: 0; }
+        .spec-cell-body .frac .frac-num, .spec-cell-body .frac .frac-den { padding: 2px 5px; }
+        .spec-cell-edit { align-items: stretch; min-width: 190px; }
+        .spec-cell-edit .spec-cell-label { text-align: left; }
         .frac-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; }
         .frac-edit input { width: 100%; text-align: center; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px;
             border: 1px solid transparent; background: #fffdf5; border-radius: 4px; padding: 7px 6px; box-sizing: border-box; }
@@ -563,9 +571,9 @@
         @keyframes flashStd { 0%,100% { box-shadow: 0 0 0 0 rgba(255,200,0,0); } 30% { box-shadow: 0 0 0 6px rgba(255,200,0,.6); } }
         .flash-highlight { animation: flashStd 1.4s ease 2; border-radius: 20px; }
         #manualStdRow.flash-highlight { border-radius: 10px; }
-        .spec-preview { margin: 6px 0 0 36px; overflow-x: auto; font-size: 13px; min-height: 0; }
-        .spec-error { margin: 4px 0 0 36px; font-size: 12px; color: #c0392b; }
-        .spec-hint { margin-top: 8px; font-size: 12px; color: #6b7480; line-height: 1.4; }
+        .spec-error { margin: 2px 0 0; font-size: 11px; color: #c0392b; }
+        .spec-error:empty { display: none; }
+        .spec-hint { margin-top: 6px; font-size: 11px; color: #6b7480; line-height: 1.35; }
         .product-gate-card { background: #fff; border-radius: 16px; padding: 26px 22px; width: 92%; max-width: 380px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
         .product-gate-card h2 { margin: 0 0 4px; font-size: 20px; }
         .product-gate-card p { margin: 0 0 16px; font-size: 13px; color: #6b7480; }
@@ -590,7 +598,10 @@
             .acb-td, .acb-th { font-size: 10px; padding: 4px; min-width: 40px; }
             .acb-input, .acb-span { font-size: 10px; padding: 3px; }
             .calculator-container { width: 100%; padding: 15px; }
-            .formula-spec-card { width: 100%; padding: 14px 15px; border-radius: 12px; }
+            .formula-spec-card { width: 100%; padding: 10px 12px; border-radius: 12px; }
+            .hold-dates-row { gap: 8px; }
+            .hold-date-input, .hold-date-static { width: 118px; font-size: 13px; padding: 0 4px; }
+            .hold-days-input { width: 62px !important; }
             .acb-input, input { font-size: 14px; }
             button { font-size: 14px; padding: 10px; }
             .qty-tracker-value { font-size: 15px; }
@@ -604,7 +615,7 @@
         @media (min-width: 900px) {
             body { padding-top: 84px; }
             .calculator-container:not(#acbCalculator) { max-width: 460px; padding: 32px; }
-            .formula-spec-card { max-width: 460px; padding: 20px 32px; }
+            .formula-spec-card { max-width: 760px; padding: 14px 22px; }
             .tab-bar, #formulaCalculator { max-width: 460px; }
             .hold-period-card { max-width: 460px; }
             .calculation-steps { max-width: 760px; }
@@ -752,6 +763,7 @@
                 <input type="number" id="assay" step="0.01" min="0.01" max="100.00" required placeholder="Enter assay content" oninput="handleInput(event)">
             </div>
         </div>
+        <div id="extraVars"></div>
         <div class="progress-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
@@ -834,6 +846,10 @@
                 <div class="hold-date-group">
                     <label for="holdStartDate">Current date</label>
                     <input type="date" id="holdStartDate" class="hold-date-input">
+                </div>
+                <div class="hold-date-group">
+                    <label for="holdDays">Days</label>
+                    <input type="number" id="holdDays" class="hold-date-input hold-days-input" value="15" min="1" max="3650" step="1" inputmode="numeric" aria-label="Hold time in days">
                 </div>
                 <div class="hold-date-group">
                     <span class="hold-label">Retest date</span>
@@ -1042,14 +1058,14 @@
             const text = String(src || '').trim();
             if (!text) throw new Error('Formula is empty.');
             if (text.length > 80) throw new Error('Formula is too long (max 80 characters).');
-            const norm = text.replace(/[×·xX]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-');
+            const norm = text.replace(/[×·]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-');
             const tokens = [];
-            const re = /\s*(\d+\.?\d*|\.\d+|[QWAqwa]|[-+*\/()])\s*/y;
+            const re = /\s*(\d+\.?\d*|\.\d+|[A-Za-z]|[-+*\/()])\s*/y;
             let pos = 0;
             while (pos < norm.length) {
                 re.lastIndex = pos;
                 const m = re.exec(norm);
-                if (!m) throw new Error(`Unexpected "${norm[pos]}" — use only Q, W, A, numbers, + − × ÷ ( ).`);
+                if (!m) throw new Error(`Unexpected "${norm[pos]}" — use only letters (variables), numbers, + − × ÷ ( ).`);
                 tokens.push(m[1]); pos = re.lastIndex;
             }
             let i = 0, usesQ = false;
@@ -1074,10 +1090,10 @@
                 if (tk === undefined) throw new Error('Formula ends unexpectedly.');
                 if (tk === '(') {
                     i++; const e = expr();
-                    if (tokens[i] !== ')') throw new Error('Missing closing bracket ")".');
+                    if (tokens[i] !== ')') throw new Error(tokens[i] === undefined ? 'Missing closing bracket ")".' : `Unexpected "${tokens[i]}" — missing operator?`);
                     i++; return { t: 'grp', e, hasVar: e.hasVar };
                 }
-                if (/^[QWAqwa]$/.test(tk)) { i++; const name = tk.toUpperCase(); if (name === 'Q') usesQ = true; return { t: 'var', name, hasVar: true }; }
+                if (/^[A-Za-z]$/.test(tk)) { i++; const name = tk.toUpperCase(); if (name === 'Q') usesQ = true; return { t: 'var', name, hasVar: true }; }
                 if (/^[\d.]/.test(tk)) { i++; return { t: 'num', raw: tk, hasVar: false }; }
                 throw new Error(`Unexpected "${tk}".`);
             }
@@ -1089,7 +1105,7 @@
         function evalAst(n, v) {
             switch (n.t) {
                 case 'num': return n.d || new Decimal(n.raw);
-                case 'var': return v[n.name];
+                case 'var': if (v[n.name] === undefined) throw new Error(`Missing value for ${n.name}`); return v[n.name];
                 case 'neg': return evalAst(n.e, v).neg();
                 case 'grp': return evalAst(n.e, v);
                 default: {
@@ -1103,20 +1119,21 @@
             }
         }
         const OPSYM = { '+': ' + ', '-': ' − ', '*': ' × ', '/': ' ÷ ' };
-        function renderAst(n) {
+        // `ql` (optional) is the wording to show for Q — e.g. "Std Qty" for F1.
+        function renderAst(n, ql) {
             switch (n.t) {
                 case 'num': return n.raw;
-                case 'var': return n.name;
-                case 'neg': return '−' + renderAst(n.e);
-                case 'grp': return '(' + renderAst(n.e) + ')';
-                default: return renderAst(n.l) + OPSYM[n.op] + renderAst(n.r);
+                case 'var': return (n.name === 'Q' && ql) ? ql : n.name;
+                case 'neg': return '−' + renderAst(n.e, ql);
+                case 'grp': return '(' + renderAst(n.e, ql) + ')';
+                default: return renderAst(n.l, ql) + OPSYM[n.op] + renderAst(n.r, ql);
             }
         }
         const stripGrp = n => { while (n.t === 'grp') n = n.e; return n; };
         // Show a tree either inline or — when its top level is a division — as a fraction.
-        function showAst(n) {
+        function showAst(n, ql) {
             const root = stripGrp(n);
-            return (root.t === 'bin' && root.op === '/') ? frac(renderAst(stripGrp(root.l)), renderAst(stripGrp(root.r))) : renderAst(root);
+            return (root.t === 'bin' && root.op === '/') ? frac(renderAst(stripGrp(root.l), ql), renderAst(stripGrp(root.r), ql)) : renderAst(root, ql);
         }
         // Replace variables by their entered values (keeps structure + brackets).
         function substAst(n, shown, v) {
@@ -1146,9 +1163,19 @@
             }
             return collapseAst(root, v);
         }
+        // Variables a formula uses. Q, W, A are the standard inputs; any other letter is an "extra" variable.
+        const STD_VARS = ['Q', 'W', 'A'];
+        function collectVars(n, set = new Set()) {
+            if (n.t === 'var') set.add(n.name);
+            else if (n.t === 'neg' || n.t === 'grp') collectVars(n.e, set);
+            else if (n.t === 'bin') { collectVars(n.l, set); collectVars(n.r, set); }
+            return set;
+        }
         function validateFormulaText(src) {
             const ast = parseFormula(src);
-            const test = evalAst(ast, { Q: new Decimal(100), W: new Decimal(5), A: new Decimal(99) });  // catches e.g. Q/0
+            const sample = { Q: new Decimal(100), W: new Decimal(5), A: new Decimal(99) };
+            collectVars(ast).forEach(v => { if (!sample[v]) sample[v] = new Decimal(2); });
+            const test = evalAst(ast, sample);  // catches e.g. Q/0
             if (!test.isFinite()) throw new Error('Formula does not give a valid number.');
             return ast;
         }
@@ -1170,12 +1197,18 @@
         const manualParts = {};
         ['F1', 'F2', 'F3'].forEach(t => { manualParts[t] = splitFormula(STD_FORMULAS[t]); manualFormulas[t] = composeFormula(manualParts[t]); });
 
-        function createCalculation(formulaType, Q, W, A) {
+        // What Q means for each formula: F1 works on the Std Qty, F3 on the Remaining Qty.
+        const Q_LABELS = { F1: 'Std Qty', F3: 'Remaining Qty' };
+        const qLabelFor = t => Q_LABELS[t];
+
+        function createCalculation(formulaType, Q, W, A, extra = {}) {
             try {
                 const exprText = getFormulaText(formulaType);
                 const ast = validateFormulaText(exprText);
-                const vals = { Q, W, A };
+                const vals = { Q, W, A, ...extra };
                 const shown = { Q: formatNumber(Q), W: formatNumber(W, true), A: formatNumber(A, true) };
+                const extraShown = {};
+                Object.keys(extra).forEach(k => { shown[k] = extraShown[k] = formatNumber(extra[k]); });
                 const result = evalAst(ast, vals);
                 if (!result.isFinite() || result.lte(0)) throw new Error('Formula gave a non-positive result.');
                 const rounded = result.toFixed(3);
@@ -1183,9 +1216,11 @@
 
                 const withVals = substAst(ast, shown, vals);
                 const collapsed = collapseTop(withVals, vals);
-                const steps = [showAst(ast), showAst(withVals)];
+                // The card starts at the substituted values — the formula itself is shown on the
+                // formula card and in the verify pop-up, not repeated here.
+                const steps = [showAst(withVals)];
                 const c = showAst(collapsed);
-                if (c !== steps[1]) steps.push(c);
+                if (c !== steps[0]) steps.push(c);
                 const root = stripGrp(ast);
                 if (root.t === 'bin' && root.op === '/') {
                     const numD = evalAst(stripGrp(root.l), vals), denD = evalAst(stripGrp(root.r), vals);
@@ -1195,7 +1230,8 @@
                 const html = buildCalculationHtml(null, null, fn, steps, rounded, result);
                 return {
                     html, formulaType, Q: Q.toString(), W: W.toString(), A: A.toString(), result: rounded,
-                    isFinal: formulaType !== "F2", product: PRODUCTS[currentProduct].name, formulaText: prettyFormula(exprText)
+                    isFinal: formulaType !== "F2", product: PRODUCTS[currentProduct].name, formulaText: prettyFormula(exprText),
+                    extraShown, formulaHtml: showAst(ast, qLabelFor(formulaType)), qLabel: qLabelFor(formulaType) || 'Quantity'
                 };
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
@@ -1216,8 +1252,10 @@
             if (!startInput.value) startInput.value = toISODate(new Date());
             const start = parseISODate(startInput.value);
             if (isNaN(start)) return;
-            const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 15);
+            const days = parseInt(document.getElementById("holdDays")?.value, 10);
             const endEl = document.getElementById("holdEndDateStatic");
+            if (!Number.isInteger(days) || days < 1) { if (endEl) endEl.textContent = '—'; return; }   // empty / invalid days
+            const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + Math.min(days, 3650));
             if (endEl) endEl.textContent = fmtDDMMYYYY(end);
         }
 
@@ -1235,24 +1273,26 @@
             const stdVal = currentProduct === 'valacyclovir' ? CONSTANTS.ACB_DEFAULT_A : currentProduct === 'levetiracetam' ? CONSTANTS.LEVA_A : null;
             stdPill.textContent = stdVal !== null ? `Std Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std Qty: enter below';
             document.getElementById('specHint').textContent = manual
-                ? 'Starts with the standard formulas — edit the top and bottom of each as per the new BMR (Q, W, A, numbers, + − × ÷ and brackets; × can be typed as *). Leave the bottom empty if there is no division.'
-                : 'Fixed for this product — cannot be changed here. Check against the BMR before dispensing; choose Manual for a different formula.';
+                ? 'Standard formulas, editable — change top/bottom as per the new BMR (Q, W, A, numbers, + − × ÷ ( ); × can be typed as *). Any other letter (e.g. B) becomes an extra input. Leave bottom empty if no division.'
+                : 'Fixed for this product. Check against the BMR before dispensing; choose Manual for a different formula.';
             rows.innerHTML = '';
             ['F1', 'F2', 'F3'].forEach(type => {
+                const ql = qLabelFor(type);
+                const cell = document.createElement('div');
                 if (!manual) {
-                    const row = document.createElement('div'); row.className = 'spec-row';
-                    let body; try { body = showAst(parseFormula(PRODUCTS[currentProduct].formulas[type])); } catch { body = '<span class="spec-error">Invalid formula in PRODUCTS table</span>'; }
-                    row.innerHTML = `<span class="spec-row-label">${type}</span><div class="spec-row-body">${body}</div>`;
-                    rows.appendChild(row);
+                    cell.className = 'spec-cell';
+                    let body; try { body = showAst(parseFormula(PRODUCTS[currentProduct].formulas[type]), ql); } catch { body = '<span class="spec-error">Invalid formula in PRODUCTS table</span>'; }
+                    cell.innerHTML = `<div class="spec-cell-label">${type} =</div><div class="spec-cell-body">${body}</div>`;
+                    rows.appendChild(cell);
                 } else {
-                    const row = document.createElement('div'); row.className = 'spec-edit-row';
-                    row.innerHTML = `<div class="spec-edit-top"><span class="spec-row-label">${type} =</span>
+                    cell.className = 'spec-cell spec-cell-edit';
+                    cell.innerHTML = `<div class="spec-cell-label">${type} =${ql ? `<small>Q = ${ql}</small>` : ''}</div>
                         <div class="frac-edit">
                             <input type="text" class="fe-num" id="manualInput${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} top part (numerator)" placeholder="top">
                             <input type="text" class="fe-den" id="manualDen${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} bottom part (denominator)" placeholder="bottom (optional)">
-                        </div></div><div class="spec-error" id="manualError${type}"></div>`;
-                    rows.appendChild(row);
-                    const nI = row.querySelector('.fe-num'), dI = row.querySelector('.fe-den'), err = row.querySelector('.spec-error');
+                        </div><div class="spec-error" id="manualError${type}"></div>`;
+                    rows.appendChild(cell);
+                    const nI = cell.querySelector('.fe-num'), dI = cell.querySelector('.fe-den'), err = cell.querySelector('.spec-error');
                     nI.value = manualParts[type].n; dI.value = manualParts[type].d;
                     const refresh = () => {
                         manualParts[type] = { n: nI.value, d: dI.value };
@@ -1262,10 +1302,38 @@
                         else { try { validateFormulaText(manualFormulas[type]); } catch (e) { msg = e.message; } }
                         err.textContent = msg; nI.classList.toggle('bad', !!msg); dI.classList.toggle('bad', !!msg);
                     };
-                    nI.addEventListener('input', refresh); dI.addEventListener('input', refresh); refresh();
+                    nI.addEventListener('input', () => { refresh(); syncExtraVars(); }); dI.addEventListener('input', () => { refresh(); syncExtraVars(); }); refresh();
                 }
             });
+            syncExtraVars();
             updateSheetScale();
+        }
+
+        // Extra variables: any letter other than Q, W, A typed into a Manual formula gets its own input.
+        const extraVarValues = {};
+        function syncExtraVars() {
+            const box = document.getElementById('extraVars');
+            if (!box) return;
+            const names = new Set();
+            if (currentProduct === 'manual') {
+                ['F1', 'F2', 'F3'].forEach(t => { try { collectVars(parseFormula(manualFormulas[t])).forEach(v => { if (!STD_VARS.includes(v)) names.add(v); }); } catch {} });
+            }
+            const list = [...names].sort();
+            const existing = [...box.querySelectorAll('input')].map(i => i.dataset.var);
+            if (JSON.stringify(list) === JSON.stringify(existing)) return;       // nothing changed — keep focus/values
+            existing.forEach(n => { const el = document.getElementById('extraVar_' + n); if (el) extraVarValues[n] = el.value; });
+            box.innerHTML = '';
+            list.forEach(name => {
+                const g = document.createElement('div'); g.className = 'input-group';
+                g.innerHTML = `<label for="extraVar_${name}">Value of ${name} (from your formula):</label>
+                    <input type="number" id="extraVar_${name}" data-var="${name}" step="any" inputmode="decimal" placeholder="Enter value of ${name}">`;
+                const input = g.querySelector('input');
+                input.value = extraVarValues[name] || '';
+                input.addEventListener('input', () => { if (!/^\d*\.?\d{0,4}$/.test(input.value) && input.value !== '') input.value = input.value.slice(0, -1); updateProgress(); });
+                input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
+                box.appendChild(g);
+            });
+            updateProgress();
         }
 
         function renderFormulaCardVisibility() {
@@ -1446,10 +1514,13 @@
             if (domCache.QInput.value.trim()) f++;
             if (domCache.waterInput.value.trim()) f++;
             if (domCache.assayInput.value.trim()) f++;
-            domCache.progressBar.style.width = (f / 3) * 100 + "%";
+            const extras = [...document.querySelectorAll('#extraVars input')];
+            const total = 3 + extras.length;
+            extras.forEach(i => { if (i.value.trim()) f++; });
+            domCache.progressBar.style.width = (f / total) * 100 + "%";
             domCache.waterGroup.style.display = domCache.QInput.value.trim() ? "block" : "none";
             domCache.assayGroup.style.display = domCache.waterInput.value.trim() ? "block" : "none";
-            domCache.buttons.style.display = f === 3 ? "flex" : "none";
+            domCache.buttons.style.display = f === total ? "flex" : "none";
         }
 
         function showCalculator(calculator) {
@@ -1602,11 +1673,12 @@
                 <h3 id="verifyTitle" style="text-align:center;">Please verify the following:</h3>
                 <div class="verify-details-wrap">
                 <div class="verify-rows">
-                <div class="verify-row"><span class="verify-label">Quantity (Q):</span> <span class="verify-value">${Q}</span></div>
+                <div class="verify-row"><span class="verify-label">${calculation.qLabel} (Q):</span> <span class="verify-value">${Q}</span></div>
                 <div class="verify-row"><span class="verify-label">Water Content (W):</span> <span class="verify-value">${W}%</span></div>
                 <div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>
+                ${Object.entries(calculation.extraShown || {}).map(([k, v]) => `<div class="verify-row"><span class="verify-label">Value of ${k}:</span> <span class="verify-value">${v}</span></div>`).join('')}
                 <div class="verify-row"><span class="verify-label">Product:</span> <span class="verify-value">${calculation.product}</span></div>
-                <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value">${calculation.formulaType} = ${calculation.formulaText}</span></div>
+                <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value verify-formula">${calculation.formulaType} = ${calculation.formulaHtml}</span></div>
                 </div>
                 </div>
             `;
@@ -1642,9 +1714,18 @@
             if (Q.gt(CONSTANTS.Q_MAX)) { alert(`Quantity (Q) must be ≤ ${CONSTANTS.Q_MAX}.`); return; }
             if (A.gt(CONSTANTS.A_MAX) || W.gt(CONSTANTS.W_MAX)) { alert("Invalid values: Ensure A ≤ 100 and W ≤ 99.99."); return; }
 
+            // Extra variables typed into a manual formula — each one needs a value.
+            const extra = {};
+            for (const name of collectVars(parseFormula(getFormulaText(formulaType)))) {
+                if (STD_VARS.includes(name)) continue;
+                const el = document.getElementById('extraVar_' + name);
+                const txt = el ? el.value.trim() : '';
+                if (!txt || isNaN(Number(txt))) { alert(`Enter a value for ${name} (used in ${formulaType}).`); el?.focus(); return; }
+                extra[name] = new Decimal(txt);
+            }
             hasCalculated = true;
             let calculationResult;
-            try { calculationResult = createCalculation(formulaType, Q, W, A); if (!calculationResult) throw new Error("Failed"); }
+            try { calculationResult = createCalculation(formulaType, Q, W, A, extra); if (!calculationResult) throw new Error("Failed"); }
             catch { alert("Calculation failed. Please check inputs."); return; }
 
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
@@ -1661,7 +1742,7 @@
                 <div class="entry-meta-row">
                     <div class="lot-label"></div>
                     <div class="product-label">${calculationResult.product}</div>
-                    <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
+                    <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"${Object.entries(calculationResult.extraShown || {}).map(([k, v]) => ` ${k}="${v}"`).join('')}</div>
                 </div>
                 <div class="calculation-content">${calculationResult.html}</div>
                 <div class="page-number">${calculationCount+1}/${calculationCount+1}</div>
@@ -1672,6 +1753,7 @@
 
             // Clear inputs immediately so they're ready for the next entry
             domCache.QInput.value = ""; domCache.waterInput.value = ""; domCache.assayInput.value = "";
+            document.querySelectorAll('#extraVars input').forEach(i => { i.value = ''; });
             domCache.progressBar.style.width = "0%"; domCache.buttons.style.display = "none";
             domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             updateQuantityTracker();
@@ -1856,6 +1938,13 @@
             // Start ready-to-use with the default preset already applied.
             applyDrugPreset(drugSelector.value);
             document.getElementById('holdStartDate').addEventListener('change', updateHoldPeriod);
+            const holdDays = document.getElementById('holdDays');
+            holdDays.addEventListener('keydown', e => { if (['e', 'E', '+', '-', '.', ','].includes(e.key)) e.preventDefault(); });
+            holdDays.addEventListener('input', () => {
+                if (holdDays.value !== '' && parseInt(holdDays.value, 10) > 3650) holdDays.value = '3650';
+                updateHoldPeriod();
+            });
+            holdDays.addEventListener('blur', () => { if (!(parseInt(holdDays.value, 10) >= 1)) { holdDays.value = '15'; updateHoldPeriod(); } });
             updateHoldPeriod();
             document.getElementById('printBtn').addEventListener('click', printWithCheck);
             document.getElementById('infoBtn').addEventListener('click', showInfo);
