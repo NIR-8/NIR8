@@ -1447,7 +1447,10 @@
         function updateQuantityTracker() {
             const stdQty = new Decimal(domCache.stdQtyInput.value || 0);
             let dispensed = new Decimal(0), remainingCalc = new Decimal(0), hasFinal = false;
-            calculations.forEach(calc => {
+            // A batch that has been assigned to a lot is CLOSED: its cards stay on
+            // screen as the record, but the tracker resets to defaults (0 dispensed,
+            // full Std Qty remaining) until the next batch's first confirmed calc.
+            if (!batchAssigned) calculations.forEach(calc => {
                 if (calc.formulaType === "F2") { dispensed = dispensed.plus(calc.Q); remainingCalc = remainingCalc.plus(calc.result); }
                 else { dispensed = dispensed.plus(calc.result); remainingCalc = remainingCalc.plus(calc.Q); hasFinal = true; }
             });
@@ -1509,6 +1512,7 @@
             // values and runs F1/F2/F3) — see calculate().
             domCache.formulaCalculator.classList.remove('input-locked');
             batchAssigned = true;
+            updateQuantityTracker();   // tracker back to defaults: 0 dispensed, full Std Qty remaining
         }
 
         // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
