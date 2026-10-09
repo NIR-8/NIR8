@@ -600,7 +600,10 @@
         /* ── INPUT CARD LOCKED — remaining qty is 0: hide the whole input card
            except the lot-assign panel, until the user assigns the lot ── */
         #formulaCalculator.input-locked { padding: 18px; }
-        #formulaCalculator.input-locked > *:not(#lotAssignPanel) { display: none !important; }
+        /* Keep the lot picker AND the qty tracker (Dispensed / Remaining) visible
+           while the batch is complete — only the input fields are locked away. */
+        #formulaCalculator.input-locked > *:not(#lotAssignPanel):not(#menuQtyTracker) { display: none !important; }
+        #formulaCalculator.input-locked #menuQtyTracker { margin-top: 0; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
