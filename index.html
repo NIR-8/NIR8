@@ -480,26 +480,30 @@
         }
         .hold-period-card .hold-label { display: block; font-weight: 600; color: #157347; margin-bottom: 4px; }
         .hold-title { font-weight: 700; text-align: center; color: #157347; font-size: 14px; margin-bottom: 10px; }
-        .hold-dates-row { display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: wrap; }
-        .hold-date-group { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
-        /* Fixed label + fixed control heights keep the two date displays on one
-           straight line regardless of font metrics or native date-picker chrome. */
+        /* One straight line: identical box model for the two inputs and the static
+           retest-date box — same height, padding, radius and centered text. The
+           number input's spin buttons are removed so it matches the date input. */
+        .hold-dates-row { display: flex; align-items: flex-end; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .hold-date-group { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
         .hold-date-group label, .hold-date-group .hold-label {
             display: block; height: 18px; line-height: 18px; font-weight: 600;
             color: #157347; font-size: 12px; text-align: center; overflow: hidden;
             white-space: nowrap;
         }
         .hold-date-input {
-            width: 160px; height: 40px; padding: 0 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
+            width: 152px; height: 40px; padding: 0 8px; border: 1.5px solid #cfd8e3; border-radius: 6px;
             text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; background: #fff;
-            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+            box-sizing: border-box; line-height: 40px; margin: 0;
         }
-        .hold-days-input { width: 80px; }
+        .hold-days-input { width: 76px; }
+        #holdDays::-webkit-outer-spin-button, #holdDays::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        #holdDays { -moz-appearance: textfield; appearance: textfield; }
         .hold-date-input:focus { border-color: #157347; outline: 0; box-shadow: 0 0 5px rgba(21,115,71,.3); }
         .hold-date-static {
-            display: inline-flex; align-items: center; justify-content: center; width: 160px; height: 40px;
+            display: inline-flex; align-items: center; justify-content: center; width: 152px; height: 40px;
             padding: 0 8px; border: 1.5px solid #a9dfba; border-radius: 6px; text-align: center; font-size: 14px;
             font-weight: 600; font-variant-numeric: tabular-nums; color: #111; background: #eaf7ee; box-sizing: border-box;
+            line-height: 40px;
         }
         .hold-sep { display: flex; align-items: center; font-weight: 700; color: #157347; font-size: 16px; }
 
@@ -1494,6 +1498,11 @@
             document.getElementById('lotAssignPanel')?.classList.add('hidden');
             // Lot assigned — release the input card for the next batch.
             domCache.formulaCalculator.classList.remove('input-locked');
+            // The batch is now recorded against the lot's Issued Qty (B) cell, so its
+            // calculation cards have served their purpose. Retire them automatically:
+            // remaining returns to the full Std Qty, the input card unlocks, and the
+            // next batch starts clean — no "Qty mismatch" and no manual clearing.
+            if (calculations.length > 0) clearAllCalculations();
         }
 
         // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
