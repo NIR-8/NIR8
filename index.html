@@ -247,6 +247,12 @@
             margin-top: 24mm; padding: 0 10mm; font-size: 12pt; gap: 10px;
         }
         .calculation-entry .lot-label { font-size: 12pt; text-align: left; }
+        /* Fillable lot number — prints as part of the record; overrides the global input styling */
+        .calculation-entry .lot-input {
+            width: 90px; padding: 0 2px; margin: 0; font-size: 12pt; text-align: left;
+            border: none; border-bottom: 1px solid #999; border-radius: 0; background: transparent;
+        }
+        .calculation-entry .lot-input:focus { outline: none; border-bottom-color: #000; box-shadow: none; background: transparent; }
         .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
         .reference-values { text-align: right; font-size: 10pt; color: #000; white-space: nowrap; }
         .calculation-content {
@@ -1445,7 +1451,7 @@
                 if (calc.formulaType === "F2") { dispensed = dispensed.plus(calc.Q); remainingCalc = remainingCalc.plus(calc.result); }
                 else { dispensed = dispensed.plus(calc.result); remainingCalc = remainingCalc.plus(calc.Q); hasFinal = true; }
             });
-            domCache.dispensedQty.textContent = formatNumber(dispensed);
+            domCache.dispensedQty.textContent = dispensed.toFixed(3);
             const lotPanel = document.getElementById('lotAssignPanel');
             if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
                 domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active');
@@ -1453,15 +1459,15 @@
                 domCache.formulaCalculator.classList.remove("input-locked");
             } else {
                 const remaining = stdQty.minus(remainingCalc);
-                domCache.remainingQty.textContent = formatNumber(remaining);
+                domCache.remainingQty.textContent = remaining.toFixed(3);
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
-                if (lotPanel) lotPanel.classList.toggle('hidden', !remaining.eq(0));
+                if (lotPanel) lotPanel.classList.toggle('hidden', !remaining.eq(0) || batchAssigned);
                 // Remaining qty is exactly 0 after a final (F1/F3) calculation: the
                 // batch is complete — hide the input card and only offer the lot
                 // assignment. It reappears once a lot is assigned, a calculation is
                 // deleted, or the Std Qty changes.
-                domCache.formulaCalculator.classList.toggle("input-locked", hasFinal && remaining.eq(0));
+                domCache.formulaCalculator.classList.toggle("input-locked", hasFinal && remaining.eq(0) && !batchAssigned);
             }
         }
 
@@ -1850,7 +1856,7 @@
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="entry-meta-row">
-                    <div class="lot-label"></div>
+                    <div class="lot-label"><input type="text" class="lot-input" maxlength="20" aria-label="Lot number" placeholder="No."></div>
                     <div class="product-label">${calculationResult.product}</div>
                     <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"${Object.entries(calculationResult.extraShown || {}).map(([k, v]) => ` ${k}="${v}"`).join('')}</div>
                 </div>
@@ -2019,7 +2025,8 @@
                 const tag = ae ? ae.tagName : '';
                 if (tag === 'TEXTAREA' || (tag === 'INPUT' && ae.type === 'text')) return;
                 for (const id of ['verifyModal', 'infoModal', 'productGate']) {
-                    if (document.getElementById(id).style.display === 'flex') return;
+                    const el = document.getElementById(id);
+                    if (el && getComputedStyle(el).display !== 'none') return;
                 }
                 if (writeusIsOpen && writeusIsOpen()) return;
                 calculate(formulaType);
