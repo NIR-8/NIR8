@@ -586,6 +586,11 @@
         /* ── PER-LOT A/C VARIATION HIGHLIGHT (light red) ── */
         .acb-input.acb-varies { background: #ffe3e3 !important; border-color: #f1b0b0; }
 
+        /* ── INPUT CARD LOCKED — remaining qty is 0: hide the whole input card
+           except the lot-assign panel, until the user assigns the lot ── */
+        #formulaCalculator.input-locked { padding: 18px; }
+        #formulaCalculator.input-locked > *:not(#lotAssignPanel) { display: none !important; }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
             /* more room for the scaled-down sheet */
@@ -1228,10 +1233,12 @@
                     if (last !== steps[steps.length - 1]) steps.push(last);
                 }
                 const html = buildCalculationHtml(null, null, fn, steps, rounded, result);
+                const usedVars = collectVars(ast);
                 return {
                     html, formulaType, Q: Q.toString(), W: W.toString(), A: A.toString(), result: rounded,
                     isFinal: formulaType !== "F2", product: PRODUCTS[currentProduct].name, formulaText: prettyFormula(exprText),
-                    extraShown, formulaHtml: showAst(ast, qLabelFor(formulaType)), qLabel: qLabelFor(formulaType) || 'Quantity'
+                    extraShown, formulaHtml: showAst(ast, qLabelFor(formulaType)), qLabel: qLabelFor(formulaType) || 'Quantity',
+                    usesW: usedVars.has('W'), usesA: usedVars.has('A')
                 };
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
@@ -1320,6 +1327,7 @@
             }
             const list = [...names].sort();
             const existing = [...box.querySelectorAll('input')].map(i => i.dataset.var);
+            updateProgress();   // W/A visibility must refresh even when the extra-vars list is unchanged
             if (JSON.stringify(list) === JSON.stringify(existing)) return;       // nothing changed — keep focus/values
             existing.forEach(n => { const el = document.getElementById('extraVar_' + n); if (el) extraVarValues[n] = el.value; });
             box.innerHTML = '';
@@ -1384,12 +1392,18 @@
             if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
                 domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active');
                 if (lotPanel) lotPanel.classList.add('hidden');
+                domCache.formulaCalculator.classList.remove("input-locked");
             } else {
                 const remaining = stdQty.minus(remainingCalc);
                 domCache.remainingQty.textContent = formatNumber(remaining);
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
                 if (lotPanel) lotPanel.classList.toggle('hidden', !remaining.eq(0));
+                // Remaining qty is exactly 0 after a final (F1/F3) calculation: the
+                // batch is complete — hide the input card and only offer the lot
+                // assignment. It reappears once a lot is assigned, a calculation is
+                // deleted, or the Std Qty changes.
+                domCache.formulaCalculator.classList.toggle("input-locked", hasFinal && remaining.eq(0));
             }
         }
 
@@ -1425,6 +1439,8 @@
             input.focus();
             document.getElementById('lotAssignSelect').value = '';
             document.getElementById('lotAssignPanel')?.classList.add('hidden');
+            // Lot assigned — release the input card for the next batch.
+            domCache.formulaCalculator.classList.remove('input-locked');
         }
 
         // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
@@ -1446,14 +1462,16 @@
             if (txt === '-' || txt === '0.000') return;
             if (confirm("Copy " + txt + " to Quantity (Q) field?")) {
                 domCache.QInput.value = txt; domCache.waterInput.value = ''; domCache.assayInput.value = '';
-                domCache.progressBar.style.width = "33%"; domCache.waterGroup.style.display = "block";
-                domCache.assayGroup.style.display = "none"; domCache.buttons.style.display = "none";
-                domCache.waterInput.focus();
-                domCache.waterInput.addEventListener("keydown", function handleWEnter(e) {
-                    if (e.key === "Enter" && domCache.waterInput.value.trim() !== "") {
-                        domCache.assayGroup.style.display = "block"; domCache.waterInput.removeEventListener("keydown", handleWEnter);
-                    }
-                });
+                updateProgress();
+                const used = getUsedStdVars();
+                if (used.has('W')) {
+                    domCache.waterInput.focus();
+                    domCache.waterInput.addEventListener("keydown", function handleWEnter(e) {
+                        if (e.key === "Enter" && domCache.waterInput.value.trim() !== "" && used.has('A')) {
+                            domCache.assayGroup.style.display = "block"; domCache.waterInput.removeEventListener("keydown", handleWEnter);
+                        }
+                    });
+                } else if (used.has('A')) domCache.assayInput.focus();
             }
         }
 
@@ -1489,10 +1507,13 @@
             if (input.id === "water" || input.id === "assay") clearError(input);
             if (event.key === "Enter" && value !== "") {
                 event.preventDefault();
-                const next = input.id === "Q" ? domCache.waterInput : input.id === "water" ? domCache.assayInput : null;
-                if (next) { next.parentElement.style.display = "block"; next.focus(); } else input.blur();
+                const used = getUsedStdVars();
+                const next = input.id === "Q"
+                    ? (used.has('W') ? domCache.waterInput : used.has('A') ? domCache.assayInput : null)
+                    : input.id === "water" ? domCache.assayInput : null;
+                if (next && next.parentElement.style.display !== "none") { next.parentElement.style.display = "block"; next.focus(); } else input.blur();
             }
-            if (event.type === "change" && input.id === "water" && numericValue > 0) domCache.assayInput.focus();
+            if (event.type === "change" && input.id === "water" && numericValue > 0 && getUsedStdVars().has('A')) domCache.assayInput.focus();
             if ((input.id === "water" || input.id === "assay") && !/^\d*\.?\d{0,2}$/.test(value)) { input.value = value.slice(0, -1); return; }
             updateProgress();
         }
@@ -1509,17 +1530,36 @@
             if (e) e.remove(); input.removeAttribute('aria-describedby'); input.setCustomValidity("");
         }
 
+        // Standard variables (Q/W/A) actually used by the current product's formulas.
+        // Removing a variable from every formula hides its input field and stops
+        // asking for it. Falls back to the standard formulas before a product is chosen.
+        function getUsedStdVars() {
+            const used = new Set();
+            const sources = currentProduct
+                ? ['F1', 'F2', 'F3'].map(getFormulaText)
+                : Object.values(STD_FORMULAS);
+            sources.forEach(src => { if (src) { try { collectVars(parseFormula(src)).forEach(v => used.add(v)); } catch {} } });
+            return used;
+        }
+
+        function updateStdVarVisibility() {
+            const used = getUsedStdVars();
+            domCache.waterGroup.style.display = (used.has('W') && domCache.QInput.value.trim()) ? "block" : "none";
+            const prevFilled = used.has('W') ? domCache.waterInput.value.trim() : domCache.QInput.value.trim();
+            domCache.assayGroup.style.display = (used.has('A') && prevFilled) ? "block" : "none";
+        }
+
         function updateProgress() {
-            let f = 0;
-            if (domCache.QInput.value.trim()) f++;
-            if (domCache.waterInput.value.trim()) f++;
-            if (domCache.assayInput.value.trim()) f++;
+            const used = getUsedStdVars();
+            let f = 0, total = 0;
+            total++; if (domCache.QInput.value.trim()) f++;
+            if (used.has('W')) { total++; if (domCache.waterInput.value.trim()) f++; }
+            if (used.has('A')) { total++; if (domCache.assayInput.value.trim()) f++; }
             const extras = [...document.querySelectorAll('#extraVars input')];
-            const total = 3 + extras.length;
+            total += extras.length;
             extras.forEach(i => { if (i.value.trim()) f++; });
             domCache.progressBar.style.width = (f / total) * 100 + "%";
-            domCache.waterGroup.style.display = domCache.QInput.value.trim() ? "block" : "none";
-            domCache.assayGroup.style.display = domCache.waterInput.value.trim() ? "block" : "none";
+            updateStdVarVisibility();
             domCache.buttons.style.display = f === total ? "flex" : "none";
         }
 
@@ -1674,8 +1714,8 @@
                 <div class="verify-details-wrap">
                 <div class="verify-rows">
                 <div class="verify-row"><span class="verify-label">${calculation.qLabel} (Q):</span> <span class="verify-value">${Q}</span></div>
-                <div class="verify-row"><span class="verify-label">Water Content (W):</span> <span class="verify-value">${W}%</span></div>
-                <div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>
+                ${calculation.usesW ? `<div class="verify-row"><span class="verify-label">Water Content (W):</span> <span class="verify-value">${W}%</span></div>` : ''}
+                ${calculation.usesA ? `<div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>` : ''}
                 ${Object.entries(calculation.extraShown || {}).map(([k, v]) => `<div class="verify-row"><span class="verify-label">Value of ${k}:</span> <span class="verify-value">${v}</span></div>`).join('')}
                 <div class="verify-row"><span class="verify-label">Product:</span> <span class="verify-value">${calculation.product}</span></div>
                 <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value verify-formula">${calculation.formulaType} = ${calculation.formulaHtml}</span></div>
@@ -1688,8 +1728,7 @@
                     verifyModal.style.display = "none";
                     if (!confirmed) {
                         domCache.QInput.value = Q; domCache.waterInput.value = W; domCache.assayInput.value = A;
-                        domCache.progressBar.style.width = "100%"; domCache.buttons.style.display = "flex";
-                        domCache.assayGroup.style.display = "block"; domCache.waterGroup.style.display = "block"; domCache.QInput.focus();
+                        updateProgress(); domCache.QInput.focus();
                     }
                     resolve(confirmed);
                 };
@@ -1701,6 +1740,7 @@
         }
 
         async function calculate(formulaType) {
+            if (domCache.formulaCalculator.classList.contains('input-locked')) return;   // batch complete — assign the lot first
             if (!currentProduct) { openProductGate(); return; }
             if (currentProduct === 'manual') {
                 try { validateFormulaText(manualFormulas[formulaType]); }
@@ -1710,9 +1750,10 @@
             let Q, W, A;
             try { Q = new Decimal(domCache.QInput.value || 0); W = new Decimal(domCache.waterInput.value || 0); A = new Decimal(domCache.assayInput.value || 0); }
             catch { alert("Invalid input values."); return; }
-            if (Q.isNaN() || W.isNaN() || A.isNaN() || Q.lte(0) || W.lte(0) || A.lte(0)) { alert("Please enter valid values for Q, W, and A (all must be greater than 0)."); return; }
+            const usedVars = collectVars(parseFormula(getFormulaText(formulaType)));
+            if (Q.isNaN() || Q.lte(0) || (usedVars.has('W') && (W.isNaN() || W.lte(0))) || (usedVars.has('A') && (A.isNaN() || A.lte(0)))) { alert("Please enter valid values (every variable the formula uses must be greater than 0)."); return; }
             if (Q.gt(CONSTANTS.Q_MAX)) { alert(`Quantity (Q) must be ≤ ${CONSTANTS.Q_MAX}.`); return; }
-            if (A.gt(CONSTANTS.A_MAX) || W.gt(CONSTANTS.W_MAX)) { alert("Invalid values: Ensure A ≤ 100 and W ≤ 99.99."); return; }
+            if ((usedVars.has('A') && A.gt(CONSTANTS.A_MAX)) || (usedVars.has('W') && W.gt(CONSTANTS.W_MAX))) { alert("Invalid values: Ensure A ≤ 100 and W ≤ 99.99."); return; }
 
             // Extra variables typed into a manual formula — each one needs a value.
             const extra = {};
@@ -1754,8 +1795,7 @@
             // Clear inputs immediately so they're ready for the next entry
             domCache.QInput.value = ""; domCache.waterInput.value = ""; domCache.assayInput.value = "";
             document.querySelectorAll('#extraVars input').forEach(i => { i.value = ''; });
-            domCache.progressBar.style.width = "0%"; domCache.buttons.style.display = "none";
-            domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
+            updateProgress();
             updateQuantityTracker();
 
             // New entries are always prepended to the top of the list, right below the
@@ -1937,6 +1977,7 @@
             });
             // Start ready-to-use with the default preset already applied.
             applyDrugPreset(drugSelector.value);
+            updateProgress();
             document.getElementById('holdStartDate').addEventListener('change', updateHoldPeriod);
             const holdDays = document.getElementById('holdDays');
             holdDays.addEventListener('keydown', e => { if (['e', 'E', '+', '-', '.', ','].includes(e.key)) e.preventDefault(); });
