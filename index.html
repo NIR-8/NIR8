@@ -219,40 +219,49 @@
             display: flex; flex-direction: column;
             padding-top: 10px; margin-top: 5px; border-top: 1px solid #eee;
         }
+        /* Each card is a fixed A4-landscape sheet (280mm x 186mm) on every device.
+           On narrower screens the whole sheet is scaled down to fit (never
+           reflowed) via --sheet-scale, which JS keeps in sync with the width. */
         .calculation-entry {
-            margin-bottom: 15px; border: 1px solid #000; padding: 0;
-            position: relative; width: 100%; font-size: 14pt;
+            --sheet-w: 280mm;
+            margin: 0 auto 15px; border: 1px solid #000; padding: 0;
+            position: relative; width: var(--sheet-w); height: 186mm; flex: none;
+            font-size: 14pt; background: #fff; text-align: left;
             border-radius: 0; box-sizing: border-box; overflow: hidden;
-            scroll-margin-top: 70px;
+            scroll-margin-top: 70px; zoom: var(--sheet-scale, 1);
+            box-shadow: 0 2px 8px rgba(0,0,0,.18);
         }
         .calculation-entry::before {
-            content: "Assay Based Calculation"; display: block;
-            background: #f0f0f0; padding: 5mm; text-align: center;
+            content: "Assay Based Calculation"; position: absolute; top: 0; left: 0;
+            width: 100%; background: #f0f0f0; padding: 5mm; text-align: center;
             font-size: 16pt; font-weight: 600; border-bottom: 1px solid #000; box-sizing: border-box;
         }
         .calculation-entry::after {
             content: "Remarks: ______________________________________________________________";
-            display: block; background: #f0f0f0;
+            position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f0f0;
             padding: 5mm; font-size: 14pt; border-top: 1px solid #000; box-sizing: border-box;
+            text-align: left; white-space: nowrap; overflow: hidden;
         }
         .entry-meta-row {
             display: flex; justify-content: space-between; align-items: baseline;
-            padding: 4mm 15mm 0; font-size: 14pt; gap: 10px;
+            margin-top: 24mm; padding: 0 10mm; font-size: 12pt; gap: 10px;
         }
-        .calculation-entry .lot-label { font-size: 14pt; text-align: left; }
+        .calculation-entry .lot-label { font-size: 12pt; text-align: left; }
         .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
         .reference-values { text-align: right; font-size: 10pt; color: #000; white-space: nowrap; }
         .calculation-content {
-            padding: 4mm 15mm; overflow: hidden; font-size: 14pt; text-align: center;
+            margin-top: 8mm; padding: 0 15mm; overflow: hidden; font-size: 14pt; text-align: left;
         }
+        /* Keep the delete button a comfortable tap size even when the sheet is scaled down */
         .delete-button {
             position: absolute; top: 10px; left: 10px; background: transparent; border: none;
-            cursor: pointer; font-size: 20px; color: red; padding: 0;
+            cursor: pointer; font-size: 20px; color: red; padding: 0; z-index: 6;
             width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+            zoom: var(--sheet-inv, 1);
         }
         .delete-button:hover { color: #c00; }
         .page-number {
-            position: absolute; bottom: 1mm; right: 4mm; font-size: 8pt;
+            position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt;
             color: #000; font-weight: 700; z-index: 5;
         }
 
@@ -522,34 +531,55 @@
         }
         .fab:hover { transform: scale(1.12); background: #eaf7ee; }
 
+        /* ── FORMULA CARD (above the input card) + PRODUCT GATE ── */
+        .formula-spec-card {
+            display: none; background: #fff; padding: 18px 22px; width: 90%; max-width: 400px;
+            border-radius: 16px; box-shadow: 0 8px 24px rgba(20,40,60,.08); margin-bottom: 14px;
+            border: 1px solid rgba(20,40,60,.05); border-left: 5px solid #157347; text-align: left;
+        }
+        .formula-spec-card.show { display: block; }
+        .formula-spec-card.is-manual { border-left-color: #d98300; }
+        .spec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .spec-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+        .spec-product { font-size: 13px; font-weight: 600; color: #157347; }
+        .is-manual .spec-product { color: #b86e00; }
+        .spec-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: #e7f5ec; color: #157347; white-space: nowrap; }
+        .is-manual .spec-badge { background: #fff3dd; color: #b86e00; }
+        .spec-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #eef1f4; }
+        .spec-row-label { font-weight: 700; min-width: 26px; font-size: 14px; }
+        .spec-row-body { flex: 1; min-width: 0; overflow-x: auto; font-size: 14px; }
+        .spec-row-body .frac { font-size: 13px; }
+        .spec-edit-row { padding: 8px 0; border-top: 1px solid #eef1f4; }
+        .spec-edit-top { display: flex; align-items: center; gap: 10px; }
+        .spec-edit-top input { flex: 1; font-family: ui-monospace, Menlo, Consolas, monospace; text-align: left; }
+        .spec-preview { margin: 6px 0 0 36px; overflow-x: auto; font-size: 13px; min-height: 0; }
+        .spec-error { margin: 4px 0 0 36px; font-size: 12px; color: #c0392b; }
+        .spec-hint { margin-top: 8px; font-size: 12px; color: #6b7480; line-height: 1.4; }
+        .product-gate-card { background: #fff; border-radius: 16px; padding: 26px 22px; width: 92%; max-width: 380px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+        .product-gate-card h2 { margin: 0 0 4px; font-size: 20px; }
+        .product-gate-card p { margin: 0 0 16px; font-size: 13px; color: #6b7480; }
+        .gate-btn { display: block; width: 100%; margin-bottom: 10px; text-align: left; padding: 14px 16px; }
+        .gate-btn small { display: block; font-weight: 400; font-size: 12px; opacity: .85; margin-top: 2px; }
+        .gate-btn.manual { background: #d98300; }
+        .product-label { font-size: 12pt; font-weight: 600; text-align: center; flex: 1; }
+        @media print { .formula-spec-card, #productGate { display: none !important; } }
+
         /* ── PER-LOT A/C VARIATION HIGHLIGHT (light red) ── */
         .acb-input.acb-varies { background: #ffe3e3 !important; border-color: #f1b0b0; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .calculation-entry { font-size: 12pt; }
-            .calculation-entry::before { font-size: 14pt; padding: 4mm; }
-            .calculation-entry::after { font-size: 12pt; padding: 4mm; }
-            .entry-meta-row { padding: 3mm 10mm 0; font-size: 12pt; }
-            .calculation-entry .lot-label { font-size: 12pt; }
-            .reference-values { font-size: 10pt; }
-            .calculation-content { font-size: 12pt; padding: 3mm 10mm; }
-            .page-number { font-size: 10pt; bottom: 2mm; right: 10mm; }
+            /* more room for the scaled-down sheet */
+            .calculation-steps { width: 100%; padding: 8px; }
             .acb-td, .acb-th { font-size: 12px; padding: 6px; min-width: 50px; }
             .acb-input, .acb-span { font-size: 12px; padding: 4px; }
         }
         @media (max-width: 480px) {
-            .calculation-entry { font-size: 10pt; }
-            .calculation-entry::before { font-size: 12pt; padding: 3mm; }
-            .calculation-entry::after { font-size: 10pt; padding: 3mm; }
-            .entry-meta-row { padding: 3mm 8mm 0; font-size: 10pt; }
-            .calculation-entry .lot-label { font-size: 10pt; }
             .reference-values { font-size: 10pt; }
-            .calculation-content { font-size: 10pt; padding: 3mm 8mm; }
-            .page-number { font-size: 8pt; bottom: 1mm; right: 8mm; }
             .acb-td, .acb-th { font-size: 10px; padding: 4px; min-width: 40px; }
             .acb-input, .acb-span { font-size: 10px; padding: 3px; }
             .calculator-container { width: 100%; padding: 15px; }
+            .formula-spec-card { width: 100%; padding: 14px 15px; border-radius: 12px; }
             .acb-input, input { font-size: 14px; }
             button { font-size: 14px; padding: 10px; }
             .qty-tracker-value { font-size: 15px; }
@@ -563,6 +593,7 @@
         @media (min-width: 900px) {
             body { padding-top: 84px; }
             .calculator-container:not(#acbCalculator) { max-width: 460px; padding: 32px; }
+            .formula-spec-card { max-width: 460px; padding: 20px 32px; }
             .tab-bar, #formulaCalculator { max-width: 460px; }
             .hold-period-card { max-width: 460px; }
             .calculation-steps { max-width: 760px; }
@@ -590,6 +621,7 @@
                 max-height: none !important; overflow: visible !important;
             }
             .calculation-entry {
+                zoom: 1 !important; box-shadow: none; text-align: left;
                 width: 100%; height: 186mm; margin: 0 auto; padding: 0;
                 border: 1px solid #000; font-size: 12pt; position: relative;
                 background: #fff; overflow: hidden;
@@ -605,7 +637,7 @@
             .calculation-entry::after {
                 content: "Remarks: ______________________________________________________________";
                 position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f0f0;
-                padding: 5mm; font-size: 14pt; border-top: 1px solid #000;
+                padding: 5mm; font-size: 14pt; border-top: 1px solid #000; text-align: left;
             }
             .entry-meta-row { margin-top: 24mm; padding: 0 10mm; font-size: 12pt; }
             .calculation-entry .lot-label { font-size: 12pt; color: #000; }
@@ -647,6 +679,17 @@
         <button type="button" class="tab-btn" id="tabAcbBtn" role="tab" aria-selected="false" aria-controls="acbCalculator">(A+C)-B</button>
     </div>
 
+    <!-- FORMULA CARD — sits above the input card. Locked for fixed products; editable only for Manual. -->
+    <div class="formula-spec-card" id="formulaSpecCard" aria-live="polite">
+        <div class="spec-head">
+            <h2>Formula</h2>
+            <span class="spec-product" id="specProduct"></span>
+            <span class="spec-badge" id="specBadge"></span>
+        </div>
+        <div id="specRows"></div>
+        <div class="spec-hint" id="specHint"></div>
+    </div>
+
     <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container active">
         <div class="formula-header-row">
@@ -655,6 +698,7 @@
         <div class="input-group">
             <label for="drugSelector">Product:</label>
             <select id="drugSelector">
+                <option value="" disabled selected>— Select product —</option>
                 <option value="valacyclovir">Valacyclovir — Std Qty 417 kg</option>
                 <option value="levetiracetam">Levetiracetam — Std Qty 268.750 kg</option>
                 <option value="manual">Manual — enter your own Std Qty</option>
@@ -814,6 +858,17 @@
     </div>
 
     <!-- VERIFY MODAL -->
+    <!-- PRODUCT GATE — shown on every page load; calculations stay blocked until a product is chosen -->
+    <div id="productGate" class="info-modal" role="dialog" aria-modal="true" aria-labelledby="gateTitle" style="z-index:20000">
+        <div class="product-gate-card">
+            <h2 id="gateTitle">Select product</h2>
+            <p>Choose the product first. Its formulas are then shown above the input card — check them against the BMR before dispensing.</p>
+            <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<small>Std Qty 417 kg · fixed formulas</small></button>
+            <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<small>Std Qty 268.750 kg · fixed formulas</small></button>
+            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · enter your own formulas</small></button>
+        </div>
+    </div>
+
     <div id="verifyModal" class="info-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
         <div class="modal-content">
             <span class="close" id="verifyModalClose" aria-label="Close">&times;</span>
@@ -954,39 +1009,171 @@
             return stepLines + resultLine;
         }
 
+        // ── PRODUCT FORMULAS — the single source of truth ───────────────────────
+        // Edit a product's formulas HERE (per its BMR). The formula card, the
+        // verify pop-up, the calculation AND the printed card all read from it.
+        // Variables: Q = quantity, W = water content %, A = assay %.
+        const STD_FORMULAS = {
+            F1: 'Q*100*100/(A*(100-W))',
+            F2: 'Q*A*(100-W)/(100*100)',
+            F3: 'Q*100*100/(A*(100-W))'
+        };
+        const PRODUCTS = {
+            valacyclovir:  { name: 'Valacyclovir',  formulas: STD_FORMULAS },
+            levetiracetam: { name: 'Levetiracetam', formulas: STD_FORMULAS },
+            manual:        { name: 'Manual',        formulas: null }   // typed by the user
+        };
+        let currentProduct = '';                      // '' until chosen on the gate
+        const manualFormulas = { F1: '', F2: '', F3: '' };
+
+        // ── Safe formula parser (no eval) ───────────────────────────────────────
+        function parseFormula(src) {
+            const text = String(src || '').trim();
+            if (!text) throw new Error('Formula is empty.');
+            if (text.length > 80) throw new Error('Formula is too long (max 80 characters).');
+            const norm = text.replace(/[×·]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-');
+            const tokens = [];
+            const re = /\s*(\d+\.?\d*|\.\d+|[QWAqwa]|[-+*\/()])\s*/y;
+            let pos = 0;
+            while (pos < norm.length) {
+                re.lastIndex = pos;
+                const m = re.exec(norm);
+                if (!m) throw new Error(`Unexpected "${norm[pos]}" — use only Q, W, A, numbers, + − × ÷ ( ).`);
+                tokens.push(m[1]); pos = re.lastIndex;
+            }
+            let i = 0, usesQ = false;
+            const peek = () => tokens[i];
+            function expr() {
+                let n = term();
+                while (peek() === '+' || peek() === '-') { const op = tokens[i++]; const r = term(); n = { t: 'bin', op, l: n, r, hasVar: n.hasVar || r.hasVar }; }
+                return n;
+            }
+            function term() {
+                let n = unary();
+                while (peek() === '*' || peek() === '/') { const op = tokens[i++]; const r = unary(); n = { t: 'bin', op, l: n, r, hasVar: n.hasVar || r.hasVar }; }
+                return n;
+            }
+            function unary() {
+                if (peek() === '-') { i++; const e = unary(); return { t: 'neg', e, hasVar: e.hasVar }; }
+                if (peek() === '+') throw new Error('Unexpected "+".');
+                return primary();
+            }
+            function primary() {
+                const tk = tokens[i];
+                if (tk === undefined) throw new Error('Formula ends unexpectedly.');
+                if (tk === '(') {
+                    i++; const e = expr();
+                    if (tokens[i] !== ')') throw new Error('Missing closing bracket ")".');
+                    i++; return { t: 'grp', e, hasVar: e.hasVar };
+                }
+                if (/^[QWAqwa]$/.test(tk)) { i++; const name = tk.toUpperCase(); if (name === 'Q') usesQ = true; return { t: 'var', name, hasVar: true }; }
+                if (/^[\d.]/.test(tk)) { i++; return { t: 'num', raw: tk, hasVar: false }; }
+                throw new Error(`Unexpected "${tk}".`);
+            }
+            const root = expr();
+            if (i < tokens.length) throw new Error(tokens[i] === ')' ? 'Extra closing bracket ")".' : `Unexpected "${tokens[i]}" — missing operator?`);
+            if (!usesQ) throw new Error('Formula must use Q (quantity).');
+            return root;
+        }
+        function evalAst(n, v) {
+            switch (n.t) {
+                case 'num': return n.d || new Decimal(n.raw);
+                case 'var': return v[n.name];
+                case 'neg': return evalAst(n.e, v).neg();
+                case 'grp': return evalAst(n.e, v);
+                default: {
+                    const l = evalAst(n.l, v), r = evalAst(n.r, v);
+                    if (n.op === '+') return l.plus(r);
+                    if (n.op === '-') return l.minus(r);
+                    if (n.op === '*') return l.times(r);
+                    if (r.isZero()) throw new Error('Division by zero');
+                    return l.div(r);
+                }
+            }
+        }
+        const OPSYM = { '+': ' + ', '-': ' − ', '*': ' × ', '/': ' ÷ ' };
+        function renderAst(n) {
+            switch (n.t) {
+                case 'num': return n.raw;
+                case 'var': return n.name;
+                case 'neg': return '−' + renderAst(n.e);
+                case 'grp': return '(' + renderAst(n.e) + ')';
+                default: return renderAst(n.l) + OPSYM[n.op] + renderAst(n.r);
+            }
+        }
+        const stripGrp = n => { while (n.t === 'grp') n = n.e; return n; };
+        // Show a tree either inline or — when its top level is a division — as a fraction.
+        function showAst(n) {
+            const root = stripGrp(n);
+            return (root.t === 'bin' && root.op === '/') ? frac(renderAst(stripGrp(root.l)), renderAst(stripGrp(root.r))) : renderAst(root);
+        }
+        // Replace variables by their entered values (keeps structure + brackets).
+        function substAst(n, shown, v) {
+            switch (n.t) {
+                case 'var': return { t: 'num', raw: shown[n.name], d: v[n.name], hasVar: true };
+                case 'num': return n;
+                case 'neg': return { t: 'neg', e: substAst(n.e, shown, v), hasVar: n.hasVar };
+                case 'grp': return { t: 'grp', e: substAst(n.e, shown, v), hasVar: n.hasVar };
+                default: return { t: 'bin', op: n.op, l: substAst(n.l, shown, v), r: substAst(n.r, shown, v), hasVar: n.hasVar };
+            }
+        }
+        // Evaluate bracketed groups and constant-only parts (e.g. (100 − W) → 97, 100 × 100 → 10000).
+        function collapseAst(n, v) {
+            const num = node => { const d = evalAst(node, v); return { t: 'num', raw: formatNumber(d), d, hasVar: node.hasVar }; };
+            switch (n.t) {
+                case 'num': return n;
+                case 'grp': { const e = n.e; return (e.t === 'bin' || e.t === 'neg') ? num(e) : collapseAst(e, v); }
+                case 'neg': return n.hasVar ? { t: 'neg', e: collapseAst(n.e, v), hasVar: true } : num(n);
+                default: return n.hasVar ? { t: 'bin', op: n.op, l: collapseAst(n.l, v), r: collapseAst(n.r, v), hasVar: true } : num(n);
+            }
+        }
+        // Same, but the brackets that merely wrap a whole numerator/denominator are not collapsed.
+        function collapseTop(n, v) {
+            const root = stripGrp(n);
+            if (root.t === 'bin' && root.op === '/' && root.hasVar) {
+                return { t: 'bin', op: '/', l: collapseAst(stripGrp(root.l), v), r: collapseAst(stripGrp(root.r), v), hasVar: true };
+            }
+            return collapseAst(root, v);
+        }
+        function validateFormulaText(src) {
+            const ast = parseFormula(src);
+            const test = evalAst(ast, { Q: new Decimal(100), W: new Decimal(5), A: new Decimal(99) });  // catches e.g. Q/0
+            if (!test.isFinite()) throw new Error('Formula does not give a valid number.');
+            return ast;
+        }
+        function getFormulaText(type) {
+            if (!currentProduct) return '';
+            return currentProduct === 'manual' ? manualFormulas[type] : PRODUCTS[currentProduct].formulas[type];
+        }
+        const prettyFormula = src => { try { return renderAst(parseFormula(src)); } catch { return String(src); } };
+
         function createCalculation(formulaType, Q, W, A) {
             try {
-                const hundred = new Decimal(100);
-                const fQ = formatNumber(Q), fA = formatNumber(A, true), fW = formatNumber(W, true);
-                if (formulaType === "F1" || formulaType === "F3") {
-                    const step3 = hundred.sub(W), numerator = Q.mul(hundred).mul(hundred), denominator = A.mul(step3);
-                    if (denominator.isZero()) throw new Error("Division by zero");
-                    const result = numerator.div(denominator), rounded = result.toFixed(3), fn = formulaType === "F1" ? "1" : "3";
-                    const steps = [
-                        frac(`${fQ} × 100 × 100`, `${fA} × (100 − ${fW})`),
-                        frac(`${fQ} × 100 × 100`, `${fA} × ${formatNumber(step3)}`),
-                        frac(formatNumber(numerator), formatNumber(denominator))
-                    ];
-                    const html = buildCalculationHtml(fW, fA, fn, steps, rounded, result);
-                    return {
-                        html,
-                        formulaType, Q: Q.toString(), W: W.toString(), A: A.toString(), result: rounded, isFinal: true
-                    };
-                } else if (formulaType === "F2") {
-                    const step1 = hundred.sub(W), numerator = Q.mul(A).mul(step1), denominator = hundred.mul(hundred);
-                    const result = numerator.div(denominator), rounded = result.toFixed(3);
-                    const steps = [
-                        frac(`${fQ} × ${fA} × (100 − ${fW})`, `100 × 100`),
-                        frac(`${fQ} × ${fA} × ${formatNumber(step1)}`, formatNumber(denominator)),
-                        frac(formatNumber(numerator), formatNumber(denominator))
-                    ];
-                    const html = buildCalculationHtml(fW, fA, "2", steps, rounded, result);
-                    return {
-                        html,
-                        formulaType, Q: Q.toString(), W: W.toString(), A: A.toString(), result: rounded, isFinal: false
-                    };
+                const exprText = getFormulaText(formulaType);
+                const ast = validateFormulaText(exprText);
+                const vals = { Q, W, A };
+                const shown = { Q: formatNumber(Q), W: formatNumber(W, true), A: formatNumber(A, true) };
+                const result = evalAst(ast, vals);
+                if (!result.isFinite() || result.lte(0)) throw new Error('Formula gave a non-positive result.');
+                const rounded = result.toFixed(3);
+                const fn = formulaType.slice(1);
+
+                const withVals = substAst(ast, shown, vals);
+                const collapsed = collapseTop(withVals, vals);
+                const steps = [showAst(ast), showAst(withVals)];
+                const c = showAst(collapsed);
+                if (c !== steps[1]) steps.push(c);
+                const root = stripGrp(ast);
+                if (root.t === 'bin' && root.op === '/') {
+                    const numD = evalAst(stripGrp(root.l), vals), denD = evalAst(stripGrp(root.r), vals);
+                    const last = frac(formatNumber(numD), formatNumber(denD));
+                    if (last !== steps[steps.length - 1]) steps.push(last);
                 }
-                return null;
+                const html = buildCalculationHtml(null, null, fn, steps, rounded, result);
+                return {
+                    html, formulaType, Q: Q.toString(), W: W.toString(), A: A.toString(), result: rounded,
+                    isFinal: formulaType !== "F2", product: PRODUCTS[currentProduct].name, formulaText: prettyFormula(exprText)
+                };
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
 
@@ -1009,6 +1196,76 @@
             const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 15);
             const endEl = document.getElementById("holdEndDateStatic");
             if (endEl) endEl.textContent = fmtDDMMYYYY(end);
+        }
+
+        function renderFormulaCard() {
+            const card = document.getElementById('formulaSpecCard');
+            const rows = document.getElementById('specRows');
+            const onFormula = domCache.formulaCalculator.classList.contains('active');
+            card.classList.toggle('show', !!currentProduct && onFormula);
+            if (!currentProduct) return;
+            const manual = currentProduct === 'manual';
+            card.classList.toggle('is-manual', manual);
+            document.getElementById('specProduct').textContent = PRODUCTS[currentProduct].name;
+            document.getElementById('specBadge').textContent = manual ? '✎ Editable' : '🔒 Fixed';
+            document.getElementById('specHint').textContent = manual
+                ? 'Type each formula using Q, W, A, numbers, + − × ÷ and brackets, e.g. Q*100*100/(A*(100-W)). Check them against the BMR.'
+                : 'Fixed for this product — cannot be changed here. Check against the BMR before dispensing; choose Manual for a different formula.';
+            rows.innerHTML = '';
+            ['F1', 'F2', 'F3'].forEach(type => {
+                if (!manual) {
+                    const row = document.createElement('div'); row.className = 'spec-row';
+                    let body; try { body = showAst(parseFormula(PRODUCTS[currentProduct].formulas[type])); } catch { body = '<span class="spec-error">Invalid formula in PRODUCTS table</span>'; }
+                    row.innerHTML = `<span class="spec-row-label">${type}</span><div class="spec-row-body">${body}</div>`;
+                    rows.appendChild(row);
+                } else {
+                    const row = document.createElement('div'); row.className = 'spec-edit-row';
+                    row.innerHTML = `<div class="spec-edit-top"><span class="spec-row-label">${type}</span>
+                        <input type="text" id="manualInput${type}" autocomplete="off" spellcheck="false" inputmode="text"
+                               placeholder="e.g. Q*100*100/(A*(100-W))" aria-label="Formula ${type}" maxlength="80"></div>
+                        <div class="spec-preview" id="manualPreview${type}"></div><div class="spec-error" id="manualError${type}"></div>`;
+                    rows.appendChild(row);
+                    const input = row.querySelector('input');
+                    input.value = manualFormulas[type];
+                    const refresh = () => {
+                        manualFormulas[type] = input.value.trim();
+                        const prev = row.querySelector('.spec-preview'), err = row.querySelector('.spec-error');
+                        if (!manualFormulas[type]) { prev.innerHTML = ''; err.textContent = ''; return; }
+                        try { prev.innerHTML = '= ' + showAst(validateFormulaText(manualFormulas[type])); err.textContent = ''; }
+                        catch (e) { prev.innerHTML = ''; err.textContent = e.message; }
+                    };
+                    input.addEventListener('input', refresh); refresh();
+                }
+            });
+            updateSheetScale();
+        }
+
+        function renderFormulaCardVisibility() {
+            document.getElementById('formulaSpecCard').classList.toggle('show', !!currentProduct && domCache.formulaCalculator.classList.contains('active'));
+        }
+
+        function openProductGate() { document.getElementById('productGate').style.display = 'flex'; document.querySelector('#productGate .gate-btn')?.focus(); }
+        function clearAllCalculations() {
+            calculations = []; calculationCount = 0; domCache.stepsContainer.innerHTML = '';
+            refreshStepsPanelVisibility(); updatePageNumbers(); updateQuantityTracker();
+        }
+        function selectProduct(val) {
+            const sel = document.getElementById('drugSelector');
+            if (val === currentProduct) { document.getElementById('productGate').style.display = 'none'; return true; }
+            if (calculationCount > 0 && currentProduct) {
+                if (!confirm(`Changing the product will clear the ${calculationCount} existing calculation card(s), because they were made with ${PRODUCTS[currentProduct].name}'s formulas. Continue?`)) {
+                    sel.value = currentProduct; return false;
+                }
+                clearAllCalculations();
+            }
+            currentProduct = val; sel.value = val;
+            toggleManualStdRow(val);
+            if (val === 'manual') { domCache.stdQtyInput.value = ''; domCache.stdCInput.value = ''; }
+            applyDrugPreset(val);
+            renderFormulaCard();
+            document.getElementById('productGate').style.display = 'none';
+            requestAnimationFrame(() => (val === 'manual' ? document.getElementById('manualInputF1') : domCache.QInput)?.focus());
+            return true;
         }
 
         function toggleManualStdRow(preset) {
@@ -1041,6 +1298,18 @@
             const hasContent = calculationCount > 0;
             const onFormula = domCache.formulaCalculator.classList.contains('active');
             domCache.calculationSteps.classList.toggle('hidden', !(hasContent && onFormula));
+            updateSheetScale();
+        }
+
+        // Scale the fixed A4 sheet down to the available width (never up).
+        const SHEET_WIDTH_PX = 280 * 96 / 25.4;
+        function updateSheetScale() {
+            const w = domCache.stepsContainer.clientWidth;
+            if (!w) return;                       // panel hidden: keep previous value
+            const scale = Math.min(1, w / SHEET_WIDTH_PX);
+            const root = document.documentElement.style;
+            root.setProperty('--sheet-scale', scale.toFixed(4));
+            root.setProperty('--sheet-inv', (1 / scale).toFixed(4));
         }
 
         // Selecting a lot copies the currently dispensed amount into that lot's
@@ -1161,6 +1430,7 @@
             document.getElementById('tabFormulaBtn')?.setAttribute('aria-selected', String(!showAcb));
             document.getElementById('tabAcbBtn')?.setAttribute('aria-selected', String(showAcb));
             refreshStepsPanelVisibility();
+            renderFormulaCardVisibility();
             requestAnimationFrame(() => (showAcb ? domCache.acbInputs.b[0] : domCache.QInput)?.focus());
         }
 
@@ -1304,7 +1574,8 @@
                 <div class="verify-row"><span class="verify-label">Quantity (Q):</span> <span class="verify-value">${Q}</span></div>
                 <div class="verify-row"><span class="verify-label">Water Content (W):</span> <span class="verify-value">${W}%</span></div>
                 <div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>
-                <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value">F${calculation.formulaType.replace("F","")}</span></div>
+                <div class="verify-row"><span class="verify-label">Product:</span> <span class="verify-value">${calculation.product}</span></div>
+                <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value">${calculation.formulaType} = ${calculation.formulaText}</span></div>
                 </div>
                 </div>
             `;
@@ -1327,6 +1598,11 @@
         }
 
         async function calculate(formulaType) {
+            if (!currentProduct) { openProductGate(); return; }
+            if (currentProduct === 'manual') {
+                try { validateFormulaText(manualFormulas[formulaType]); }
+                catch (e) { alert(`Manual formula ${formulaType}: ${e.message}`); document.getElementById('manualInput' + formulaType)?.focus(); return; }
+            }
             if (calculationCount >= CONSTANTS.MAX_CALCULATIONS) { alert(`Maximum of ${CONSTANTS.MAX_CALCULATIONS} calculations reached.`); return; }
             let Q, W, A;
             try { Q = new Decimal(domCache.QInput.value || 0); W = new Decimal(domCache.waterInput.value || 0); A = new Decimal(domCache.assayInput.value || 0); }
@@ -1353,6 +1629,7 @@
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="entry-meta-row">
                     <div class="lot-label"></div>
+                    <div class="product-label">${calculationResult.product}</div>
                     <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 </div>
                 <div class="calculation-content">${calculationResult.html}</div>
@@ -1469,9 +1746,6 @@
             // Only steal focus to Q if the user hasn't already started typing somewhere
             // (other render-blocking resources can delay DOMContentLoaded, so it may
             // fire after the user has already begun entering values).
-            const userAlreadyTyping = document.activeElement !== document.body ||
-                domCache.QInput.value || domCache.waterInput.value || domCache.assayInput.value;
-            if (!userAlreadyTyping) requestAnimationFrame(() => document.getElementById('drugSelector').focus());
 
             [domCache.QInput, domCache.waterInput, domCache.assayInput].forEach(input => {
                 input.addEventListener("input", e => { validateInput(input); handleInput(e); });
@@ -1531,18 +1805,14 @@
 
             // Plain product dropdown: switching it applies the preset immediately.
             const drugSelector = document.getElementById('drugSelector');
-            drugSelector.addEventListener('change', () => {
-                const val = drugSelector.value;
-                toggleManualStdRow(val);
-                if (val === 'manual') { domCache.stdQtyInput.value = ''; domCache.stdCInput.value = ''; }
-                applyDrugPreset(val);
-                if (val === 'manual') domCache.stdQtyInput.focus();
-            });
+            drugSelector.addEventListener('change', () => { if (drugSelector.value) selectProduct(drugSelector.value); });
+            document.querySelectorAll('#productGate .gate-btn').forEach(btn => btn.addEventListener('click', () => selectProduct(btn.dataset.product)));
+            openProductGate();
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (!el) return;
                 el.addEventListener('input', () => validateInput(el));
                 el.addEventListener('change', () => {
-                    if (drugSelector.value === 'manual') applyDrugPreset('manual');
+                    if (currentProduct === 'manual') applyDrugPreset('manual');
                     updateQuantityTracker();
                 });
             });
@@ -1584,7 +1854,7 @@
             }
         });
 
-        window.addEventListener('resize', updatePageNumbers);
+        window.addEventListener('resize', () => { updatePageNumbers(); updateSheetScale(); });
     </script>
 
     <!-- SIDENAV + WRITE US SCRIPT -->
