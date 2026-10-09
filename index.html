@@ -558,6 +558,7 @@
         .spec-cell-body .frac { font-size: 13px; line-height: 1.45; margin: 0; }
         .spec-cell-body .frac .frac-num, .spec-cell-body .frac .frac-den { padding: 2px 5px; }
         .spec-cell-edit { align-items: stretch; min-width: 190px; }
+        .link-badge { margin-left: 4px; font-size: 11px; cursor: help; opacity: .85; }
         .spec-cell-edit .spec-cell-label { text-align: left; }
         .frac-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; }
         .frac-edit input { width: 100%; text-align: center; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px;
@@ -599,6 +600,16 @@
             .acb-input, .acb-span { font-size: 12px; padding: 4px; }
         }
         @media (max-width: 480px) {
+            /* ── FOOTER — drop out of the fixed layer on phones so it can never
+               overlap content; it flows at the end of the page instead (pinned
+               to the viewport bottom on short pages via margin-top:auto) ── */
+            body { padding-bottom: 24px; }
+            footer {
+                position: static; margin-top: auto; z-index: auto;
+                font-size: 11px; line-height: 1.4; padding: 7px 6px;
+                width: 100%; box-sizing: border-box;
+            }
+            footer .info-btn { min-height: 32px; padding: 2px 8px; font-size: 11px; }
             .reference-values { font-size: 10pt; }
             .acb-td, .acb-th { font-size: 10px; padding: 4px; min-width: 40px; }
             .acb-input, .acb-span { font-size: 10px; padding: 3px; }
@@ -1202,6 +1213,45 @@
         const manualParts = {};
         ['F1', 'F2', 'F3'].forEach(t => { manualParts[t] = splitFormula(STD_FORMULAS[t]); manualFormulas[t] = composeFormula(manualParts[t]); });
 
+        // ── F1 / F2 / F3 are algebraically linked ────────────────────────────
+        //   F1 = Q·100·100 / (A·(100−W))     (forward: raw qty from target Q)
+        //   F2 = Q·A·(100−W) / (100·100)     (the exact inverse of F1)
+        //   F3 = same fraction as F1         (only the meaning of Q differs:
+        //                                     Std Qty for F1, Remaining for F3)
+        // So one fraction defines all three: editing any box rewrites the others
+        // automatically — F2 gets numerator/denominator swapped, F1 and F3 share
+        // the same fraction. Derivation always starts from the box just edited.
+        const manualEls = {};
+        let linkingFormulas = false;
+        function reciprocalParts(p) {
+            const n = p.n.trim(), d = p.d.trim();
+            if (d === '1') return { n, d: '' };              // ÷1 is a no-op — keep it clean
+            return d ? { n: d, d: n } : { n: '1', d: n };    // no denominator → 1/(…)
+        }
+        function setManualParts(type, parts) {
+            manualParts[type] = parts;
+            manualFormulas[type] = composeFormula(parts);
+            const els = manualEls[type];
+            if (!els) return;
+            els.nI.value = parts.n; els.dI.value = parts.d;
+            let msg = '';
+            if (!parts.n.trim()) msg = 'Top part is empty.';
+            else { try { validateFormulaText(manualFormulas[type]); } catch (e) { msg = e.message; } }
+            els.err.textContent = msg; els.nI.classList.toggle('bad', !!msg); els.dI.classList.toggle('bad', !!msg);
+        }
+        function linkFormulas(source) {
+            if (linkingFormulas) return;
+            const src = manualParts[source];
+            if (!src || !src.n.trim()) return;
+            try { validateFormulaText(composeFormula(src)); } catch { return; }   // sync only from a valid formula
+            linkingFormulas = true;
+            const base = (source === 'F2') ? reciprocalParts(src) : { n: src.n, d: src.d };
+            setManualParts('F1', { ...base });
+            setManualParts('F3', { ...base });
+            setManualParts('F2', reciprocalParts(base));
+            linkingFormulas = false;
+        }
+
         // What Q means for each formula: F1 works on the Std Qty, F3 on the Remaining Qty.
         const Q_LABELS = { F1: 'Std Qty', F3: 'Remaining Qty' };
         const qLabelFor = t => Q_LABELS[t];
@@ -1293,21 +1343,24 @@
                     rows.appendChild(cell);
                 } else {
                     cell.className = 'spec-cell spec-cell-edit';
-                    cell.innerHTML = `<div class="spec-cell-label">${type} =${ql ? `<small>Q = ${ql}</small>` : ''}</div>
+                    cell.innerHTML = `<div class="spec-cell-label">${type} =${ql ? `<small>Q = ${ql}</small>` : ''}<span class="link-badge" title="F1, F2 and F3 are linked — edit any one and the other two update automatically (F2 is the inverse of F1; F3 mirrors F1)">&#128279;</span></div>
                         <div class="frac-edit">
                             <input type="text" class="fe-num" id="manualInput${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} top part (numerator)" placeholder="top">
                             <input type="text" class="fe-den" id="manualDen${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} bottom part (denominator)" placeholder="bottom (optional)">
                         </div><div class="spec-error" id="manualError${type}"></div>`;
                     rows.appendChild(cell);
                     const nI = cell.querySelector('.fe-num'), dI = cell.querySelector('.fe-den'), err = cell.querySelector('.spec-error');
+                    manualEls[type] = { nI, dI, err };
                     nI.value = manualParts[type].n; dI.value = manualParts[type].d;
-                    const refresh = () => {
+                    const refresh = (fromLink = false) => {
                         manualParts[type] = { n: nI.value, d: dI.value };
                         manualFormulas[type] = composeFormula(manualParts[type]);
                         let msg = '';
                         if (!nI.value.trim()) msg = 'Top part is empty.';
                         else { try { validateFormulaText(manualFormulas[type]); } catch (e) { msg = e.message; } }
                         err.textContent = msg; nI.classList.toggle('bad', !!msg); dI.classList.toggle('bad', !!msg);
+                        // F1/F2/F3 are algebraically linked — editing one rewrites the other two.
+                        if (!fromLink && !msg) linkFormulas(type);
                     };
                     nI.addEventListener('input', () => { refresh(); syncExtraVars(); }); dI.addEventListener('input', () => { refresh(); syncExtraVars(); }); refresh();
                 }
