@@ -1012,6 +1012,7 @@
         };
 
         let calculationCount = 0, hasCalculated = false, calcIdCounter = 0;
+        let batchAssigned = false;   // a lot was assigned; the next confirmed calculation starts a fresh batch
         let calculations = [];
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
 
@@ -1496,13 +1497,12 @@
             input.focus();
             document.getElementById('lotAssignSelect').value = '';
             document.getElementById('lotAssignPanel')?.classList.add('hidden');
-            // Lot assigned — release the input card for the next batch.
+            // Lot assigned — release the input card for the next batch. The old
+            // batch's calculation cards STAY on screen as the record; they are
+            // retired only when the user actually starts the next batch (enters
+            // values and runs F1/F2/F3) — see calculate().
             domCache.formulaCalculator.classList.remove('input-locked');
-            // The batch is now recorded against the lot's Issued Qty (B) cell, so its
-            // calculation cards have served their purpose. Retire them automatically:
-            // remaining returns to the full Std Qty, the input card unlocks, and the
-            // next batch starts clean — no "Qty mismatch" and no manual clearing.
-            if (calculations.length > 0) clearAllCalculations();
+            batchAssigned = true;
         }
 
         // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
@@ -1802,7 +1802,7 @@
         }
 
         async function calculate(formulaType) {
-            if (domCache.formulaCalculator.classList.contains('input-locked')) return;   // batch complete — assign the lot first
+            if (domCache.formulaCalculator.classList.contains('input-locked') && !batchAssigned) return;   // batch complete — assign the lot first
             if (!currentProduct) { openProductGate(); return; }
             if (currentProduct === 'manual') {
                 try { validateFormulaText(manualFormulas[formulaType]); }
@@ -1833,6 +1833,13 @@
 
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
             if (!isConfirmed) return;
+
+            // First confirmed calculation of a NEW batch: retire the previous
+            // (already assigned) batch's cards so the new one starts the list clean.
+            if (batchAssigned) {
+                batchAssigned = false;
+                if (calculations.length > 0) clearAllCalculations();
+            }
 
             calculationResult.id = ++calcIdCounter;
             calculations.push(calculationResult);
