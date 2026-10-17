@@ -274,7 +274,6 @@
         /* ── INPUTS ── */
         .input-row { display: flex; gap: 10px; justify-content: space-between; }
         .input-row .input-group { flex: 1; }
-        @media (max-width: 480px) { #manualStdRow { flex-direction: column; } }   /* long Std qty labels get a full line each on phones */
         .progress-container {
             width: 100%; background: #ddd; border-radius: 5px; margin-top: 15px; height: 10px; overflow: hidden;
         }
@@ -745,24 +744,24 @@
             <label for="drugSelector">Product:</label>
             <select id="drugSelector">
                 <option value="" disabled selected>— Select product —</option>
-                <option value="valacyclovir">Valacyclovir — Std Qty 417 kg</option>
-                <option value="levetiracetam">Levetiracetam — Std Qty 268.750 kg</option>
-                <option value="manual">Manual — enter your own Std Qty</option>
+                <option value="valacyclovir">Valacyclovir — Std API Qty 417 kg</option>
+                <option value="levetiracetam">Levetiracetam — Std API Qty 268.750 kg</option>
+                <option value="manual">Manual — enter your own Std API Qty</option>
             </select>
         </div>
         <div class="input-row" id="manualStdRow" style="display:none">
             <div class="input-group" id="stdQtyGroup">
-                <label for="stdQty">Std theoretical API qty (A) kg:</label>
-                <input type="number" id="stdQty" step="0.001" min="0" placeholder="Enter Std theoretical API qty (A)">
+                <label for="stdQty">Std API qty (A) kg:</label>
+                <input type="number" id="stdQty" step="0.001" min="0" placeholder="Enter Std API qty (A)">
             </div>
             <div class="input-group" id="stdCGroup">
-                <label for="stdC">Std theoretical compensatory Excipient qty (C) kg:</label>
-                <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std theoretical compensatory Excipient qty (C)">
+                <label for="stdC">Std Excipient qty (C) kg:</label>
+                <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std Excipient qty (C)">
             </div>
         </div>
         <div class="qty-tracker-card" id="menuQtyTracker">
             <div class="qty-tracker-item">
-                <span class="qty-tracker-label">Dispensed</span>
+                <span class="qty-tracker-label">Dispensed API Qty</span>
                 <span id="dispensedQty" class="qty-tracker-value">0.000</span>
             </div>
             <div class="qty-tracker-sep"></div>
@@ -825,7 +824,7 @@
             </thead>
             <tbody>
                 <tr>
-                    <td class="acb-td">Std. Qty (A)<br>kg</td>
+                    <td class="acb-td">Std API qty (A)<br>kg</td>
                     <td class="acb-td"><label for="lot1-a" class="hidden">Lot 1 A</label><input type="number" step="0.001" id="lot1-a" value="417.000" class="acb-input acb-prefilled" readonly></td>
                     <td class="acb-td"><label for="lot2-a" class="hidden">Lot 2 A</label><input type="number" step="0.001" id="lot2-a" value="417.000" class="acb-input acb-prefilled" readonly></td>
                     <td class="acb-td"><label for="lot3-a" class="hidden">Lot 3 A</label><input type="number" step="0.001" id="lot3-a" value="417.000" class="acb-input acb-prefilled" readonly></td>
@@ -841,7 +840,7 @@
                     <td class="acb-td"><span id="total-b" class="acb-span acb-prefilled">0.000</span></td>
                 </tr>
                 <tr>
-                    <td class="acb-td">Std. Qty (C)<br>kg</td>
+                    <td class="acb-td">Std Excipient qty (C)<br>kg</td>
                     <td class="acb-td"><label for="lot1-c" class="hidden">Lot 1 C</label><input type="number" step="0.001" id="lot1-c" value="84.375" class="acb-input acb-prefilled" readonly></td>
                     <td class="acb-td"><label for="lot2-c" class="hidden">Lot 2 C</label><input type="number" step="0.001" id="lot2-c" value="84.375" class="acb-input acb-prefilled" readonly></td>
                     <td class="acb-td"><label for="lot3-c" class="hidden">Lot 3 C</label><input type="number" step="0.001" id="lot3-c" value="84.375" class="acb-input acb-prefilled" readonly></td>
@@ -915,7 +914,7 @@
             <p>Choose the product first. Its formulas are then shown above the input card — check them against the BMR before dispensing.</p>
             <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<small>Fixed formulas</small><span class="std-pill" data-std="valacyclovir"></span></button>
             <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<small>Fixed formulas</small><span class="std-pill" data-std="levetiracetam"></span></button>
-            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · standard formulas, enter Std Qty</small><span class="std-pill" data-std="manual">Std Qty: enter your own</span></button>
+            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · standard formulas, enter Std API Qty</small><span class="std-pill" data-std="manual">Std API Qty: enter your own</span></button>
         </div>
     </div>
 
@@ -1144,7 +1143,7 @@
         // Words shown in formulas instead of the single letters (display only — the formulas still use W and A).
         const VAR_LABELS = { W: 'Water content', A: 'Assay' };
         const OPSYM = { '+': ' + ', '-': ' − ', '*': ' × ', '/': ' ÷ ' };
-        // `ql` (optional) is the wording to show for Q — e.g. "Std Qty" for F1.
+        // `ql` (optional) is the wording to show for Q — e.g. "Std API Qty" for F1.
         function renderAst(n, ql) {
             switch (n.t) {
                 case 'num': return n.raw;
@@ -1211,7 +1210,7 @@
         const prettyFormula = src => { try { return renderAst(parseFormula(src)); } catch { return String(src); } };
 
         // What Q means for each formula: F1 works on the Std Qty, F3 on the Remaining Qty.
-        const Q_LABELS = { F1: 'Std Qty', F2: 'Dispensed Qty', F3: 'Remaining Qty' };
+        const Q_LABELS = { F1: 'Std API Qty', F2: 'Dispensed API Qty', F3: 'Remaining Qty' };
         const qLabelFor = t => Q_LABELS[t];
 
         function createCalculation(formulaType, Q, W, A, extra = {}) {
@@ -1286,9 +1285,9 @@
             document.getElementById('specBadge').textContent = '🔒 Fixed';
             const stdPill = document.getElementById('specStd');
             const stdVal = currentProduct === 'valacyclovir' ? CONSTANTS.ACB_DEFAULT_A : currentProduct === 'levetiracetam' ? CONSTANTS.LEVA_A : null;
-            stdPill.textContent = stdVal !== null ? `Std Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std Qty: enter below';
+            stdPill.textContent = stdVal !== null ? `Std API Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std API Qty: enter below';
             document.getElementById('specHint').textContent = manual
-                ? 'Standard formulas (fixed). Enter your Std Qty below, and check the formulas against the BMR before dispensing.'
+                ? 'Standard formulas (fixed). Enter your Std API Qty below, and check the formulas against the BMR before dispensing.'
                 : 'Fixed for this product. Check against the BMR before dispensing; choose Manual for a new product with the standard formulas.';
             rows.innerHTML = '';
             ['F1', 'F2', 'F3'].forEach(type => {
@@ -1472,8 +1471,8 @@
             if (!confirm("Reset the (A+C)-B calculator? This will clear all entered values.")) return;
             const preset = document.getElementById('drugSelector')?.value || 'valacyclovir';
             if (preset === 'manual') {
-                domCache.acbInputs.a.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std Qty A'; });
-                domCache.acbInputs.c.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std Qty C'; });
+                domCache.acbInputs.a.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std API Qty A'; });
+                domCache.acbInputs.c.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std Excipient Qty C'; });
                 domCache.acbInputs.totals.a.textContent = '0.000';
                 domCache.acbInputs.totals.c.textContent = '0.000';
             } else if (preset === 'levetiracetam') {
@@ -1824,13 +1823,13 @@
                     input.value = aVal; input.readOnly = false;
                     input.classList.remove('acb-prefilled', 'acb-manual-input', 'edited');
                     if (aVal) input.classList.add('acb-manual-input');
-                    input.placeholder = 'Std Qty A';
+                    input.placeholder = 'Std API Qty A';
                 });
                 domCache.acbInputs.c.forEach(input => {
                     input.value = cVal; input.readOnly = false;
                     input.classList.remove('acb-prefilled', 'acb-manual-input', 'edited');
                     if (cVal) input.classList.add('acb-manual-input');
-                    input.placeholder = 'Std Qty C';
+                    input.placeholder = 'Std Excipient Qty C';
                 });
                 domCache.acbInputs.totals.a.textContent = new Decimal(aVal || 0).times(domCache.acbInputs.a.length).toFixed(3);
                 domCache.acbInputs.totals.c.textContent = new Decimal(cVal || 0).times(domCache.acbInputs.c.length).toFixed(3);
@@ -1962,7 +1961,7 @@
             drugSelector.addEventListener('change', () => { if (drugSelector.value) selectProduct(drugSelector.value); });
             document.querySelectorAll('#productGate .gate-btn').forEach(btn => btn.addEventListener('click', () => selectProduct(btn.dataset.product)));
             const stdFor = { valacyclovir: CONSTANTS.ACB_DEFAULT_A, levetiracetam: CONSTANTS.LEVA_A };
-            document.querySelectorAll('.std-pill[data-std]').forEach(p => { const v = stdFor[p.dataset.std]; if (v !== undefined) p.textContent = `Std Qty ${formatNumber(new Decimal(v))} kg`; });
+            document.querySelectorAll('.std-pill[data-std]').forEach(p => { const v = stdFor[p.dataset.std]; if (v !== undefined) p.textContent = `Std API Qty ${formatNumber(new Decimal(v))} kg`; });
             openProductGate();
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (!el) return;
