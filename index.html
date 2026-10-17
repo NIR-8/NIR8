@@ -274,6 +274,7 @@
         /* ── INPUTS ── */
         .input-row { display: flex; gap: 10px; justify-content: space-between; }
         .input-row .input-group { flex: 1; }
+        @media (max-width: 480px) { #manualStdRow { flex-direction: column; } }   /* long Std qty labels get a full line each on phones */
         .progress-container {
             width: 100%; background: #ddd; border-radius: 5px; margin-top: 15px; height: 10px; overflow: hidden;
         }
@@ -751,12 +752,12 @@
         </div>
         <div class="input-row" id="manualStdRow" style="display:none">
             <div class="input-group" id="stdQtyGroup">
-                <label for="stdQty">Std Qty (A) kg:</label>
-                <input type="number" id="stdQty" step="0.001" min="0" placeholder="Enter Std Qty (A)">
+                <label for="stdQty">Std theoretical API qty (A) kg:</label>
+                <input type="number" id="stdQty" step="0.001" min="0" placeholder="Enter Std theoretical API qty (A)">
             </div>
             <div class="input-group" id="stdCGroup">
-                <label for="stdC">Std Qty (C) kg:</label>
-                <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std Qty (C)">
+                <label for="stdC">Std theoretical compensatory Excipient qty (C) kg:</label>
+                <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std theoretical compensatory Excipient qty (C)">
             </div>
         </div>
         <div class="qty-tracker-card" id="menuQtyTracker">
@@ -1140,12 +1141,14 @@
                 }
             }
         }
+        // Words shown in formulas instead of the single letters (display only — the formulas still use W and A).
+        const VAR_LABELS = { W: 'Water content', A: 'Assay' };
         const OPSYM = { '+': ' + ', '-': ' − ', '*': ' × ', '/': ' ÷ ' };
         // `ql` (optional) is the wording to show for Q — e.g. "Std Qty" for F1.
         function renderAst(n, ql) {
             switch (n.t) {
                 case 'num': return n.raw;
-                case 'var': return (n.name === 'Q' && ql) ? ql : n.name;
+                case 'var': return (n.name === 'Q' && ql) ? ql : (VAR_LABELS[n.name] || n.name);
                 case 'neg': return '−' + renderAst(n.e, ql);
                 case 'grp': return '(' + renderAst(n.e, ql) + ')';
                 default: return renderAst(n.l, ql) + OPSYM[n.op] + renderAst(n.r, ql);
@@ -1208,7 +1211,7 @@
         const prettyFormula = src => { try { return renderAst(parseFormula(src)); } catch { return String(src); } };
 
         // What Q means for each formula: F1 works on the Std Qty, F3 on the Remaining Qty.
-        const Q_LABELS = { F1: 'Std Qty', F3: 'Remaining Qty' };
+        const Q_LABELS = { F1: 'Std Qty', F2: 'Dispensed Qty', F3: 'Remaining Qty' };
         const qLabelFor = t => Q_LABELS[t];
 
         function createCalculation(formulaType, Q, W, A, extra = {}) {
