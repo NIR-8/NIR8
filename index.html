@@ -570,13 +570,6 @@
         .spec-cell-edit { align-items: stretch; min-width: 190px; }
         .link-badge { margin-left: 4px; font-size: 11px; cursor: help; opacity: .85; }
         .spec-cell-edit .spec-cell-label { text-align: left; }
-        .frac-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-        .frac-edit input { width: 100%; text-align: center; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px;
-            border: 1px solid transparent; background: #fffdf5; border-radius: 4px; padding: 7px 6px; box-sizing: border-box; }
-        .frac-edit input:focus { outline: none; border-color: #d98300; background: #fff; }
-        .frac-edit .fe-num { border-bottom: 2px solid #111; border-radius: 4px 4px 0 0; }   /* the fraction line */
-        .frac-edit .fe-den { border-radius: 0 0 4px 4px; }
-        .frac-edit input.bad { background: #ffeaea; }
         .std-pill { display: inline-block; background: #fff3a8; color: #5a4500; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid #e8cf55; font-size: 12px; }
         .gate-btn .std-pill { margin-top: 5px; }
         @keyframes flashStd { 0%,100% { box-shadow: 0 0 0 0 rgba(255,200,0,0); } 30% { box-shadow: 0 0 0 6px rgba(255,200,0,.6); } }
@@ -730,7 +723,7 @@
         <button type="button" class="tab-btn" id="tabAcbBtn" role="tab" aria-selected="false" aria-controls="acbCalculator">(A+C)-B</button>
     </div>
 
-    <!-- FORMULA CARD — sits above the input card. Locked for fixed products; editable only for Manual. -->
+    <!-- FORMULA CARD — sits above the input card. Formulas are fixed for every product. -->
     <div class="formula-spec-card" id="formulaSpecCard" aria-live="polite">
         <div class="spec-head">
             <h2>Formula</h2>
@@ -921,7 +914,7 @@
             <p>Choose the product first. Its formulas are then shown above the input card — check them against the BMR before dispensing.</p>
             <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<small>Fixed formulas</small><span class="std-pill" data-std="valacyclovir"></span></button>
             <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<small>Fixed formulas</small><span class="std-pill" data-std="levetiracetam"></span></button>
-            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · editable formulas</small><span class="std-pill" data-std="manual">Std Qty: enter your own</span></button>
+            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · standard formulas, enter Std Qty</small><span class="std-pill" data-std="manual">Std Qty: enter your own</span></button>
         </div>
     </div>
 
@@ -1078,10 +1071,9 @@
         const PRODUCTS = {
             valacyclovir:  { name: 'Valacyclovir',  formulas: STD_FORMULAS },
             levetiracetam: { name: 'Levetiracetam', formulas: STD_FORMULAS },
-            manual:        { name: 'Manual',        formulas: null }   // typed by the user
+            manual:        { name: 'Manual',        formulas: STD_FORMULAS }   // fixed standard formulas — only the Std Qty is typed by the user
         };
         let currentProduct = '';                      // '' until chosen on the gate
-        const manualFormulas = { F1: '', F2: '', F3: '' };
 
         // ── Safe formula parser (no eval) ───────────────────────────────────────
         function parseFormula(src) {
@@ -1211,87 +1203,9 @@
         }
         function getFormulaText(type) {
             if (!currentProduct) return '';
-            return currentProduct === 'manual' ? manualFormulas[type] : PRODUCTS[currentProduct].formulas[type];
+            return PRODUCTS[currentProduct].formulas[type];
         }
         const prettyFormula = src => { try { return renderAst(parseFormula(src)); } catch { return String(src); } };
-
-        // Manual formulas are edited as a stacked fraction (top / bottom) and start
-        // as a copy of the standard formulas.
-        const composeFormula = p => { const n = p.n.trim(), d = p.d.trim(); return d ? `(${n})/(${d})` : n; };
-        function splitFormula(src) {
-            const root = stripGrp(parseFormula(src));
-            return (root.t === 'bin' && root.op === '/')
-                ? { n: renderAst(stripGrp(root.l)), d: renderAst(stripGrp(root.r)) }
-                : { n: renderAst(root), d: '' };
-        }
-        const manualParts = {};
-        ['F1', 'F2', 'F3'].forEach(t => { manualParts[t] = splitFormula(STD_FORMULAS[t]); manualFormulas[t] = composeFormula(manualParts[t]); });
-
-        // ── F1 / F2 / F3 are algebraically linked ────────────────────────────
-        //   F1 = Q·100·100 / (A·(100−W))     (forward: raw qty from target Q)
-        //   F2 = Q·A·(100−W) / (100·100)     (inverse of the F1 ratio, Q stays on top)
-        //   F3 = same fraction as F1         (only the meaning of Q differs:
-        //                                     Std Qty for F1, Remaining for F3)
-        // So one fraction defines all three: editing any box rewrites the others
-        // automatically — in F2 the ratio is inverted (Q stays on top), F1 and F3 share
-        // the same fraction. Derivation always starts from the box just edited.
-        const manualEls = {};
-        let linkingFormulas = false;
-        // F2 is the inverse of F1 *in the ratio only* — Q stays on top:
-        //   F1 = Q × a / b   ⇄   F2 = Q × b / a
-        // (Swapping the whole numerator/denominator would push Q into the
-        //  denominator and give F2 = b / (Q × a), which is wrong.)
-        // The same operation turns F1 into F2 and F2 back into F1.
-        // Returns null when Q is not a plain multiplying factor on top.
-        function invertParts(p) {
-            const n = p.n.trim(), d = p.d.trim();
-            if (!n) return null;
-            try {
-                const factors = [];
-                (function walk(node) {
-                    const r = stripGrp(node);
-                    if (r.t === 'bin' && r.op === '*') { walk(r.l); walk(r.r); } else factors.push(node);
-                })(parseFormula(n));
-                const qAt = factors.findIndex(f => { const r = stripGrp(f); return r.t === 'var' && r.name === 'Q'; });
-                if (qAt < 0) return null;
-                const rest = factors.filter((_, i) => i !== qAt).map(f => renderAst(f)).join(' × ');
-                let dPart = d;
-                if (d) {                                   // a sum/difference needs brackets once Q multiplies it
-                    const inner = stripGrp(parseFormula(`Q*(${d})`).r);
-                    if (inner.t === 'bin' && (inner.op === '+' || inner.op === '-')) dPart = `(${d})`;
-                }
-                return { n: dPart ? `Q × ${dPart}` : 'Q', d: rest };
-            } catch { return null; }
-        }
-        function setManualParts(type, parts) {
-            manualParts[type] = parts;
-            manualFormulas[type] = composeFormula(parts);
-            const els = manualEls[type];
-            if (!els) return;
-            els.nI.value = parts.n; els.dI.value = parts.d;
-            let msg = '';
-            if (!parts.n.trim()) msg = 'Top part is empty.';
-            else { try { validateFormulaText(manualFormulas[type]); } catch (e) { msg = e.message; } }
-            els.err.textContent = msg; els.nI.classList.toggle('bad', !!msg); els.dI.classList.toggle('bad', !!msg);
-        }
-        function linkFormulas(source) {
-            if (linkingFormulas) return;
-            const src = manualParts[source];
-            if (!src || !src.n.trim()) return;
-            try { validateFormulaText(composeFormula(src)); } catch { return; }   // sync only from a valid formula
-            linkingFormulas = true;
-            try {
-                const inv = invertParts(src);                         // F1⇄F2 ratio inverse
-                if (source === 'F2') {
-                    if (!inv) return;                                 // Q not a top-level factor — cannot derive F1/F3
-                    setManualParts('F1', { ...inv });
-                    setManualParts('F3', { ...inv });
-                } else {
-                    setManualParts(source === 'F1' ? 'F3' : 'F1', { n: src.n, d: src.d });
-                    if (inv) setManualParts('F2', inv);
-                }
-            } finally { linkingFormulas = false; }
-        }
 
         // What Q means for each formula: F1 works on the Std Qty, F3 on the Remaining Qty.
         const Q_LABELS = { F1: 'Std Qty', F3: 'Remaining Qty' };
@@ -1366,59 +1280,33 @@
             const manual = currentProduct === 'manual';
             card.classList.toggle('is-manual', manual);
             document.getElementById('specProduct').textContent = PRODUCTS[currentProduct].name;
-            document.getElementById('specBadge').textContent = manual ? '✎ Editable' : '🔒 Fixed';
+            document.getElementById('specBadge').textContent = '🔒 Fixed';
             const stdPill = document.getElementById('specStd');
             const stdVal = currentProduct === 'valacyclovir' ? CONSTANTS.ACB_DEFAULT_A : currentProduct === 'levetiracetam' ? CONSTANTS.LEVA_A : null;
             stdPill.textContent = stdVal !== null ? `Std Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std Qty: enter below';
             document.getElementById('specHint').textContent = manual
-                ? 'Standard formulas, editable — change top/bottom as per the new BMR (Q, W, A, numbers, + − × ÷ ( ); × can be typed as *). Any other letter (e.g. B) becomes an extra input. Leave bottom empty if no division.'
-                : 'Fixed for this product. Check against the BMR before dispensing; choose Manual for a different formula.';
+                ? 'Standard formulas (fixed). Enter your Std Qty below, and check the formulas against the BMR before dispensing.'
+                : 'Fixed for this product. Check against the BMR before dispensing; choose Manual for a new product with the standard formulas.';
             rows.innerHTML = '';
             ['F1', 'F2', 'F3'].forEach(type => {
                 const ql = qLabelFor(type);
                 const cell = document.createElement('div');
-                if (!manual) {
-                    cell.className = 'spec-cell';
-                    let body; try { body = showAst(parseFormula(PRODUCTS[currentProduct].formulas[type]), ql); } catch { body = '<span class="spec-error">Invalid formula in PRODUCTS table</span>'; }
-                    cell.innerHTML = `<div class="spec-cell-label">${type} =</div><div class="spec-cell-body">${body}</div>`;
-                    rows.appendChild(cell);
-                } else {
-                    cell.className = 'spec-cell spec-cell-edit';
-                    cell.innerHTML = `<div class="spec-cell-label">${type} =${ql ? `<small>Q = ${ql}</small>` : ''}<span class="link-badge" title="F1, F2 and F3 are linked — edit any one and the other two update automatically (F2 is the inverse of F1; F3 mirrors F1)">&#128279;</span></div>
-                        <div class="frac-edit">
-                            <input type="text" class="fe-num" id="manualInput${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} top part (numerator)" placeholder="top">
-                            <input type="text" class="fe-den" id="manualDen${type}" autocomplete="off" spellcheck="false" maxlength="60" aria-label="${type} bottom part (denominator)" placeholder="bottom (optional)">
-                        </div><div class="spec-error" id="manualError${type}"></div>`;
-                    rows.appendChild(cell);
-                    const nI = cell.querySelector('.fe-num'), dI = cell.querySelector('.fe-den'), err = cell.querySelector('.spec-error');
-                    manualEls[type] = { nI, dI, err };
-                    nI.value = manualParts[type].n; dI.value = manualParts[type].d;
-                    const refresh = (fromLink = false) => {
-                        manualParts[type] = { n: nI.value, d: dI.value };
-                        manualFormulas[type] = composeFormula(manualParts[type]);
-                        let msg = '';
-                        if (!nI.value.trim()) msg = 'Top part is empty.';
-                        else { try { validateFormulaText(manualFormulas[type]); } catch (e) { msg = e.message; } }
-                        err.textContent = msg; nI.classList.toggle('bad', !!msg); dI.classList.toggle('bad', !!msg);
-                        // F1/F2/F3 are algebraically linked — editing one rewrites the other two.
-                        if (!fromLink && !msg) linkFormulas(type);
-                    };
-                    nI.addEventListener('input', () => { refresh(); syncExtraVars(); }); dI.addEventListener('input', () => { refresh(); syncExtraVars(); }); refresh(true);
-                }
+                cell.className = 'spec-cell';
+                let body; try { body = showAst(parseFormula(PRODUCTS[currentProduct].formulas[type]), ql); } catch { body = '<span class="spec-error">Invalid formula in PRODUCTS table</span>'; }
+                cell.innerHTML = `<div class="spec-cell-label">${type} =</div><div class="spec-cell-body">${body}</div>`;
+                rows.appendChild(cell);
             });
             syncExtraVars();
             updateSheetScale();
         }
 
-        // Extra variables: any letter other than Q, W, A typed into a Manual formula gets its own input.
+        // Extra variables: only if a product formula in PRODUCTS uses a letter other than Q, W, A (none today).
         const extraVarValues = {};
         function syncExtraVars() {
             const box = document.getElementById('extraVars');
             if (!box) return;
             const names = new Set();
-            if (currentProduct === 'manual') {
-                ['F1', 'F2', 'F3'].forEach(t => { try { collectVars(parseFormula(manualFormulas[t])).forEach(v => { if (!STD_VARS.includes(v)) names.add(v); }); } catch {} });
-            }
+            if (currentProduct) ['F1', 'F2', 'F3'].forEach(t => { try { collectVars(parseFormula(getFormulaText(t))).forEach(v => { if (!STD_VARS.includes(v)) names.add(v); }); } catch {} });
             const list = [...names].sort();
             const existing = [...box.querySelectorAll('input')].map(i => i.dataset.var);
             updateProgress();   // W/A visibility must refresh even when the extra-vars list is unchanged
@@ -1844,10 +1732,6 @@
         async function calculate(formulaType) {
             if (domCache.formulaCalculator.classList.contains('input-locked') && !batchAssigned) return;   // batch complete — assign the lot first
             if (!currentProduct) { openProductGate(); return; }
-            if (currentProduct === 'manual') {
-                try { validateFormulaText(manualFormulas[formulaType]); }
-                catch (e) { alert(`Manual formula ${formulaType}: ${e.message}`); document.getElementById('manualInput' + formulaType)?.focus(); return; }
-            }
             if (calculationCount >= CONSTANTS.MAX_CALCULATIONS) { alert(`Maximum of ${CONSTANTS.MAX_CALCULATIONS} calculations reached.`); return; }
             let Q, W, A;
             try { Q = new Decimal(domCache.QInput.value || 0); W = new Decimal(domCache.waterInput.value || 0); A = new Decimal(domCache.assayInput.value || 0); }
@@ -1857,7 +1741,7 @@
             if (Q.gt(CONSTANTS.Q_MAX)) { alert(`Quantity (Q) must be ≤ ${CONSTANTS.Q_MAX}.`); return; }
             if ((usedVars.has('A') && A.gt(CONSTANTS.A_MAX)) || (usedVars.has('W') && W.gt(CONSTANTS.W_MAX))) { alert("Invalid values: Ensure A ≤ 100 and W ≤ 99.99."); return; }
 
-            // Extra variables typed into a manual formula — each one needs a value.
+            // Extra variables used by the formula (none today) — each one needs a value.
             const extra = {};
             for (const name of collectVars(parseFormula(getFormulaText(formulaType)))) {
                 if (STD_VARS.includes(name)) continue;
@@ -2045,7 +1929,7 @@
 
             // F1 / F2 / F3 keyboard shortcuts. They work while focus is in the Q / W / A
             // number fields or a dropdown (that is where focus normally is). They are
-            // ignored only while typing free text (manual formula boxes, Write Us), on the
+            // ignored only while typing free text (Write Us), on the
             // (A+C)-B tab, or when a pop-up is open. F1 is always kept away from the
             // browser's own help page.
             const FORMULA_KEYS = { F1: 'F1', F2: 'F2', F3: 'F3' };
