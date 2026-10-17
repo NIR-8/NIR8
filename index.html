@@ -1229,18 +1229,39 @@
 
         // ── F1 / F2 / F3 are algebraically linked ────────────────────────────
         //   F1 = Q·100·100 / (A·(100−W))     (forward: raw qty from target Q)
-        //   F2 = Q·A·(100−W) / (100·100)     (the exact inverse of F1)
+        //   F2 = Q·A·(100−W) / (100·100)     (inverse of the F1 ratio, Q stays on top)
         //   F3 = same fraction as F1         (only the meaning of Q differs:
         //                                     Std Qty for F1, Remaining for F3)
         // So one fraction defines all three: editing any box rewrites the others
-        // automatically — F2 gets numerator/denominator swapped, F1 and F3 share
+        // automatically — in F2 the ratio is inverted (Q stays on top), F1 and F3 share
         // the same fraction. Derivation always starts from the box just edited.
         const manualEls = {};
         let linkingFormulas = false;
-        function reciprocalParts(p) {
+        // F2 is the inverse of F1 *in the ratio only* — Q stays on top:
+        //   F1 = Q × a / b   ⇄   F2 = Q × b / a
+        // (Swapping the whole numerator/denominator would push Q into the
+        //  denominator and give F2 = b / (Q × a), which is wrong.)
+        // The same operation turns F1 into F2 and F2 back into F1.
+        // Returns null when Q is not a plain multiplying factor on top.
+        function invertParts(p) {
             const n = p.n.trim(), d = p.d.trim();
-            if (d === '1') return { n, d: '' };              // ÷1 is a no-op — keep it clean
-            return d ? { n: d, d: n } : { n: '1', d: n };    // no denominator → 1/(…)
+            if (!n) return null;
+            try {
+                const factors = [];
+                (function walk(node) {
+                    const r = stripGrp(node);
+                    if (r.t === 'bin' && r.op === '*') { walk(r.l); walk(r.r); } else factors.push(node);
+                })(parseFormula(n));
+                const qAt = factors.findIndex(f => { const r = stripGrp(f); return r.t === 'var' && r.name === 'Q'; });
+                if (qAt < 0) return null;
+                const rest = factors.filter((_, i) => i !== qAt).map(f => renderAst(f)).join(' × ');
+                let dPart = d;
+                if (d) {                                   // a sum/difference needs brackets once Q multiplies it
+                    const inner = stripGrp(parseFormula(`Q*(${d})`).r);
+                    if (inner.t === 'bin' && (inner.op === '+' || inner.op === '-')) dPart = `(${d})`;
+                }
+                return { n: dPart ? `Q × ${dPart}` : 'Q', d: rest };
+            } catch { return null; }
         }
         function setManualParts(type, parts) {
             manualParts[type] = parts;
@@ -1259,11 +1280,17 @@
             if (!src || !src.n.trim()) return;
             try { validateFormulaText(composeFormula(src)); } catch { return; }   // sync only from a valid formula
             linkingFormulas = true;
-            const base = (source === 'F2') ? reciprocalParts(src) : { n: src.n, d: src.d };
-            setManualParts('F1', { ...base });
-            setManualParts('F3', { ...base });
-            setManualParts('F2', reciprocalParts(base));
-            linkingFormulas = false;
+            try {
+                const inv = invertParts(src);                         // F1⇄F2 ratio inverse
+                if (source === 'F2') {
+                    if (!inv) return;                                 // Q not a top-level factor — cannot derive F1/F3
+                    setManualParts('F1', { ...inv });
+                    setManualParts('F3', { ...inv });
+                } else {
+                    setManualParts(source === 'F1' ? 'F3' : 'F1', { n: src.n, d: src.d });
+                    if (inv) setManualParts('F2', inv);
+                }
+            } finally { linkingFormulas = false; }
         }
 
         // What Q means for each formula: F1 works on the Std Qty, F3 on the Remaining Qty.
@@ -1376,7 +1403,7 @@
                         // F1/F2/F3 are algebraically linked — editing one rewrites the other two.
                         if (!fromLink && !msg) linkFormulas(type);
                     };
-                    nI.addEventListener('input', () => { refresh(); syncExtraVars(); }); dI.addEventListener('input', () => { refresh(); syncExtraVars(); }); refresh();
+                    nI.addEventListener('input', () => { refresh(); syncExtraVars(); }); dI.addEventListener('input', () => { refresh(); syncExtraVars(); }); refresh(true);
                 }
             });
             syncExtraVars();
