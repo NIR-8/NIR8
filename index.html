@@ -5,42 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light only">
     <meta name="theme-color" content="#4facfe">
-    <title>NIR8 Calculators – Assay &amp; Formula Calculator for Pharmaceutical Dispensing</title>
+    <title>NIR8 Calculators</title>
 
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="NIR8 Calculators – free online pharmaceutical assay calculator. Calculate F1, F2, F3 formulas and (A+C)-B lot quantities with water content and assay correction. Use it online, instant results, printable.">
-    <meta name="keywords" content="assay calculator, pharmaceutical calculator, formula calculator, water content correction, assay based calculation, F1 F2 F3 formula, dispensing calculator, lot quantity calculator">
-    <meta name="author" content="NIR8">
-    <meta name="robots" content="index, follow">
+    <meta name="description" content="Assay based formula (F1, F2, F3) and (A+C)-B lot calculator for pharmaceutical dispensing.">
     <link rel="canonical" href="https://nir8.pages.dev/">
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="NIR8 Calculators – Assay &amp; Formula Calculator">
-    <meta property="og:description" content="Free online pharmaceutical assay calculator. F1, F2, F3 formulas and (A+C)-B lot quantities with water content and assay correction. Instant results, printable.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://nir8.pages.dev/">
-    <meta property="og:site_name" content="NIR8 Calculators">
-    <meta property="og:image" content="https://nir8.pages.dev/icons/icon-512.png">
-    <meta property="og:image:width" content="512">
-    <meta property="og:image:height" content="512">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="NIR8 Calculators – Assay &amp; Formula Calculator">
-    <meta name="twitter:description" content="Free online pharmaceutical assay calculator. F1, F2, F3 formulas and (A+C)-B lot quantities. Instant results, printable.">
-    <meta name="twitter:image" content="https://nir8.pages.dev/icons/icon-512.png">
-
-    <!-- Favicon + PWA -->
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="manifest" href="/manifest.json">
 
-    <!-- Inter — self-hosted locally, no external font request. Used everywhere, including equations, for maximum legibility when hand-copying numbers. -->
     <link rel="preload" href="/assets/fonts/inter-v19-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/inter-v19-latin-500.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/inter-v19-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/inter-v19-latin-700.woff2" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face {
             font-family: 'Inter';
@@ -71,26 +47,7 @@
             src: url('/assets/fonts/inter-v19-latin-700.woff2') format('woff2');
         }
     </style>
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 
-    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
-
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "NIR8 Calculators",
-      "description": "Pharmaceutical assay-based formula calculator supporting F1, F2, F3 and (A+C)-B lot quantity calculations with water content and assay correction.",
-      "applicationCategory": "UtilitiesApplication",
-      "operatingSystem": "Any",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
-    }
-    </script>
-
-    <!-- Formulas render as plain HTML/CSS — no math-rendering engine needed -->
-
-    <!-- Decimal.js — separate cache-first asset instead of inlined in network-first HTML -->
     <script defer src="/assets/js/decimal.min.js"></script>
 
     <style>
@@ -99,7 +56,7 @@
 
         /* ── HAMBURGER — small circular button, fixed top-right corner ── */
         .hamburger-btn {
-            position: fixed; top: 12px; right: 12px; z-index: 1000;
+            position: fixed; top: 12px; right: 12px; z-index: 20030;
             width: 44px; height: 44px; border-radius: 50%;
             background: rgba(255,255,255,.9); color: #157347; border: 1px solid rgba(0,0,0,.06);
             font-size: 18px; line-height: 1; cursor: pointer;
@@ -112,7 +69,7 @@
         /* ── BODY ── */
         body {
             font-family: "Inter", sans-serif;
-            background: linear-gradient(160deg, #eef2f6 0%, #e4ebf1 100%);
+            background: #f6f7f8;
             display: flex; justify-content: flex-start; align-items: center;
             min-height: 100vh; flex-direction: column;
             padding: 64px 20px 60px; text-align: center; margin: 0;
@@ -122,26 +79,20 @@
         .calculator-container {
             display: none; background: #fff; padding: 26px;
             width: 90%; max-width: 400px; border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(20,40,60,.08); margin-bottom: 20px; position: relative;
+            box-shadow: none; margin-bottom: 20px; position: relative;
             scroll-margin-top: 60px; border: 1px solid rgba(20,40,60,.05);
         }
         #acbCalculator { max-width: 900px; margin: 0 auto; }
         .calculator-container.active { display: block; }
-        .calculator-container h2 {
-            font-family: "Inter", sans-serif; font-size: 19px; font-weight: 600;
-            letter-spacing: -0.2px; color: #1a1a1a; margin: 0 0 14px;
-        }
-        .header-row { margin-bottom: 4px; }
 
         /* ── TAB BAR — minimal segmented control switching Formula / ACB screens ── */
         .tab-bar {
             display: flex; gap: 4px; background: #fff;
             border: 1px solid rgba(20,40,60,.06); border-radius: 12px;
             padding: 4px; margin: 0 0 16px; width: 90%; max-width: 400px;
-            box-shadow: 0 4px 14px rgba(20,40,60,.06);
+            box-shadow: none;
         }
-        .tab-bar.hidden { display: none; }
-        .tab-btn {
+                .tab-btn {
             flex: 1; background: transparent; color: #6b7480; border: none;
             border-radius: 9px; padding: 10px 8px; font-size: 14px; font-weight: 600;
             font-family: "Inter", sans-serif; cursor: pointer; transition: background .2s ease, color .2s ease;
@@ -149,18 +100,6 @@
         .tab-btn.active { background: #157347; color: #fff; }
         .tab-btn:not(.active):hover { background: #f2f6f3; color: #157347; }
         .input-group { margin-top: 10px; text-align: left; }
-        /* Formula card title + selected drug/Std Qty badge, side by side on one line */
-        .formula-header-row {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 8px; flex-wrap: nowrap;
-        }
-        .formula-header-row h2 { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        /* The input-card title style — the drug / Std Qty badge sits on its own
-           line under the card title at the top of the input card. */
-        .formula-header-row h2 {
-            font-family: "Inter", sans-serif; font-size: 18px; font-weight: 600;
-            letter-spacing: -0.2px; color: inherit; line-height: 1.3;
-        }
         /* ── QTY TRACKER (embedded in the Formula Calculator card) ── */
         .qty-tracker-card {
             display: flex; align-items: stretch; margin: 10px 0 0; padding: 10px 6px;
@@ -202,10 +141,6 @@
         .sr-only {
             position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
             overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-        }
-        .hidden[aria-hidden=true] {
-            position: absolute; width: 1px; height: 1px; padding: 0;
-            margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;
         }
 
         /* ── CALCULATION STEPS ── */
@@ -274,10 +209,6 @@
         /* ── INPUTS ── */
         .input-row { display: flex; gap: 10px; justify-content: space-between; }
         .input-row .input-group { flex: 1; }
-        .progress-container {
-            width: 100%; background: #ddd; border-radius: 5px; margin-top: 15px; height: 10px; overflow: hidden;
-        }
-        .progress-bar { width: 0%; height: 100%; background: #28a745; transition: width .3s ease-in-out; }
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -310,8 +241,6 @@
             justify-content: center; border-radius: 6px; transition: background .15s ease;
             flex-shrink: 0; line-height: 1;
         }
-        .clear-all-btn { color: #dc3545; }
-        .clear-all-btn:hover { background: rgba(220,53,69,.08); }
         /* Print button: small circular button pinned to the left-most corner of the card */
         /* Print toolbar pinned top-RIGHT: top-left is where every calculation
            card's delete ❌ button lives — keeping it left overlapped the newest
@@ -333,9 +262,9 @@
             background: transparent; border: none;
             cursor: pointer; font-size: 18px; color: #ff6b6b; padding: 6px;
             width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
-            border-radius: 50%; transition: all 0.3s ease;
+            border-radius: 50%;
         }
-        .reset-acb-btn:hover { background: rgba(255,107,107,0.1); transform: rotate(90deg); }
+        .reset-acb-btn:hover { background: rgba(255,107,107,0.1); }
 
         /* ── MODALS ── */
         .info-modal {
@@ -374,11 +303,9 @@
             display: inline-flex; align-items: center; justify-content: center; border-radius: 4px;
         }
         .close:hover, .close:focus { color: #000; background: rgba(0,0,0,0.07); }
-        .info-section { margin-bottom: 15px; }
         .info-section h3 { margin-top: 0; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         .info-item { margin-bottom: 8px; }
         .info-key { font-weight: 700; color: #157347; }
-        .info-footer { text-align: center; margin-top: 20px; font-size: 12px; color: #686868; }
 
         /* ── FORMULA FRACTIONS (plain CSS, no MathJax — minimal, legible, tabular numerals for accurate hand-copying) ── */
         .calc-step {
@@ -417,11 +344,10 @@
         #remainingQty { cursor: pointer; transition: all 0.2s ease; }
         #remainingQty:hover { color: #4facfe; text-decoration: underline; }
 
-
         /* ── WRITE US PANEL ── */
         .writeus-panel {
             position: fixed; top: 0; right: 0; width: 280px; max-width: 85vw;
-            height: 100%; background: #fff; z-index: 600;
+            height: 100%; background: #fff; z-index: 20028;
             display: flex; flex-direction: column;
             padding: 24px 20px 20px;
             transform: translateX(100%);
@@ -437,12 +363,8 @@
             border-radius: 4px; line-height: 1.4;
         }
         .wp-back:hover { color: #333; background: #f0f0f0; }
-        .wp-eyebrow {
-            font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
-            text-transform: uppercase; color: #c9b8f0; margin-bottom: 6px;
-        }
         .wp-title { font-size: 18px; font-weight: 600; color: #111; margin-bottom: 6px; letter-spacing: -0.2px; }
-        .wp-sub { font-size: 12px; color: #767676; line-height: 1.6; margin-bottom: 20px; }
+        .wp-title { margin-bottom: 16px; }
         .writeus-panel textarea {
             width: 100%; min-height: 130px; padding: 12px;
             font-family: "Inter", sans-serif; font-size: 13px; color: #1a1a1a;
@@ -473,7 +395,6 @@
             font-size: 18px; margin: 0 auto 14px;
         }
         .wp-success h3 { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 6px; }
-        .wp-success p { font-size: 12px; color: #767676; line-height: 1.6; }
         @keyframes wpUp {
             from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -527,7 +448,7 @@
 
         /* ── FLOATING ACTION BUTTONS (hamburger contents) ── */
         .fab-container {
-            position: fixed; top: 70px; right: 12px; z-index: 999;
+            position: fixed; top: 70px; right: 12px; z-index: 20029;
             display: flex; flex-direction: column; gap: 10px;
             opacity: 0; pointer-events: none; transform: translateX(24px);
             transition: opacity .25s ease, transform .25s ease;
@@ -546,43 +467,54 @@
         /* ── FORMULA CARD (above the input card) + PRODUCT GATE ── */
         .formula-spec-card {
             display: none; background: #fff; padding: 12px 16px; width: 90%; max-width: 760px;
-            border-radius: 16px; box-shadow: 0 8px 24px rgba(20,40,60,.08); margin-bottom: 14px;
+            border-radius: 16px; box-shadow: none; margin-bottom: 14px;
             border: 1px solid rgba(20,40,60,.05); border-left: 5px solid #157347; text-align: left;
         }
         .formula-spec-card.show { display: block; }
         .formula-spec-card.is-manual { border-left-color: #d98300; }
         .spec-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
-        .spec-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
         .spec-product { font-size: 13px; font-weight: 600; color: #157347; }
         .is-manual .spec-product { color: #b86e00; }
-        .spec-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: #e7f5ec; color: #157347; white-space: nowrap; }
-        .is-manual .spec-badge { background: #fff3dd; color: #b86e00; }
-        #specRows { display: flex; align-items: stretch; overflow-x: auto; padding-bottom: 2px; }
-        .spec-cell { flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 2px 14px; border-left: 1px solid #e3e7ee; }
+        /* Formulas always fit the card: cells share the width and shrink, and the
+           fraction text wraps instead of forcing a sideways scroll. */
+        #specRows { display: flex; align-items: stretch; overflow: visible; padding-bottom: 2px; }
+        .spec-cell { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 2px 12px; border-left: 1px solid #e3e7ee; }
         .spec-cell:first-child { border-left: none; padding-left: 0; }
         .spec-cell:last-child { padding-right: 0; }
         .spec-cell-label { font-weight: 700; font-size: 13px; margin-bottom: 2px; white-space: nowrap; }
         .spec-cell-label small { font-weight: 500; color: #6b7480; font-size: 11px; margin-left: 4px; }
-        .spec-cell-body { font-size: 13px; }
-        .spec-cell-body .frac { font-size: 13px; line-height: 1.45; margin: 0; }
-        .spec-cell-body .frac .frac-num, .spec-cell-body .frac .frac-den { padding: 2px 5px; }
-        .spec-cell-edit { align-items: stretch; min-width: 190px; }
-        .link-badge { margin-left: 4px; font-size: 11px; cursor: help; opacity: .85; }
-        .spec-cell-edit .spec-cell-label { text-align: left; }
+        .spec-cell-body { font-size: 13px; min-width: 0; max-width: 100%; }
+        .spec-cell-body .frac { font-size: 13px; line-height: 1.45; margin: 0; max-width: 100%; }
+        .spec-cell-body .frac .frac-num, .spec-cell-body .frac .frac-den { padding: 2px 5px; white-space: normal; text-align: center; }
+        @media (max-width: 640px) {
+            /* Phones: one formula per row, stacked — nothing to scroll */
+            #specRows { flex-direction: column; }
+            .spec-cell { flex-direction: row; justify-content: flex-start; gap: 10px; padding: 7px 0;
+                border-left: none; border-top: 1px solid #e3e7ee; }
+            .spec-cell:first-child { border-top: none; padding-top: 2px; }
+            .spec-cell:last-child { padding-bottom: 2px; }
+            .spec-cell-label { margin-bottom: 0; flex: none; }
+            .spec-cell-body { flex: 1 1 auto; display: flex; justify-content: center; }
+        }
+        @media (max-width: 380px) {
+            .spec-cell-body, .spec-cell-body .frac { font-size: 12px; }
+        }
+        /* Verify pop-up: the formula wraps inside the box instead of overflowing */
+        .verify-rows { max-width: 100%; }
+        .verify-value.verify-formula { flex-wrap: wrap; max-width: 100%; }
+        .verify-formula .frac .frac-num, .verify-formula .frac .frac-den { white-space: normal; text-align: center; }
+        @media (max-width: 480px) {
+            .verify-row { flex-wrap: wrap; }
+            .verify-label { width: auto; text-align: left; margin-right: 6px; }
+        }
         .std-pill { display: inline-block; background: #fff3a8; color: #5a4500; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid #e8cf55; font-size: 12px; }
         .gate-btn .std-pill { margin-top: 5px; }
-        @keyframes flashStd { 0%,100% { box-shadow: 0 0 0 0 rgba(255,200,0,0); } 30% { box-shadow: 0 0 0 6px rgba(255,200,0,.6); } }
-        .flash-highlight { animation: flashStd 1.4s ease 2; border-radius: 20px; }
-        #manualStdRow.flash-highlight { border-radius: 10px; }
         .spec-error { margin: 2px 0 0; font-size: 11px; color: #c0392b; }
         .spec-error:empty { display: none; }
-        .spec-hint { margin-top: 6px; font-size: 11px; color: #6b7480; line-height: 1.35; }
         .product-gate-card { background: #fff; border-radius: 16px; padding: 26px 22px; width: 92%; max-width: 380px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
         .product-gate-card h2 { margin: 0 0 4px; font-size: 20px; }
-        .product-gate-card p { margin: 0 0 16px; font-size: 13px; color: #6b7480; }
         .gate-btn { display: block; width: 100%; margin-bottom: 10px; text-align: left; padding: 14px 16px; }
-        .gate-btn small { display: block; font-weight: 400; font-size: 12px; opacity: .85; margin-top: 2px; }
         .gate-btn.manual { background: #d98300; }
         .product-label { font-size: 12pt; font-weight: 600; text-align: center; flex: 1; }
         @media print { .formula-spec-card, #productGate { display: none !important; } }
@@ -628,7 +560,7 @@
             button { font-size: 14px; padding: 10px; }
             .qty-tracker-value { font-size: 15px; }
             .tab-bar { width: 100%; }
-            .sidenav, .writeus-panel { width: auto; right: 0; left: 0; max-width: 100%; }
+            .writeus-panel { width: auto; right: 0; left: 0; max-width: 100%; }
         }
 
         /* ── DESKTOP — a little more breathing room on larger screens; the layout
@@ -657,7 +589,7 @@
             .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .progress-container, footer, .reset-acb-btn, .reset-acb-row, .hold-period-card,
-            .sidenav, .sidenav-overlay, .writeus-panel, .tab-bar,
+ .writeus-panel, .tab-bar,
             .hamburger-btn, .fab-container, .fab { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
@@ -708,38 +640,24 @@
 </head>
 <body>
     <h1 class="sr-only">NIR8 Calculators – Pharmaceutical Assay &amp; Formula Calculator</h1>
-    <noscript>
-        <div style="background:#ff6b6b;color:#fff;padding:10px;text-align:center">
-            JavaScript is required. Please enable JavaScript in your browser settings.
-        </div>
-    </noscript>
+    <noscript>JavaScript is required.</noscript>
 
-    <!-- HAMBURGER — floating circular button, top-right corner -->
     <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
 
-    <!-- TAB BAR — switches between the two calculators as separate screens -->
     <div class="tab-bar" id="tabBar" role="tablist" aria-label="Calculators">
         <button type="button" class="tab-btn active" id="tabFormulaBtn" role="tab" aria-selected="true" aria-controls="formulaCalculator">Formula</button>
         <button type="button" class="tab-btn" id="tabAcbBtn" role="tab" aria-selected="false" aria-controls="acbCalculator">(A+C)-B</button>
     </div>
 
-    <!-- FORMULA CARD — sits above the input card. Formulas are fixed for every product. -->
     <div class="formula-spec-card" id="formulaSpecCard" aria-live="polite">
         <div class="spec-head">
-            <h2>Formula</h2>
             <span class="spec-product" id="specProduct"></span>
             <span class="std-pill" id="specStd"></span>
-            <span class="spec-badge" id="specBadge"></span>
         </div>
         <div id="specRows"></div>
-        <div class="spec-hint" id="specHint"></div>
     </div>
 
-    <!-- FORMULA CALCULATOR -->
     <div id="formulaCalculator" class="calculator-container active">
-        <div class="formula-header-row">
-            <h2 id="formulaCardTitle">Formula Calculator</h2>
-        </div>
         <div class="input-group">
             <label for="drugSelector">Product:</label>
             <select id="drugSelector">
@@ -773,21 +691,17 @@
         <div id="quantityWarning" class="quantity-warning-banner">Qty mismatch!</div>
         <div class="input-group">
             <label for="Q">Quantity (Q):</label>
-            <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity" oninput="handleInput(event)">
+            <input type="number" id="Q" max="9999999" min="0.001" required placeholder="Enter quantity">
         </div>
         <div class="input-row">
             <div class="input-group">
                 <label for="water">Water Content (W):</label>
-                <input type="number" id="water" step="0.01" min="0.01" max="99.99" required placeholder="Enter water content" oninput="handleInput(event)">
+                <input type="number" id="water" step="0.01" min="0.01" max="99.99" required placeholder="Enter water content">
             </div>
             <div class="input-group">
                 <label for="assay">Assay Content (A):</label>
-                <input type="number" id="assay" step="0.01" min="0.01" max="100.00" required placeholder="Enter assay content" oninput="handleInput(event)">
+                <input type="number" id="assay" step="0.01" min="0.01" max="100.00" required placeholder="Enter assay content">
             </div>
-        </div>
-        <div id="extraVars"></div>
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
         </div>
         <div class="button-row">
             <button type="button" data-formula="F1" aria-label="Calculate F1">Calculate F1</button>
@@ -805,11 +719,7 @@
         </div>
     </div>
 
-    <!-- ACB CALCULATOR — standalone screen, reached via the tab bar -->
     <div id="acbCalculator" class="calculator-container">
-        <div class="header-row">
-            <h2>(A+C)-B Calculator</h2>
-        </div>
         <table class="acb-table">
             <caption class="hidden">(A+C)-B Calculator Table</caption>
             <thead>
@@ -861,7 +771,6 @@
             <button type="button" class="reset-acb-btn" id="resetAcbBtn" title="Reset" aria-label="Reset (A+C)-B Calculator">↻</button>
         </div>
 
-        <!-- HOLD TIME PERIOD — plain, no card styling, bottom of the (A+C)-B Calculator only -->
         <div id="holdPeriodCard" class="hold-period-card">
             <div class="hold-title">Hold time period</div>
             <div class="hold-dates-row">
@@ -881,8 +790,6 @@
         </div>
     </div>
 
-    <!-- CALCULATION STEPS -->
-    <!-- Print-only copy of the cards (oldest first); filled just before printing -->
     <div id="printArea" aria-hidden="true"></div>
 
     <div class="calculation-steps hidden" id="calculationSteps" role="region" aria-label="Calculation steps">
@@ -892,7 +799,6 @@
         <div id="stepsContainer"></div>
     </div>
 
-    <!-- INFO MODAL -->
     <div id="infoModal" class="info-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
         <div class="modal-content">
             <span class="close" id="infoModalClose" aria-label="Close">×</span>
@@ -902,19 +808,16 @@
                 <div class="info-item"><span class="info-key">❌:</span> Remove a calculation</div>
                 <div class="info-item"><span class="info-key">Remaining Qty:</span> Tap it to copy into the Q field</div>
             </div>
-            <div class="info-footer">This tool is continuously improving to serve you better.</div>
         </div>
     </div>
 
-    <!-- VERIFY MODAL -->
-    <!-- PRODUCT GATE — shown on every page load; calculations stay blocked until a product is chosen -->
     <div id="productGate" class="info-modal" role="dialog" aria-modal="true" aria-labelledby="gateTitle" style="z-index:20000">
         <div class="product-gate-card">
             <h2 id="gateTitle">Select product</h2>
-            <p>Choose the product first. Its formulas are then shown above the input card — check them against the BMR before dispensing.</p>
-            <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<small>Fixed formulas</small><span class="std-pill" data-std="valacyclovir"></span></button>
-            <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<small>Fixed formulas</small><span class="std-pill" data-std="levetiracetam"></span></button>
-            <button type="button" class="gate-btn manual" data-product="manual">Manual<small>New product / new BMR · standard formulas, enter Std API Qty</small><span class="std-pill" data-std="manual">Std API Qty: enter your own</span></button>
+            
+            <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<span class="std-pill" data-std="valacyclovir"></span></button>
+            <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<span class="std-pill" data-std="levetiracetam"></span></button>
+            <button type="button" class="gate-btn manual" data-product="manual">Manual<span class="std-pill" data-std="manual">Enter your own Std API Qty</span></button>
         </div>
     </div>
 
@@ -929,25 +832,20 @@
         </div>
     </div>
 
-    <!-- FOOTER -->
     <footer>
-        This tool is continuously improving to serve you better. Results are reliable but always double-check.
+        Always double-check results.
         <button type="button" class="info-btn" id="infoBtn" aria-label="Help and shortcuts">ℹ️ Help &amp; Shortcuts</button>
     </footer>
 
-    <!-- FLOATING ACTION BUTTONS — hamburger contents, small circular & collapsible -->
     <div class="fab-container" id="fabContainer">
         <button type="button" class="fab" id="fabWriteUs" aria-label="Write us" title="Write us">✍️</button>
         <a class="fab" href="vault" target="_blank" rel="noopener noreferrer" aria-label="Vault" title="Vault">🔐</a>
     </div>
 
-    <!-- WRITE US PANEL -->
     <div class="writeus-panel" id="writeusPanel" role="dialog" aria-modal="true" aria-label="Write us">
         <button class="wp-back" id="wpBack">‹ &nbsp;Back</button>
         <div id="wpFormArea">
-            <p class="wp-eyebrow">We're listening</p>
             <p class="wp-title">Write to us.</p>
-            <p class="wp-sub">Bug, idea, or anything on your mind —<br>every message is read personally.</p>
             <form id="writeusForm" novalidate>
                 <input type="hidden" name="access_key" value="d745079a-5836-41cd-959c-b7bacc1be074">
                 <input type="hidden" name="subject" value="NIR8 — Write Us">
@@ -960,12 +858,10 @@
         </div>
         <div class="wp-success" id="wpSuccess">
             <div class="wp-tick">✓</div>
-            <h3>Got it. Thank you.</h3>
-            <p>Your message is with us.<br>We appreciate you taking the time.</p>
+            <h3>Sent. Thank you.</h3>
         </div>
     </div>
 
-    <!-- MAIN SCRIPT -->
     <script>
         const CONSTANTS = {
             MAX_CALCULATIONS: 15,
@@ -988,7 +884,6 @@
             waterGroup: document.querySelector("#water").parentElement,
             assayGroup: document.querySelector("#assay").parentElement,
             buttons: document.querySelector("#formulaCalculator .button-row"),
-            progressBar: document.getElementById("progressBar"),
             calculationSteps: document.getElementById("calculationSteps"),
             stepsContainer: document.getElementById("stepsContainer"),
             formulaCalculator: document.getElementById("formulaCalculator"),
@@ -1013,7 +908,7 @@
             }
         };
 
-        let calculationCount = 0, hasCalculated = false, calcIdCounter = 0;
+        let calculationCount = 0, calcIdCounter = 0;
         let batchAssigned = false;   // a lot was assigned; the next confirmed calculation starts a fresh batch
         let calculations = [];
         const LOT_NAMES = ['', 'I', 'II', 'III', 'IV'];
@@ -1187,8 +1082,6 @@
             }
             return collapseAst(root, v);
         }
-        // Variables a formula uses. Q, W, A are the standard inputs; any other letter is an "extra" variable.
-        const STD_VARS = ['Q', 'W', 'A'];
         function collectVars(n, set = new Set()) {
             if (n.t === 'var') set.add(n.name);
             else if (n.t === 'neg' || n.t === 'grp') collectVars(n.e, set);
@@ -1207,20 +1100,17 @@
             if (!currentProduct) return '';
             return PRODUCTS[currentProduct].formulas[type];
         }
-        const prettyFormula = src => { try { return renderAst(parseFormula(src)); } catch { return String(src); } };
 
         // What Q means for each formula: F1 works on the Std Qty, F3 on the Remaining Qty.
         const Q_LABELS = { F1: 'Std API Qty', F2: 'Dispensed API Qty', F3: 'Remaining Qty' };
         const qLabelFor = t => Q_LABELS[t];
 
-        function createCalculation(formulaType, Q, W, A, extra = {}) {
+        function createCalculation(formulaType, Q, W, A) {
             try {
                 const exprText = getFormulaText(formulaType);
                 const ast = validateFormulaText(exprText);
-                const vals = { Q, W, A, ...extra };
+                const vals = { Q, W, A };
                 const shown = { Q: formatNumber(Q), W: formatNumber(W, true), A: formatNumber(A, true) };
-                const extraShown = {};
-                Object.keys(extra).forEach(k => { shown[k] = extraShown[k] = formatNumber(extra[k]); });
                 const result = evalAst(ast, vals);
                 if (!result.isFinite() || result.lte(0)) throw new Error('Formula gave a non-positive result.');
                 const rounded = result.toFixed(3);
@@ -1243,8 +1133,7 @@
                 const usedVars = collectVars(ast);
                 return {
                     html, formulaType, Q: Q.toString(), W: W.toString(), A: A.toString(), result: rounded,
-                    isFinal: formulaType !== "F2", product: PRODUCTS[currentProduct].name, formulaText: prettyFormula(exprText),
-                    extraShown, formulaHtml: showAst(ast, qLabelFor(formulaType)), qLabel: qLabelFor(formulaType) || 'Quantity',
+                    isFinal: formulaType !== "F2", product: PRODUCTS[currentProduct].name, formulaHtml: showAst(ast, qLabelFor(formulaType)), qLabel: qLabelFor(formulaType) || 'Quantity',
                     usesW: usedVars.has('W'), usesA: usedVars.has('A')
                 };
             } catch (err) { console.error("Calculation error:", err); throw err; }
@@ -1282,13 +1171,9 @@
             const manual = currentProduct === 'manual';
             card.classList.toggle('is-manual', manual);
             document.getElementById('specProduct').textContent = PRODUCTS[currentProduct].name;
-            document.getElementById('specBadge').textContent = '🔒 Fixed';
             const stdPill = document.getElementById('specStd');
             const stdVal = currentProduct === 'valacyclovir' ? CONSTANTS.ACB_DEFAULT_A : currentProduct === 'levetiracetam' ? CONSTANTS.LEVA_A : null;
             stdPill.textContent = stdVal !== null ? `Std API Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std API Qty: enter below';
-            document.getElementById('specHint').textContent = manual
-                ? 'Standard formulas (fixed). Enter your Std API Qty below, and check the formulas against the BMR before dispensing.'
-                : 'Fixed for this product. Check against the BMR before dispensing; choose Manual for a new product with the standard formulas.';
             rows.innerHTML = '';
             ['F1', 'F2', 'F3'].forEach(type => {
                 const ql = qLabelFor(type);
@@ -1298,34 +1183,8 @@
                 cell.innerHTML = `<div class="spec-cell-label">${type} =</div><div class="spec-cell-body">${body}</div>`;
                 rows.appendChild(cell);
             });
-            syncExtraVars();
-            updateSheetScale();
-        }
-
-        // Extra variables: only if a product formula in PRODUCTS uses a letter other than Q, W, A (none today).
-        const extraVarValues = {};
-        function syncExtraVars() {
-            const box = document.getElementById('extraVars');
-            if (!box) return;
-            const names = new Set();
-            if (currentProduct) ['F1', 'F2', 'F3'].forEach(t => { try { collectVars(parseFormula(getFormulaText(t))).forEach(v => { if (!STD_VARS.includes(v)) names.add(v); }); } catch {} });
-            const list = [...names].sort();
-            const existing = [...box.querySelectorAll('input')].map(i => i.dataset.var);
-            updateProgress();   // W/A visibility must refresh even when the extra-vars list is unchanged
-            if (JSON.stringify(list) === JSON.stringify(existing)) return;       // nothing changed — keep focus/values
-            existing.forEach(n => { const el = document.getElementById('extraVar_' + n); if (el) extraVarValues[n] = el.value; });
-            box.innerHTML = '';
-            list.forEach(name => {
-                const g = document.createElement('div'); g.className = 'input-group';
-                g.innerHTML = `<label for="extraVar_${name}">Value of ${name} (from your formula):</label>
-                    <input type="number" id="extraVar_${name}" data-var="${name}" step="any" inputmode="decimal" placeholder="Enter value of ${name}">`;
-                const input = g.querySelector('input');
-                input.value = extraVarValues[name] || '';
-                input.addEventListener('input', () => { if (!/^\d*\.?\d{0,4}$/.test(input.value) && input.value !== '') input.value = input.value.slice(0, -1); updateProgress(); });
-                input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
-                box.appendChild(g);
-            });
             updateProgress();
+            updateSheetScale();
         }
 
         function renderFormulaCardVisibility() {
@@ -1334,7 +1193,7 @@
 
         function openProductGate() { document.getElementById('productGate').style.display = 'flex'; document.querySelector('#productGate .gate-btn')?.focus(); }
         function clearAllCalculations() {
-            calculations = []; calculationCount = 0; domCache.stepsContainer.innerHTML = '';
+            calculations = []; calculationCount = 0; batchAssigned = false; domCache.stepsContainer.innerHTML = '';
             refreshStepsPanelVisibility(); updatePageNumbers(); updateQuantityTracker();
         }
         function selectProduct(val) {
@@ -1352,9 +1211,6 @@
             applyDrugPreset(val);
             renderFormulaCard();
             document.getElementById('productGate').style.display = 'none';
-            // Draw the eye to the Std Qty that came with this product
-            const flashEl = val === 'manual' ? document.getElementById('manualStdRow') : document.getElementById('specStd');
-            flashEl.classList.remove('flash-highlight'); void flashEl.offsetWidth; flashEl.classList.add('flash-highlight');
             requestAnimationFrame(() => (val === 'manual' ? domCache.stdQtyInput : domCache.QInput)?.focus());
             return true;
         }
@@ -1422,8 +1278,7 @@
             input.value = domCache.dispensedQty.textContent;
             input.classList.add('acb-manual-input');
             updateACB(input, lotIndex, 'b');
-            showCalculator('acb');
-            input.focus();
+            showCalculator('acb', input);
             document.getElementById('lotAssignSelect').value = '';
             document.getElementById('lotAssignPanel')?.classList.add('hidden');
             // Lot assigned — release the input card for the next batch. The old
@@ -1451,45 +1306,20 @@
 
         function copyRemainingToQ() {
             const txt = domCache.remainingQty.textContent;
-            if (txt === '-' || txt === '0.000') return;
+            if (txt === '-' || !(parseFloat(txt) > 0)) return;
             if (confirm("Copy " + txt + " to Quantity (Q) field?")) {
                 domCache.QInput.value = txt; domCache.waterInput.value = ''; domCache.assayInput.value = '';
                 updateProgress();
                 const used = getUsedStdVars();
-                if (used.has('W')) {
-                    domCache.waterInput.focus();
-                    domCache.waterInput.addEventListener("keydown", function handleWEnter(e) {
-                        if (e.key === "Enter" && domCache.waterInput.value.trim() !== "" && used.has('A')) {
-                            domCache.assayGroup.style.display = "block"; domCache.waterInput.removeEventListener("keydown", handleWEnter);
-                        }
-                    });
-                } else if (used.has('A')) domCache.assayInput.focus();
+                if (used.has('W')) domCache.waterInput.focus();
+                else if (used.has('A')) domCache.assayInput.focus();
             }
         }
 
         function resetACBCalculator() {
             if (!confirm("Reset the (A+C)-B calculator? This will clear all entered values.")) return;
-            const preset = document.getElementById('drugSelector')?.value || 'valacyclovir';
-            if (preset === 'manual') {
-                domCache.acbInputs.a.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std API Qty A'; });
-                domCache.acbInputs.c.forEach(input => { input.value = ''; input.readOnly = false; input.classList.remove('edited','acb-manual-input','acb-prefilled'); input.placeholder = 'Std Excipient Qty C'; });
-                domCache.acbInputs.totals.a.textContent = '0.000';
-                domCache.acbInputs.totals.c.textContent = '0.000';
-            } else if (preset === 'levetiracetam') {
-                domCache.acbInputs.a.forEach(input => { input.value = CONSTANTS.LEVA_A.toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
-                domCache.acbInputs.c.forEach((input, i) => { input.value = LEVA_C_PER_LOT[i].toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
-                domCache.acbInputs.totals.a.textContent = CONSTANTS.LEVA_TOTAL_A.toFixed(3);
-                domCache.acbInputs.totals.c.textContent = CONSTANTS.LEVA_TOTAL_C.toFixed(3);
-            } else {
-                domCache.acbInputs.a.forEach(input => { input.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
-                domCache.acbInputs.c.forEach(input => { input.value = CONSTANTS.ACB_DEFAULT_C.toFixed(3); input.classList.remove('edited','acb-manual-input'); input.classList.add('acb-prefilled'); });
-                domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
-                domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
-            }
-            domCache.acbInputs.b.forEach(input => { input.value = ''; input.classList.remove('acb-manual-input'); });
-            domCache.acbInputs.totals.b.textContent = '0.000';
-            domCache.acbInputs.totals.result.textContent = '0.000';
-            domCache.acbInputs.results.forEach(r => { r.textContent = '-'; r.classList.remove('acb-output','acb-prefilled'); });
+            // Re-apply the current product's preset (Manual re-reads the Std API / Excipient qty fields)
+            applyDrugPreset(currentProduct || 'valacyclovir');
         }
 
         function handleInput(event) {
@@ -1543,19 +1373,14 @@
 
         function updateProgress() {
             const used = getUsedStdVars();
-            let f = 0, total = 0;
-            total++; if (domCache.QInput.value.trim()) f++;
+            let f = domCache.QInput.value.trim() ? 1 : 0, total = 1;
             if (used.has('W')) { total++; if (domCache.waterInput.value.trim()) f++; }
             if (used.has('A')) { total++; if (domCache.assayInput.value.trim()) f++; }
-            const extras = [...document.querySelectorAll('#extraVars input')];
-            total += extras.length;
-            extras.forEach(i => { if (i.value.trim()) f++; });
-            domCache.progressBar.style.width = (f / total) * 100 + "%";
             updateStdVarVisibility();
             domCache.buttons.style.display = f === total ? "flex" : "none";
         }
 
-        function showCalculator(calculator) {
+        function showCalculator(calculator, focusEl) {
             const showAcb = calculator === 'acb';
             domCache.formulaCalculator.classList.toggle('active', !showAcb);
             domCache.acbCalculator.classList.toggle('active', showAcb);
@@ -1565,7 +1390,7 @@
             document.getElementById('tabAcbBtn')?.setAttribute('aria-selected', String(showAcb));
             refreshStepsPanelVisibility();
             renderFormulaCardVisibility();
-            requestAnimationFrame(() => (showAcb ? domCache.acbInputs.b[0] : domCache.QInput)?.focus());
+            requestAnimationFrame(() => (focusEl || (showAcb ? domCache.acbInputs.b[0] : domCache.QInput))?.focus());
         }
 
         function showInfo() {
@@ -1694,7 +1519,6 @@
         }
 
         function printWithCheck() {
-            if (window.innerWidth <= 768 && !confirm("For optimal printing, use a larger screen or PC. Continue?")) return;
             buildPrintArea();   // safe to repeat; also covers browsers that skip beforeprint
             window.print();
         }
@@ -1708,7 +1532,6 @@
                 <div class="verify-row"><span class="verify-label">${calculation.qLabel} (Q):</span> <span class="verify-value">${Q}</span></div>
                 ${calculation.usesW ? `<div class="verify-row"><span class="verify-label">Water Content (W):</span> <span class="verify-value">${W}%</span></div>` : ''}
                 ${calculation.usesA ? `<div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>` : ''}
-                ${Object.entries(calculation.extraShown || {}).map(([k, v]) => `<div class="verify-row"><span class="verify-label">Value of ${k}:</span> <span class="verify-value">${v}</span></div>`).join('')}
                 <div class="verify-row"><span class="verify-label">Product:</span> <span class="verify-value">${calculation.product}</span></div>
                 <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value verify-formula">${calculation.formulaType} = ${calculation.formulaHtml}</span></div>
                 </div>
@@ -1743,18 +1566,8 @@
             if (Q.gt(CONSTANTS.Q_MAX)) { alert(`Quantity (Q) must be ≤ ${CONSTANTS.Q_MAX}.`); return; }
             if ((usedVars.has('A') && A.gt(CONSTANTS.A_MAX)) || (usedVars.has('W') && W.gt(CONSTANTS.W_MAX))) { alert("Invalid values: Ensure A ≤ 100 and W ≤ 99.99."); return; }
 
-            // Extra variables used by the formula (none today) — each one needs a value.
-            const extra = {};
-            for (const name of collectVars(parseFormula(getFormulaText(formulaType)))) {
-                if (STD_VARS.includes(name)) continue;
-                const el = document.getElementById('extraVar_' + name);
-                const txt = el ? el.value.trim() : '';
-                if (!txt || isNaN(Number(txt))) { alert(`Enter a value for ${name} (used in ${formulaType}).`); el?.focus(); return; }
-                extra[name] = new Decimal(txt);
-            }
-            hasCalculated = true;
             let calculationResult;
-            try { calculationResult = createCalculation(formulaType, Q, W, A, extra); if (!calculationResult) throw new Error("Failed"); }
+            try { calculationResult = createCalculation(formulaType, Q, W, A); if (!calculationResult) throw new Error("Failed"); }
             catch { alert("Calculation failed. Please check inputs."); return; }
 
             const isConfirmed = await verifyCalculation(calculationResult, Q, W, A);
@@ -1778,7 +1591,7 @@
                 <div class="entry-meta-row">
                     <div class="lot-label"><input type="text" class="lot-input" maxlength="20" aria-label="Lot number" placeholder="No."></div>
                     <div class="product-label">${calculationResult.product}</div>
-                    <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"${Object.entries(calculationResult.extraShown || {}).map(([k, v]) => ` ${k}="${v}"`).join('')}</div>
+                    <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 </div>
                 <div class="calculation-content">${calculationResult.html}</div>
                 <div class="page-number">${calculationCount+1}/${calculationCount+1}</div>
@@ -1789,7 +1602,6 @@
 
             // Clear inputs immediately so they're ready for the next entry
             domCache.QInput.value = ""; domCache.waterInput.value = ""; domCache.assayInput.value = "";
-            document.querySelectorAll('#extraVars input').forEach(i => { i.value = ''; });
             updateProgress();
             updateQuantityTracker();
 
@@ -1804,10 +1616,19 @@
             });
         }
 
-        function syncStdQtyToACB(value) {
-            const stdVal = new Decimal(value || 0).toFixed(3);
-            domCache.acbInputs.a.forEach(input => { input.value = stdVal; input.classList.remove('acb-manual-input'); input.classList.add('acb-prefilled'); });
-            domCache.acbInputs.totals.a.textContent = new Decimal(stdVal).times(domCache.acbInputs.a.length).toFixed(3);
+        // Manual mode: push the Std API qty (A) / Std Excipient qty (C) into the (A+C)-B
+        // table WITHOUT touching the Issued Qty (B) values already entered.
+        function syncManualSetup() {
+            if (currentProduct !== 'manual') return;
+            [['a', domCache.stdQtyInput], ['c', domCache.stdCInput]].forEach(([type, src]) => {
+                const v = src.value || '';
+                domCache.acbInputs[type].forEach(input => {
+                    input.value = v; input.classList.remove('acb-prefilled', 'edited');
+                    input.classList.toggle('acb-manual-input', !!v);
+                });
+            });
+            updateACB(domCache.acbInputs.b[0], 0, 'b');   // refresh totals + results
+            updateQuantityTracker();
         }
 
         function applyDrugPreset(preset) {
@@ -1900,7 +1721,7 @@
                 input.addEventListener("keydown", e => { if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault(); if (e.key === "Enter") handleInput(e); });
             });
             domCache.QInput.addEventListener("focus", () => {
-                requestAnimationFrame(() => domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                requestAnimationFrame(() => domCache.formulaCalculator.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
             });
 
             domCache.acbCalculator.addEventListener("input", e => {
@@ -1966,10 +1787,7 @@
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (!el) return;
                 el.addEventListener('input', () => validateInput(el));
-                el.addEventListener('change', () => {
-                    if (currentProduct === 'manual') applyDrugPreset('manual');
-                    updateQuantityTracker();
-                });
+                el.addEventListener('change', syncManualSetup);
             });
             // Start ready-to-use with the default preset already applied.
             applyDrugPreset(drugSelector.value);
@@ -1997,13 +1815,6 @@
             });
 
             domCache.stdQtyInput.addEventListener('input', () => { validateInput(domCache.stdQtyInput); updateQuantityTracker(); });
-            domCache.stdQtyInput.addEventListener("change", () => {
-                const preset = document.getElementById('drugSelector')?.value || 'valacyclovir';
-                if (preset !== 'manual') return; // presets control their own A rows
-                const v = parseFloat(domCache.stdQtyInput.value || 0);
-                if (!isNaN(v) && v > 0) syncStdQtyToACB(v);
-                updateQuantityTracker();
-            });
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.getElementById('lotAssignSelect').addEventListener('change', function () {
                 if (!this.value) return;
@@ -2020,7 +1831,6 @@
         window.addEventListener('resize', () => { updatePageNumbers(); updateSheetScale(); });
     </script>
 
-    <!-- SIDENAV + WRITE US SCRIPT -->
     <script>
     (function () {
         const hamburger    = document.getElementById('hamburgerBtn');
@@ -2079,7 +1889,6 @@
     })();
     </script>
 
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-HMNB6B1Q8B"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
