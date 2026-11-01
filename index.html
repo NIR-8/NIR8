@@ -171,10 +171,24 @@
             width: 100%; background: #f0f0f0; padding: 5mm; text-align: center;
             font-size: 16pt; font-weight: 600; border-bottom: 1px solid #000; box-sizing: border-box;
         }
+        .calculation-entry::after {
+            content: "Remarks: ______________________________________________________________";
+            position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f0f0;
+            padding: 5mm; font-size: 14pt; border-top: 1px solid #000; box-sizing: border-box;
+            text-align: left; white-space: nowrap; overflow: hidden;
+        }
         .entry-meta-row {
             display: flex; justify-content: space-between; align-items: baseline;
             margin-top: 24mm; padding: 0 10mm; font-size: 12pt; gap: 10px;
         }
+        .calculation-entry .lot-label { font-size: 12pt; text-align: left; }
+        .calculation-entry .lot-label::before { content: "LOT: "; font-weight: 600; }
+        /* Plain fillable lot number — no placeholder text, no underline */
+        .calculation-entry .lot-input {
+            width: 90px; padding: 0 2px; margin: 0; font-size: 12pt; text-align: left;
+            border: none; border-radius: 0; background: transparent;
+        }
+        .calculation-entry .lot-input:focus { outline: none; box-shadow: none; background: transparent; }
         .reference-values { text-align: right; font-size: 10pt; color: #000; white-space: nowrap; }
         .calculation-content {
             margin-top: 8mm; padding: 0 15mm; overflow: hidden; font-size: 14pt; text-align: left;
@@ -502,7 +516,7 @@
         .product-gate-card h2 { margin: 0 0 4px; font-size: 20px; }
         .gate-btn { display: block; width: 100%; margin-bottom: 10px; text-align: left; padding: 14px 16px; }
         .gate-btn.manual { background: #d98300; }
-        .product-label { font-size: 12pt; font-weight: 600; text-align: left; flex: 1; }
+        .product-label { font-size: 12pt; font-weight: 600; text-align: center; flex: 1; }
         @media print { .formula-spec-card, #productGate, .toast { display: none !important; } }
 
         /* ── UNDO TOAST ── */
@@ -613,7 +627,13 @@
                 width: 100%; background: #f0f0f0; padding: 5mm; text-align: center;
                 font-size: 16pt; font-weight: 600; border-bottom: 1px solid #000;
             }
+            .calculation-entry::after {
+                content: "Remarks: ______________________________________________________________";
+                position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f0f0;
+                padding: 5mm; font-size: 14pt; border-top: 1px solid #000; text-align: left;
+            }
             .entry-meta-row { margin-top: 24mm; padding: 0 10mm; font-size: 12pt; }
+            .calculation-entry .lot-label { font-size: 12pt; color: #000; }
             .reference-values { font-size: 10pt; color: #000; }
             .calculation-content { margin-top: 8mm; padding: 0 15mm; font-size: 14pt; overflow: hidden; text-align: left; }
             .page-number { position: absolute; bottom: 5mm; right: 5mm; font-size: 8pt; color: #000; font-weight: 700; }
@@ -1616,6 +1636,7 @@
             newEntry.innerHTML = `
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="entry-meta-row">
+                    <div class="lot-label"><input type="text" class="lot-input" maxlength="20" aria-label="Lot number"></div>
                     <div class="product-label">${calculationResult.product}</div>
                     <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 </div>
