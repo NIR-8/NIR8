@@ -508,14 +508,23 @@
             .verify-row { flex-wrap: wrap; }
             .verify-label { width: auto; text-align: left; margin-right: 6px; }
         }
-        .std-pill { display: inline-block; background: #fff3a8; color: #5a4500; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid #e8cf55; font-size: 12px; }
-        .gate-btn .std-pill { margin-top: 5px; }
+        /* Orange glass — same translucent look as the hamburger button */
+        .std-pill, .gate-btn.manual {
+            background: linear-gradient(135deg, rgba(255,176,64,.34), rgba(255,140,0,.16));
+            border: 1px solid rgba(255,160,40,.5); color: #7a4300;
+            box-shadow: 0 2px 10px rgba(217,131,0,.16), inset 0 1px 0 rgba(255,255,255,.65);
+            -webkit-backdrop-filter: blur(10px) saturate(160%); backdrop-filter: blur(10px) saturate(160%);
+        }
+        .std-pill { display: inline-block; font-weight: 700; padding: 3px 10px; border-radius: 8px; font-size: 12px; }
+        .gate-btn .std-pill { margin-top: 6px; background: linear-gradient(135deg, rgba(255,190,90,.8), rgba(255,160,40,.6)); color: #4d2900; }
         .spec-error { margin: 2px 0 0; font-size: 11px; color: #c0392b; }
         .spec-error:empty { display: none; }
         .product-gate-card { background: #fff; border-radius: 16px; padding: 26px 22px; width: 92%; max-width: 380px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
         .product-gate-card h2 { margin: 0 0 4px; font-size: 20px; }
         .gate-btn { display: block; width: 100%; margin-bottom: 10px; text-align: left; padding: 14px 16px; }
-        .gate-btn.manual { background: #d98300; }
+        .gate-btn.manual { border-radius: 8px; }
+        .gate-btn.manual:hover { background: linear-gradient(135deg, rgba(255,176,64,.5), rgba(255,140,0,.28)); }
+        .gate-btn.manual .std-pill { background: rgba(255,255,255,.45); }
         .product-label { font-size: 12pt; font-weight: 600; text-align: center; flex: 1; }
         @media print { .formula-spec-card, #productGate, .toast { display: none !important; } }
 
