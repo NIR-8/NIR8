@@ -1424,8 +1424,9 @@
 
         function updateStdVarVisibility() {
             const used = getUsedStdVars();
-            domCache.waterGroup.style.display = used.has('W') ? "block" : "none";
-            domCache.assayGroup.style.display = used.has('A') ? "block" : "none";
+            domCache.waterGroup.style.display = (used.has('W') && domCache.QInput.value.trim()) ? "block" : "none";
+            const prevFilled = used.has('W') ? domCache.waterInput.value.trim() : domCache.QInput.value.trim();
+            domCache.assayGroup.style.display = (used.has('A') && prevFilled) ? "block" : "none";
         }
 
         function showCalcMsg(text, focusEl) {
@@ -1797,6 +1798,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
+            domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             domCache.buttons.style.display = "none"; domCache.calculationSteps.classList.add("hidden");
             // Only steal focus to Q if the user hasn't already started typing somewhere
             // (other render-blocking resources can delay DOMContentLoaded, so it may
