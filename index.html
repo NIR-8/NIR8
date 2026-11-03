@@ -54,17 +54,77 @@
         /* ── GLOBAL ── */
         *, *::before, *::after { box-sizing: border-box; }
 
-        /* ── HAMBURGER — small circular button, fixed top-right corner ── */
-        .hamburger-btn {
-            position: fixed; top: 12px; right: 12px; z-index: 20030;
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(255,255,255,.9); color: #157347; border: 1px solid rgba(0,0,0,.06);
-            font-size: 18px; line-height: 1; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,.12);
-            transition: background .2s, transform .2s;
+        /* ── TOP MENU BAR (compact — tabs + product + qty tracker) ── */
+        .menu-bar {
+            width: 100%; background: #1a2332; color: #fff;
+            display: flex; justify-content: center;
+            position: fixed; top: 0; left: 0; z-index: 100; padding: 8px 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,.18);
         }
-        .hamburger-btn:hover { background: #eaf7ee; transform: scale(1.06); }
+        .menu-container {
+            display: flex; max-width: 1100px; width: 100%;
+            padding: 0 12px; align-items: center; gap: 8px; overflow: hidden;
+        }
+        .menu-tabs {
+            display: flex; gap: 3px; background: rgba(255,255,255,.08);
+            border-radius: 9px; padding: 3px; flex-shrink: 0;
+        }
+        .menu-tab {
+            background: transparent; color: rgba(255,255,255,.7); border: none;
+            border-radius: 7px; padding: 8px 14px; font-size: 13px; font-weight: 600;
+            font-family: "Inter", sans-serif; cursor: pointer;
+            transition: background .2s, color .2s; white-space: nowrap;
+        }
+        .menu-tab.active { background: #157347; color: #fff; }
+        .menu-tab:not(.active):hover { background: rgba(255,255,255,.12); color: #fff; }
+
+        .menu-qty-tracker {
+            display: flex; align-items: center; gap: 10px; margin-left: auto;
+            flex-shrink: 1; min-width: 0; overflow: hidden;
+        }
+        .menu-qty-tracker.hidden { display: none; }
+        .menu-qty-group {
+            display: flex; flex-direction: column; align-items: flex-start; flex-shrink: 0;
+        }
+        .menu-qty-label {
+            font-size: 10px; color: rgba(255,255,255,.65); margin-bottom: 2px;
+            white-space: nowrap; font-weight: 500; letter-spacing: .2px;
+        }
+        .menu-qty-value {
+            font-size: 13px; font-weight: 700; color: #fff;
+            font-variant-numeric: tabular-nums; min-width: 52px;
+        }
+        .menu-qty-value.clickable { cursor: pointer; }
+        .menu-qty-value.clickable:hover { color: #7fe0a5; text-decoration: underline; }
+        .menu-select, .menu-qty-input {
+            width: 110px; padding: 5px 6px; border: 1px solid rgba(255,255,255,.2);
+            border-radius: 5px; text-align: center; background: rgba(255,255,255,.1);
+            color: #fff; font-size: 12px; font-weight: 600; font-family: "Inter", sans-serif;
+        }
+        .menu-select { width: 130px; text-align: left; }
+        .menu-select option { background: #1a2332; color: #fff; }
+        .menu-qty-input { width: 78px; }
+        .menu-select:focus, .menu-qty-input:focus {
+            outline: 0; border-color: #28a745; background: rgba(255,255,255,.15);
+        }
+        .menu-qty-warning {
+            display: none; font-size: 10px; font-weight: 700; color: #fff;
+            background: #ff6b6b; padding: 2px 6px; border-radius: 3px; margin-top: 1px;
+        }
+        .menu-qty-warning.active { display: block; }
+        .menu-lot-group { display: none; }
+        .menu-lot-group.show { display: flex; }
+
+        /* ── HAMBURGER — inside the menu bar ── */
+        .hamburger-btn {
+            background: transparent; border: none; color: #fff;
+            font-size: 20px; cursor: pointer; padding: 6px 8px;
+            min-height: 40px; min-width: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; margin-left: 4px; flex-shrink: 0;
+            transition: background .2s;
+        }
+        .hamburger-btn:hover { background: rgba(255,255,255,.15); }
 
         /* ── BODY ── */
         body {
@@ -72,75 +132,40 @@
             background: #f6f7f8;
             display: flex; justify-content: flex-start; align-items: center;
             min-height: 100vh; flex-direction: column;
-            padding: 64px 20px 60px; text-align: center; margin: 0;
+            padding: 68px 20px 60px; text-align: center; margin: 0;
         }
 
-        /* ── CALCULATOR ── */
+        /* ── CALCULATOR (slim) ── */
         .calculator-container {
-            display: none; background: #fff; padding: 16px;
-            width: 90%; max-width: 400px; border-radius: 16px;
-            box-shadow: none; margin-bottom: 14px; position: relative;
-            scroll-margin-top: 60px; border: 1px solid rgba(20,40,60,.05);
+            display: none; background: #fff; padding: 12px 14px;
+            width: 90%; max-width: 400px; border-radius: 14px;
+            box-shadow: none; margin-bottom: 12px; position: relative;
+            scroll-margin-top: 70px; border: 1px solid rgba(20,40,60,.05);
         }
         #acbCalculator { max-width: 900px; margin: 0 auto; }
         .calculator-container.active { display: block; }
+        /* When batch complete (remaining=0), hide input card — lot assign is in menu */
+        #formulaCalculator.input-locked { display: none !important; }
 
-        /* ── TAB BAR — minimal segmented control switching Formula / ACB screens ── */
-        .tab-bar {
-            display: flex; gap: 4px; background: #fff;
-            border: 1px solid rgba(20,40,60,.06); border-radius: 12px;
-            padding: 3px; margin: 0 0 10px; width: 90%; max-width: 400px;
-            box-shadow: none;
-        }
-                .tab-btn {
-            flex: 1; background: transparent; color: #6b7480; border: none;
-            border-radius: 9px; padding: 10px 8px; font-size: 14px; font-weight: 600;
-            font-family: "Inter", sans-serif; cursor: pointer; transition: background .2s ease, color .2s ease;
-        }
-        .tab-btn.active { background: #157347; color: #fff; }
-        .tab-btn:not(.active):hover { background: #f2f6f3; color: #157347; }
-        .input-group { margin-top: 8px; text-align: left; }
-        .product-row { display: flex; align-items: center; gap: 8px; margin-top: 0; }
-        .product-row label { margin: 0; flex: none; }
-        .product-row select { margin: 0; flex: 1; width: auto; min-width: 0; padding: 8px 6px; font-size: 14px; text-align: left; }
+        .input-group { margin-top: 6px; text-align: left; }
         .qwa-row { gap: 8px; }
         .qwa-row .q-group { flex: 1.35; }
         .qwa-row .input-group { min-width: 0; }
         .qwa-row label { font-size: 12px; white-space: nowrap; }
         .qwa-row input { width: 100%; padding: 9px 4px; margin: 2px 0 0; }
-        /* ── QTY TRACKER (embedded in the Formula Calculator card) ── */
-        .qty-tracker-card {
-            display: flex; align-items: stretch; margin: 10px 0 0; padding: 6px;
-            background: #f7f8fa; border: 1px solid #e3e7ee; border-radius: 8px;
-        }
-        .qty-tracker-item {
-            display: flex; flex-direction: column; align-items: center; gap: 2px;
-            flex: 1; min-width: 0;
-        }
-        .qty-tracker-label {
-            font-size: 10px; color: #767676; font-weight: 600;
-            text-transform: uppercase; letter-spacing: .3px;
-        }
-        .qty-tracker-value { font-size: 15px; font-weight: 700; color: #111; font-variant-numeric: tabular-nums; }
-        .qty-tracker-sep { width: 1px; background: #e3e7ee; align-self: stretch; margin: 2px 4px; }
-        .quantity-warning-banner {
-            display: none; margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 600;
-            color: #fff; background: #ff6b6b; padding: 6px 10px; border-radius: 6px;
-        }
-        .quantity-warning-banner.active { display: block; }
         label { font-weight: 600; display: block; color: #444; font-size: 13px; text-align: left; margin: 0 0 2px; }
         input, select {
-            width: calc(100% - 20px); padding: 11px 10px; margin: 4px 0 10px;
-            border: 1.5px solid #dde2e8; border-radius: 8px; font-size: 16px; text-align: center;
+            width: calc(100% - 20px); padding: 9px 8px; margin: 2px 0 6px;
+            border: 1.5px solid #dde2e8; border-radius: 8px; font-size: 15px; text-align: center;
             background: #fbfcfd; transition: border-color .15s ease, background .15s ease;
         }
         input:focus, select:focus {
             border-color: #157347; outline: 0; background: #fff; box-shadow: 0 0 0 3px rgba(21,115,71,.12);
         }
-        .button-row { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+        .button-row { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
         button {
-            background: #157347; color: #fff; padding: 11px 8px; flex: 1;
-            border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600;
+            background: #157347; color: #fff; padding: 10px 8px; flex: 1;
+            border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
             user-select: none; transition: background .15s ease, transform .1s ease;
         }
         button:hover { background: #106038; }
@@ -261,11 +286,7 @@
         }
         .print-btn:hover { background: rgba(21,115,71,.08); }
         .error-message { color: #ff6b6b; font-size: 12px; margin-top: 5px; text-align: center; }
-.lot-assign-panel {
-            margin-top: 10px; padding: 8px; border: 1px solid #e3e7ee; border-radius: 8px; background: #f7f8fa;
-        }
-        .lot-assign-panel.hidden { display: none; }
-        .reset-acb-row { text-align: right; margin: 4px 0 14px; }
+.reset-acb-row { text-align: right; margin: 4px 0 14px; }
         .reset-acb-btn {
             background: transparent; border: none;
             cursor: pointer; font-size: 18px; color: #ff6b6b; padding: 6px;
@@ -442,21 +463,9 @@
         }
         .hold-sep { display: flex; align-items: center; font-weight: 700; color: #157347; font-size: 16px; }
 
-        /* ── LOT SELECTION DROP-DOWN (manual lot control — never auto-assigned) ── */
-        .lot-select-inline {
-            width: auto; min-width: 96px; padding: 8px 10px; margin: 0; flex: none;
-            border: 1.5px solid #dde2e8; border-radius: 8px; background: #fbfcfd;
-            color: #333; font-size: 14px; font-weight: 600; cursor: pointer;
-        }
-        .lot-select-inline:focus { border-color: #157347; outline: 0; box-shadow: 0 0 0 3px rgba(21,115,71,.12); }
-        #lotAssignSelect.lot-select-inline {
-            width: 100%; max-width: 240px; margin: 0 auto; display: block;
-            padding: 12px; font-size: 15px; text-align: center;
-        }
-
         /* ── FLOATING ACTION BUTTONS (hamburger contents) ── */
         .fab-container {
-            position: fixed; top: 70px; right: 12px; z-index: 20029;
+            position: fixed; top: 62px; right: 12px; z-index: 20029;
             display: flex; flex-direction: column; gap: 10px;
             opacity: 0; pointer-events: none; transform: translateX(24px);
             transition: opacity .25s ease, transform .25s ease;
@@ -551,14 +560,6 @@
         /* ── PER-LOT A/C VARIATION HIGHLIGHT (light red) ── */
         .acb-input.acb-varies { background: #ffe3e3 !important; border-color: #f1b0b0; }
 
-        /* ── INPUT CARD LOCKED — remaining qty is 0: hide the whole input card
-           except the lot-assign panel, until the user assigns the lot ── */
-        #formulaCalculator.input-locked { padding: 12px; }
-        /* Keep the lot picker AND the qty tracker (Dispensed / Remaining) visible
-           while the batch is complete — only the input fields are locked away. */
-        #formulaCalculator.input-locked > *:not(#lotAssignPanel):not(#menuQtyTracker) { display: none !important; }
-        #formulaCalculator.input-locked #menuQtyTracker { margin-top: 0; }
-
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
             /* more room for the scaled-down sheet */
@@ -592,20 +593,19 @@
             .hold-days-input { width: 62px !important; }
             input { font-size: 14px; }
             button { font-size: 14px; padding: 10px; }
-            .qty-tracker-value { font-size: 15px; }
-            .tab-bar { width: 100%; }
+            .menu-container { flex-wrap: wrap; gap: 6px; padding: 6px 10px; }
+            .menu-qty-tracker { order: 3; width: 100%; justify-content: center; margin-left: 0; gap: 12px; }
+            .menu-select { width: 120px; }
             .writeus-panel { width: auto; right: 0; left: 0; max-width: 100%; }
         }
 
-        /* ── DESKTOP — a little more breathing room on larger screens; the layout
-           stays a centered column (better for reading/printing) rather than
-           stretching full-width. ── */
+        /* ── DESKTOP ── */
         @media (min-width: 900px) {
-            body { padding-top: 84px; }
-            .calculator-container:not(#acbCalculator) { max-width: 460px; padding: 20px; }
-            .formula-spec-card { max-width: 760px; padding: 14px 22px; }
-            .tab-bar, #formulaCalculator { max-width: 460px; }
-            .hold-period-card { max-width: 460px; }
+            body { padding-top: 72px; }
+            .calculator-container:not(#acbCalculator) { max-width: 440px; padding: 14px 16px; }
+            .formula-spec-card { max-width: 760px; padding: 12px 18px; }
+            #formulaCalculator { max-width: 440px; }
+            .hold-period-card { max-width: 440px; }
             .calculation-steps { max-width: 760px; }
         }
 
@@ -623,7 +623,7 @@
             .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .progress-container, footer, .reset-acb-btn, .reset-acb-row, .hold-period-card,
- .writeus-panel, .tab-bar,
+            .writeus-panel, .menu-bar,
             .hamburger-btn, .fab-container, .fab { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
@@ -675,11 +675,55 @@
     <h1 class="sr-only">NIR8 Calculators – Pharmaceutical Assay &amp; Formula Calculator</h1>
     <noscript>JavaScript is required.</noscript>
 
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
+    <!-- TOP MENU BAR -->
+    <div class="menu-bar">
+        <div class="menu-container">
+            <div class="menu-tabs" role="tablist" aria-label="Calculators">
+                <button type="button" class="menu-tab active" id="tabFormulaBtn" role="tab" aria-selected="true" aria-controls="formulaCalculator">Formula</button>
+                <button type="button" class="menu-tab" id="tabAcbBtn" role="tab" aria-selected="false" aria-controls="acbCalculator">(A+C)-B</button>
+            </div>
 
-    <div class="tab-bar" id="tabBar" role="tablist" aria-label="Calculators">
-        <button type="button" class="tab-btn active" id="tabFormulaBtn" role="tab" aria-selected="true" aria-controls="formulaCalculator">Formula</button>
-        <button type="button" class="tab-btn" id="tabAcbBtn" role="tab" aria-selected="false" aria-controls="acbCalculator">(A+C)-B</button>
+            <div class="menu-qty-tracker" id="menuQtyTracker">
+                <div class="menu-qty-group">
+                    <label for="drugSelector" class="menu-qty-label">Product</label>
+                    <select id="drugSelector" class="menu-select" aria-label="Select product">
+                        <option value="" disabled selected>— Select —</option>
+                        <option value="valacyclovir">Valacyclovir</option>
+                        <option value="levetiracetam">Levetiracetam</option>
+                        <option value="manual">Manual</option>
+                    </select>
+                </div>
+                <div class="menu-qty-group" id="stdQtyGroupMenu" style="display:none">
+                    <label for="stdQty" class="menu-qty-label">Std API (A)</label>
+                    <input type="number" id="stdQty" class="menu-qty-input" step="0.001" min="0" placeholder="kg" aria-label="Std API qty">
+                </div>
+                <div class="menu-qty-group" id="stdCGroupMenu" style="display:none">
+                    <label for="stdC" class="menu-qty-label">Std Exc (C)</label>
+                    <input type="number" id="stdC" class="menu-qty-input" step="0.001" min="0" placeholder="kg" aria-label="Std Excipient qty">
+                </div>
+                <div class="menu-qty-group">
+                    <span class="menu-qty-label">Dispensed</span>
+                    <span id="dispensedQty" class="menu-qty-value">0.000</span>
+                </div>
+                <div class="menu-qty-group">
+                    <span class="menu-qty-label">Remaining</span>
+                    <span id="remainingQty" class="menu-qty-value clickable">0.000</span>
+                    <span id="quantityWarning" class="menu-qty-warning">Mismatch!</span>
+                </div>
+                <div class="menu-qty-group menu-lot-group" id="lotAssignGroup">
+                    <label for="lotAssignSelect" class="menu-qty-label">Assign Lot</label>
+                    <select id="lotAssignSelect" class="menu-select" aria-label="Select lot to assign this batch to">
+                        <option value="" disabled selected>Select</option>
+                        <option value="1">Lot-I</option>
+                        <option value="2">Lot-II</option>
+                        <option value="3">Lot-III</option>
+                        <option value="4">Lot-IV</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">☰</button>
+        </div>
     </div>
 
     <div class="formula-spec-card" id="formulaSpecCard" aria-live="polite">
@@ -691,25 +735,6 @@
     </div>
 
     <div id="formulaCalculator" class="calculator-container active">
-        <div class="input-group product-row">
-            <label for="drugSelector">Product</label>
-            <select id="drugSelector">
-                <option value="" disabled selected>— Select product —</option>
-                <option value="valacyclovir">Valacyclovir — Std API Qty 417 kg</option>
-                <option value="levetiracetam">Levetiracetam — Std API Qty 268.750 kg</option>
-                <option value="manual">Manual — enter your own Std API Qty</option>
-            </select>
-        </div>
-        <div class="input-row" id="manualStdRow" style="display:none">
-            <div class="input-group" id="stdQtyGroup">
-                <label for="stdQty">Std API qty (A) kg:</label>
-                <input type="number" id="stdQty" step="0.001" min="0" placeholder="Enter Std API qty (A)">
-            </div>
-            <div class="input-group" id="stdCGroup">
-                <label for="stdC">Std Excipient qty (C) kg:</label>
-                <input type="number" id="stdC" step="0.001" min="0" placeholder="Enter Std Excipient qty (C)">
-            </div>
-        </div>
         <div class="input-row qwa-row">
             <div class="input-group q-group">
                 <label for="Q">Quantity (Q)</label>
@@ -726,30 +751,9 @@
         </div>
         <div id="calcMsg" class="error-message" role="alert"></div>
         <div class="button-row">
-            <button type="button" data-formula="F1" aria-label="Calculate F1">Calculate F1</button>
-            <button type="button" data-formula="F2" aria-label="Calculate F2">Calculate F2</button>
-            <button type="button" data-formula="F3" aria-label="Calculate F3">Calculate F3</button>
-        </div>
-        <div class="qty-tracker-card" id="menuQtyTracker">
-            <div class="qty-tracker-item">
-                <span class="qty-tracker-label">Dispensed API Qty</span>
-                <span id="dispensedQty" class="qty-tracker-value">0.000</span>
-            </div>
-            <div class="qty-tracker-sep"></div>
-            <div class="qty-tracker-item">
-                <span class="qty-tracker-label">Remaining</span>
-                <span id="remainingQty" class="qty-tracker-value">0.000</span>
-            </div>
-        </div>
-        <div id="quantityWarning" class="quantity-warning-banner">Qty mismatch!</div>
-        <div class="lot-assign-panel hidden" id="lotAssignPanel" role="status">
-            <select id="lotAssignSelect" class="lot-select-inline" aria-label="Select lot to assign this batch to">
-                <option value="" disabled selected>Select Lot</option>
-                <option value="1">Lot-I</option>
-                <option value="2">Lot-II</option>
-                <option value="3">Lot-III</option>
-                <option value="4">Lot-IV</option>
-            </select>
+            <button type="button" data-formula="F1" aria-label="Calculate F1">F1</button>
+            <button type="button" data-formula="F2" aria-label="Calculate F2">F2</button>
+            <button type="button" data-formula="F3" aria-label="Calculate F3">F3</button>
         </div>
     </div>
 
@@ -1252,7 +1256,10 @@
 
         function toggleManualStdRow(preset) {
             const manual = preset === 'manual';
-            document.getElementById('manualStdRow').style.display = manual ? 'flex' : 'none';
+            const stdA = document.getElementById('stdQtyGroupMenu');
+            const stdC = document.getElementById('stdCGroupMenu');
+            if (stdA) stdA.style.display = manual ? 'flex' : 'none';
+            if (stdC) stdC.style.display = manual ? 'flex' : 'none';
         }
 
         function updateQuantityTracker() {
@@ -1266,21 +1273,20 @@
                 else { dispensed = dispensed.plus(calc.result); remainingCalc = remainingCalc.plus(calc.Q); hasFinal = true; }
             });
             domCache.dispensedQty.textContent = dispensed.toFixed(3);
-            const lotPanel = document.getElementById('lotAssignPanel');
+            const lotGroup = document.getElementById('lotAssignGroup');
             if (stdQty.isZero() || !domCache.stdQtyInput.value.trim()) {
                 domCache.remainingQty.textContent = '-'; domCache.quantityWarning.classList.remove('active');
-                if (lotPanel) lotPanel.classList.add('hidden');
+                if (lotGroup) lotGroup.classList.remove('show');
                 domCache.formulaCalculator.classList.remove("input-locked");
             } else {
                 const remaining = stdQty.minus(remainingCalc);
                 domCache.remainingQty.textContent = remaining.toFixed(3);
                 if ((hasFinal && !remaining.eq(0)) || remaining.lt(0)) domCache.quantityWarning.classList.add('active');
                 else domCache.quantityWarning.classList.remove('active');
-                if (lotPanel) lotPanel.classList.toggle('hidden', !remaining.eq(0) || batchAssigned);
-                // Remaining qty is exactly 0 after a final (F1/F3) calculation: the
-                // batch is complete — hide the input card and only offer the lot
-                // assignment. It reappears once a lot is assigned, a calculation is
-                // deleted, or the Std Qty changes.
+                // Show lot assign only when remaining hits exactly 0 and batch not yet assigned
+                if (lotGroup) lotGroup.classList.toggle('show', remaining.eq(0) && !batchAssigned);
+                // Remaining qty is exactly 0 after a final (F1/F3): hide input card
+                // (lot picker lives in the top menu bar now).
                 domCache.formulaCalculator.classList.toggle("input-locked", hasFinal && remaining.eq(0) && !batchAssigned);
             }
         }
@@ -1315,7 +1321,7 @@
             updateACB(input, lotIndex, 'b');
             showCalculator('acb', input);
             document.getElementById('lotAssignSelect').value = '';
-            document.getElementById('lotAssignPanel')?.classList.add('hidden');
+            document.getElementById('lotAssignGroup')?.classList.remove('show');
             // Lot assigned — release the input card for the next batch. The old
             // batch's calculation cards STAY on screen as the record; they are
             // retired only when the user actually starts the next batch (enters
@@ -1429,6 +1435,8 @@
             document.getElementById('tabAcbBtn')?.classList.toggle('active', showAcb);
             document.getElementById('tabFormulaBtn')?.setAttribute('aria-selected', String(!showAcb));
             document.getElementById('tabAcbBtn')?.setAttribute('aria-selected', String(showAcb));
+            // Keep product + qty tracker visible only on the Formula tab
+            document.getElementById('menuQtyTracker')?.classList.toggle('hidden', showAcb);
             refreshStepsPanelVisibility();
             renderFormulaCardVisibility();
             requestAnimationFrame(() => (focusEl || (showAcb ? domCache.acbInputs.b[0] : domCache.QInput))?.focus());
