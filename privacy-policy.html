@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VAULT Autofill – Privacy Policy</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #222; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.2rem; margin-top: 1.8em; }
+  </style>
+</head>
+<body>
+  <h1>VAULT Autofill – Privacy Policy</h1>
+  <p><strong>Last updated:</strong> November 2026</p>
+
+  <p>VAULT Autofill is a browser extension that helps you fill usernames and passwords stored in your personal OneKey VAULT.</p>
+
+  <h2>What data we access</h2>
+  <ul>
+    <li>The extension reads login forms on websites you visit so it can offer to fill credentials.</li>
+    <li>It connects to the same Firebase project used by your OneKey VAULT web app to retrieve your encrypted vault data.</li>
+  </ul>
+
+  <h2>How your data is handled</h2>
+  <ul>
+    <li><strong>Zero-knowledge encryption</strong> – Your master password never leaves your device. All entries are encrypted with AES-256-GCM. The extension only decrypts credentials in memory when you explicitly request a fill.</li>
+    <li>Decrypted passwords exist only temporarily in the extension’s memory and are never written to disk in plain text.</li>
+    <li>We do not collect, sell, or share your passwords, usernames, or browsing history with any third party.</li>
+  </ul>
+
+  <h2>Permissions explained</h2>
+  <ul>
+    <li><code>storage</code> – Remember your last username for convenience.</li>
+    <li><code>activeTab</code> / <code>tabs</code> / <code>scripting</code> – Detect login forms and fill them when you choose to.</li>
+    <li><code>alarms</code> – Auto-lock the vault after inactivity.</li>
+    <li>Host permissions for Firebase – Required to sync your encrypted vault data.</li>
+  </ul>
+
+  <h2>Contact</h2>
+  <p>This extension is provided as a companion to the OneKey VAULT web application. For questions about privacy, please contact the maintainer of your VAULT instance.</p>
+</body>
+</html>
