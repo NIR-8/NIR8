@@ -887,7 +887,7 @@
         <a class="fab" href="vault" target="_blank" rel="noopener noreferrer" aria-label="Vault" title="Vault">🔐</a>
     </div>
 
-    <div class="wu-dock open" id="wuDock">
+    <div class="wu-dock" id="wuDock">
         <div class="wu-compose" id="wuCompose" role="dialog" aria-label="Write us">
             <div class="wu-head">
                 <span class="wu-title">Write us ✍️</span>
@@ -1940,13 +1940,8 @@
         // Let the F1/F2/F3 shortcut handler ignore keys while the compose window is open.
         window.writeusIsOpen = () => dock.classList.contains('open');
 
-        // ── Open on page load so it gets noticed, then collapse to the blinking ✍️ pill ──
-        let autoTimer = setTimeout(() => collapse(), 6000);
-        const keepOpen = () => clearTimeout(autoTimer);          // the user started using it
-        document.getElementById('wuCompose').addEventListener('focusin', keepOpen);
-        document.getElementById('wuCompose').addEventListener('pointerdown', keepOpen);
-
-        function openCompose() { clearTimeout(autoTimer); dock.classList.add('open'); setTimeout(() => wpMsg.focus(), 0); }
+        // Starts collapsed — opens only when the user taps the ✍️ pill
+        function openCompose() { dock.classList.add('open'); setTimeout(() => wpMsg.focus(), 0); }
         function collapse() { dock.classList.remove('open'); }
         document.getElementById('wuPill').addEventListener('click', openCompose);
         document.getElementById('wuClose').addEventListener('click', collapse);
