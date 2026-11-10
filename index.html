@@ -373,14 +373,14 @@
 
         /* ── WRITE US: small Gmail-style compose window, bottom-right ── */
         .wu-dock { position: fixed; right: 12px; bottom: 52px; z-index: 20020; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
-        .wu-led { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex: none; animation: wuBlink 1.4s ease-in-out infinite; }
+        .wu-led { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex: none; animation: wuBlink 1.4s ease-in-out infinite; }
         .wu-dock.offline .wu-led { background: #e5484d; animation: none; }
         @keyframes wuBlink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
         @media (prefers-reduced-motion: reduce) { .wu-led { animation: none; } }
-        /* collapsed: blinking light + "Write us" */
-        .wu-pill { display: inline-flex; align-items: center; gap: 8px; flex: none; margin: 0; padding: 7px 14px; min-height: 0;
-            background: #fff; color: #041e49; font-size: 13px; font-weight: 600;
-            border: 1px solid rgba(20,40,60,.12); border-radius: 18px; box-shadow: 0 2px 10px rgba(20,40,60,.18); cursor: pointer; }
+        /* collapsed: green dot + ✍️ only (no "Write us" text) */
+        .wu-pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: none; margin: 0; padding: 6px 10px; min-height: 0;
+            background: #fff; color: #041e49; font-size: 15px; font-weight: 600; line-height: 1;
+            border: 1px solid rgba(20,40,60,.12); border-radius: 999px; box-shadow: 0 2px 8px rgba(20,40,60,.16); cursor: pointer; }
         .wu-pill:hover { background: #f2f6fc; }
         .wu-dock.open .wu-pill { display: none; }
         /* compose window */
@@ -593,6 +593,11 @@
             .qty-tracker-value { font-size: 15px; }
             .menu-card { width: 100%; }
             .menu-card .tab-bar { width: auto; margin-right: 52px; }   /* hamburger floats over the card's right end */
+            /* Write-us pill: smaller on phones, clear of content/footer */
+            .wu-dock { right: 8px; bottom: 16px; }
+            .wu-pill { padding: 4px 8px; gap: 4px; font-size: 13px; box-shadow: 0 1px 5px rgba(20,40,60,.14); }
+            .wu-led { width: 6px; height: 6px; }
+            .wu-compose { width: min(300px, calc(100vw - 16px)); }
         }
 
         /* ── DESKTOP — a little more breathing room on larger screens; the layout
@@ -905,7 +910,7 @@
             </div>
             <div class="wp-success" id="wpSuccess">✓ Message sent</div>
         </div>
-        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us"><i class="wu-led"></i><span>Write us ✍️</span></button>
+        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us"><i class="wu-led"></i><span aria-hidden="true">✍️</span></button>
     </div>
 
     <script>
@@ -1935,7 +1940,7 @@
         // Let the F1/F2/F3 shortcut handler ignore keys while the compose window is open.
         window.writeusIsOpen = () => dock.classList.contains('open');
 
-        // ── Open on page load so it gets noticed, then collapse to the blinking "Write us" tag ──
+        // ── Open on page load so it gets noticed, then collapse to the blinking ✍️ pill ──
         let autoTimer = setTimeout(() => collapse(), 6000);
         const keepOpen = () => clearTimeout(autoTimer);          // the user started using it
         document.getElementById('wuCompose').addEventListener('focusin', keepOpen);
