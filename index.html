@@ -371,61 +371,50 @@
         #remainingQty { cursor: pointer; transition: all 0.2s ease; }
         #remainingQty:hover { color: #4facfe; text-decoration: underline; }
 
-        /* ── WRITE US PANEL ── */
-        .writeus-panel {
-            position: fixed; top: 0; right: 0; width: 280px; max-width: 85vw;
-            height: 100%; background: #fff; z-index: 20028;
-            display: flex; flex-direction: column;
-            padding: 24px 20px 20px;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-            box-shadow: -8px 0 40px rgba(0,0,0,0.12); overflow-y: auto;
-        }
-        .writeus-panel.open { transform: translateX(0); }
-        .wp-back {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 12px; font-weight: 500; color: #767676;
-            background: none; border: none; cursor: pointer; padding: 2px 6px;
-            font-family: "Inter", sans-serif; margin-bottom: 16px; transition: color 0.2s;
-            border-radius: 4px; line-height: 1.4;
-        }
-        .wp-back:hover { color: #333; background: #f0f0f0; }
-        .wp-title { font-size: 18px; font-weight: 600; color: #111; margin-bottom: 6px; letter-spacing: -0.2px; }
-        .wp-title { margin-bottom: 16px; }
-        .writeus-panel textarea {
-            width: 100%; min-height: 130px; padding: 12px;
-            font-family: "Inter", sans-serif; font-size: 13px; color: #1a1a1a;
-            background: #f7f8fa; border: 1.5px solid #ebebeb;
-            border-radius: 10px; resize: none; outline: none; line-height: 1.6;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .writeus-panel textarea::placeholder { color: #ccc; }
-        .writeus-panel textarea:focus {
-            border-color: #c9b8f0; box-shadow: 0 0 0 3px rgba(201,184,240,0.15); background: #fff;
-        }
-        .wp-meta { display: flex; justify-content: flex-end; margin-top: 6px; margin-bottom: 16px; }
-        .wp-char { font-size: 11px; color: #ccc; }
+        /* ── WRITE US: small Gmail-style compose window, bottom-right, auto-hiding ── */
+        .wu-dock { position: fixed; right: 12px; bottom: 52px; z-index: 15000; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
+        .wu-led { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex: none;
+            box-shadow: 0 0 6px 2px rgba(34,197,94,.7); animation: wuBlink 1.6s ease-in-out infinite; }
+        .wu-dock.offline .wu-led { background: #e5484d; box-shadow: none; animation: none; }
+        @keyframes wuBlink { 0%,100% { opacity: 1; box-shadow: 0 0 6px 2px rgba(34,197,94,.7); } 50% { opacity: .3; box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+        @media (prefers-reduced-motion: reduce) { .wu-led { animation: none; } }
+        /* collapsed pill; shrinks to just the light when idle */
+        .wu-pill { display: inline-flex; align-items: center; gap: 7px; flex: none; margin: 0; padding: 6px 12px; min-height: 0;
+            background: rgba(255,255,255,.92); color: #041e49; font-size: 12px; font-weight: 600;
+            border: 1px solid rgba(20,40,60,.1); border-radius: 18px; box-shadow: 0 2px 10px rgba(20,40,60,.15);
+            -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); cursor: pointer; transition: all .3s ease; }
+        .wu-pill:hover { background: #fff; }
+        .wu-pill .wu-more { font-weight: 400; color: #5f6368; }
+        .wu-dock.idle .wu-pill { padding: 9px; gap: 0; opacity: .75; }
+        .wu-dock.idle .wu-pill span { display: none; }
+        .wu-dock.open .wu-pill { display: none; }
+        /* compose window */
+        .wu-compose { display: none; width: 340px; max-width: calc(100vw - 24px); background: #fff; border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.28); border: 1px solid rgba(20,40,60,.1); overflow: hidden; text-align: left; }
+        .wu-dock.open .wu-compose { display: block; animation: wpUp .25s ease both; }
+        @keyframes wpUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .wu-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; background: #f2f6fc; color: #041e49; font-size: 13px; font-weight: 600; }
+        .wu-head .wu-title { flex: 1; }
+        .wu-head .wu-state { font-weight: 400; font-size: 11px; color: #5f6368; display: inline-flex; align-items: center; gap: 5px; }
+        .wu-head button { background: transparent; color: #444746; width: 28px; height: 28px; min-height: 0; flex: none; padding: 0; margin: 0;
+            border-radius: 50%; font-size: 16px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+        .wu-head button:hover { background: rgba(0,0,0,.08); }
+        .wu-row { display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid #ebebeb; min-height: 36px; font-size: 13px; }
+        .wu-row label { color: #5f6368; flex: none; width: 52px; margin: 0; font-size: 13px; }
+        .wu-row .wu-to { background: #f1f3f4; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #1f1f1f; }
+        .wu-row input { flex: 1; min-width: 0; width: auto; margin: 0; padding: 8px 0; border: none; border-radius: 0; background: transparent; font-size: 13px; text-align: left; outline: none; }
+        .wu-row input:focus { box-shadow: none; }
+        .wu-compose textarea { display: block; width: 100%; min-height: 120px; padding: 10px 14px; border: none; outline: none; resize: none;
+            font-family: "Inter", sans-serif; font-size: 13px; line-height: 1.55; color: #1a1a1a; background: #fff; border-radius: 0; box-sizing: border-box; }
+        .wu-foot { display: flex; align-items: center; gap: 10px; padding: 8px 14px 12px; }
+        .wp-send { flex: none; width: auto; margin: 0; padding: 8px 22px; min-height: 0; background: #0b57d0; color: #fff; border: none; border-radius: 18px; font-size: 13px; font-weight: 600; }
+        .wp-send:hover { background: #0a4cb8; }
+        .wp-send:disabled { opacity: .5; cursor: not-allowed; }
+        .wp-char { font-size: 11px; color: #9aa0a6; margin-left: auto; }
         .wp-char.warn { color: #e53935; }
-        .wp-send {
-            width: 100%; padding: 12px; background: #1a1a1a; color: #fff; border: none;
-            border-radius: 8px; font-family: "Inter", sans-serif; font-size: 13px;
-            font-weight: 600; cursor: pointer; transition: background 0.2s, opacity 0.2s;
-        }
-        .wp-send:hover { background: #333; }
-        .wp-send:disabled { opacity: 0.4; cursor: not-allowed; }
-        .wp-err { display: none; font-size: 12px; color: #e53935; margin-top: 10px; text-align: center; }
+        .wp-err { display: none; font-size: 12px; color: #e53935; padding: 0 14px 10px; }
         .wp-err.show { display: block; }
-        .wp-success { display: none; text-align: center; padding: 20px 0; animation: wpUp 0.35s ease both; }
-        .wp-tick {
-            width: 40px; height: 40px; background: #ede9fb; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; margin: 0 auto 14px;
-        }
-        .wp-success h3 { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 6px; }
-        @keyframes wpUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
+        .wp-success { display: none; text-align: center; padding: 28px 14px; font-size: 14px; font-weight: 600; color: #137333; }
 
         /* ── HOLD TIME PERIOD — plain, no card box, bottom of the (A+C)-B Calculator only ── */
         .hold-period-card {
@@ -610,7 +599,6 @@
             .qty-tracker-value { font-size: 15px; }
             .menu-card { width: 100%; }
             .menu-card .tab-bar { width: auto; margin-right: 52px; }   /* hamburger floats over the card's right end */
-            .writeus-panel { width: auto; right: 0; left: 0; max-width: 100%; }
         }
 
         /* ── DESKTOP — a little more breathing room on larger screens; the layout
@@ -640,7 +628,7 @@
             .calculator-container,
             .delete-button, .info-btn, .print-btn, .clear-all-btn, .calc-toolbar,
             .progress-container, footer, .reset-acb-btn, .reset-acb-row, .hold-period-card,
- .writeus-panel, .tab-bar,
+ .wu-dock, .tab-bar,
             .hamburger-btn, .fab-container, .fab { display: none !important; }
             .calculation-steps {
                 border-radius: 0 !important; box-shadow: none !important;
@@ -897,28 +885,35 @@
     </footer>
 
     <div class="fab-container" id="fabContainer">
-        <button type="button" class="fab" id="fabWriteUs" aria-label="Write us" title="Write us">✍️</button>
         <a class="fab" href="vault" target="_blank" rel="noopener noreferrer" aria-label="Vault" title="Vault">🔐</a>
     </div>
 
-    <div class="writeus-panel" id="writeusPanel" role="dialog" aria-modal="true" aria-label="Write us">
-        <button class="wp-back" id="wpBack">‹ &nbsp;Back</button>
-        <div id="wpFormArea">
-            <p class="wp-title">Write to us.</p>
-            <form id="writeusForm" novalidate>
-                <input type="hidden" name="access_key" value="d745079a-5836-41cd-959c-b7bacc1be074">
-                <input type="hidden" name="subject" value="NIR8 — Write Us">
-                <input type="checkbox" name="botcheck" style="display:none">
-                <textarea id="wpMsg" name="message" placeholder="Say anything…" maxlength="1000"></textarea>
-                <div class="wp-meta"><span class="wp-char" id="wpChar">0 / 1000</span></div>
-                <button type="submit" class="wp-send" id="wpSend">Send →</button>
-                <div class="wp-err" id="wpErr"></div>
-            </form>
+    <div class="wu-dock idle" id="wuDock">
+        <div class="wu-compose" id="wuCompose" role="dialog" aria-label="Write us">
+            <div class="wu-head">
+                <span class="wu-title">New message</span>
+                <span class="wu-state"><i class="wu-led"></i><span id="wuState">Online</span></span>
+                <button type="button" id="wuMin" aria-label="Minimize">&minus;</button>
+                <button type="button" id="wuClose" aria-label="Close">&times;</button>
+            </div>
+            <div id="wpFormArea">
+                <form id="writeusForm" novalidate>
+                    <input type="hidden" name="access_key" value="d745079a-5836-41cd-959c-b7bacc1be074">
+                    <input type="checkbox" name="botcheck" style="display:none">
+                    <div class="wu-row"><label>To</label><span class="wu-to">NIR8 team</span></div>
+                    <div class="wu-row"><label for="wuCc">Cc</label><input type="email" id="wuCc" name="ccemail" autocomplete="email" inputmode="email"></div>
+                    <div class="wu-row"><label for="wuSubject">Subject</label><input type="text" id="wuSubject" name="subject" maxlength="100"></div>
+                    <textarea id="wpMsg" name="message" placeholder="Write your message…" maxlength="1000"></textarea>
+                    <div class="wp-err" id="wpErr"></div>
+                    <div class="wu-foot">
+                        <button type="submit" class="wp-send" id="wpSend">Send</button>
+                        <span class="wp-char" id="wpChar">0 / 1000</span>
+                    </div>
+                </form>
+            </div>
+            <div class="wp-success" id="wpSuccess">✓ Message sent</div>
         </div>
-        <div class="wp-success" id="wpSuccess">
-            <div class="wp-tick">✓</div>
-            <h3>Sent. Thank you.</h3>
-        </div>
+        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us"><i class="wu-led"></i><span id="wuPillState">Online</span><span class="wu-more">· Write us</span></button>
     </div>
 
     <script>
@@ -1931,9 +1926,7 @@
     (function () {
         const hamburger    = document.getElementById('hamburgerBtn');
         const fabContainer = document.getElementById('fabContainer');
-        const fabWriteUs   = document.getElementById('fabWriteUs');
-        const writeusPanel = document.getElementById('writeusPanel');
-        const wpBack       = document.getElementById('wpBack');
+        const dock         = document.getElementById('wuDock');
         const wpMsg        = document.getElementById('wpMsg');
         const wpChar       = document.getElementById('wpChar');
         const wpSend       = document.getElementById('wpSend');
@@ -1941,20 +1934,44 @@
         const wpFormArea   = document.getElementById('wpFormArea');
         const wpSuccess    = document.getElementById('wpSuccess');
         const writeusForm  = document.getElementById('writeusForm');
+        const subjectEl    = document.getElementById('wuSubject');
 
-        // Hamburger toggles the small circular floating buttons; they collapse
-        // back into the hamburger on second tap, Escape, or after Write Us closes.
+        // Hamburger now only holds the Vault shortcut.
         function openNav() { fabContainer.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); hamburger.textContent = '✕'; }
-        function closeNav() { fabContainer.classList.remove('open'); writeusPanel.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.textContent = '☰'; }
-
-        // Expose panel state so the F1/F2/F3 shortcut handler can ignore keys while writing.
-        window.writeusIsOpen = () => writeusPanel.classList.contains('open');
-
+        function closeNav() { fabContainer.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.textContent = '☰'; }
         hamburger.addEventListener('click', () => fabContainer.classList.contains('open') ? closeNav() : openNav());
-        fabWriteUs.addEventListener('click', () => { writeusPanel.classList.add('open'); setTimeout(() => wpMsg.focus(), 300); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
-        wpBack.addEventListener('click', () => { writeusPanel.classList.remove('open'); });
 
+        // Let the F1/F2/F3 shortcut handler ignore keys while the compose window is open.
+        window.writeusIsOpen = () => dock.classList.contains('open');
+
+        // ── Auto-hide: the pill shrinks to a blinking light when idle, and the whole
+        // thing steps aside whenever you click into a calculator field. ──
+        let idleTimer = null;
+        const armIdle = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (!dock.classList.contains('open')) dock.classList.add('idle'); }, 4000); };
+        const wake = () => { dock.classList.remove('idle'); armIdle(); };
+        const openCompose = () => { dock.classList.remove('idle'); dock.classList.add('open'); setTimeout(() => (document.getElementById('wuCc').value ? wpMsg : wpMsg).focus(), 50); };
+        const collapse = () => { dock.classList.remove('open'); dock.classList.add('idle'); };
+
+        document.getElementById('wuPill').addEventListener('click', () => { if (dock.classList.contains('idle')) { wake(); } else { openCompose(); } });
+        document.getElementById('wuPill').addEventListener('mouseenter', wake);
+        document.getElementById('wuMin').addEventListener('click', () => { collapse(); armIdle(); });
+        document.getElementById('wuClose').addEventListener('click', () => { collapse(); resetForm(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNav(); if (dock.classList.contains('open')) collapse(); } });
+        // Clicking into a calculation field hides the compose window (text is kept) so nothing gets in the way.
+        document.addEventListener('focusin', e => {
+            if (e.target.closest && e.target.closest('#formulaCalculator, #acbCalculator, .menu-card')) { collapse(); }
+        });
+        armIdle();
+
+        // ── Online / offline light ──
+        function paintOnline() {
+            const on = navigator.onLine;
+            dock.classList.toggle('offline', !on);
+            document.getElementById('wuState').textContent = document.getElementById('wuPillState').textContent = on ? 'Online' : 'Offline';
+        }
+        window.addEventListener('online', paintOnline); window.addEventListener('offline', paintOnline); paintOnline();
+
+        // ── Form ──
         wpMsg.addEventListener('input', () => {
             const len = wpMsg.value.length;
             wpChar.textContent = `${len} / 1000`;
@@ -1964,22 +1981,28 @@
         writeusForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!wpMsg.value.trim()) { showErr('Please write something first.'); return; }
+            if (!navigator.onLine) { showErr("You're offline. Try again when connected."); return; }
+            const cc = document.getElementById('wuCc');
+            if (cc.value.trim() && !cc.checkValidity()) { showErr('Enter a valid Cc email.'); return; }
             wpSend.disabled = true; wpSend.textContent = 'Sending…'; wpErr.classList.remove('show');
+            const fd = new FormData(writeusForm);
+            if (!String(fd.get('subject') || '').trim()) fd.set('subject', 'NIR8 — Write Us');
+            if (!String(fd.get('ccemail') || '').trim()) fd.delete('ccemail');
             try {
-                const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: new FormData(writeusForm) });
+                const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     wpFormArea.style.display = 'none'; wpSuccess.style.display = 'block';
-                    setTimeout(() => { closeNav(); setTimeout(resetForm, 400); }, 3000);
-                } else { showErr('Something went wrong. Try again.'); resetBtn(); }
+                    setTimeout(() => { collapse(); setTimeout(resetForm, 400); }, 2500);
+                } else { showErr(data.message || 'Something went wrong. Try again.'); resetBtn(); }
             } catch { showErr('Network error. Check your connection.'); resetBtn(); }
         });
 
         function showErr(t) { wpErr.textContent = t; wpErr.classList.add('show'); }
-        function resetBtn() { wpSend.disabled = false; wpSend.textContent = 'Send →'; }
+        function resetBtn() { wpSend.disabled = false; wpSend.textContent = 'Send'; }
         function resetForm() {
             wpFormArea.style.display = 'block'; wpSuccess.style.display = 'none';
-            wpMsg.value = ''; wpChar.textContent = '0 / 1000';
+            writeusForm.reset(); wpChar.textContent = '0 / 1000';
             wpErr.classList.remove('show'); resetBtn();
         }
     })();
