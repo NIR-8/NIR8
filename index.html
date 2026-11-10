@@ -371,40 +371,34 @@
         #remainingQty { cursor: pointer; transition: all 0.2s ease; }
         #remainingQty:hover { color: #4facfe; text-decoration: underline; }
 
-        /* ── WRITE US: small Gmail-style compose window, bottom-right, auto-hiding ── */
-        .wu-dock { position: fixed; right: 12px; bottom: 52px; z-index: 15000; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
-        .wu-led { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex: none;
-            box-shadow: 0 0 6px 2px rgba(34,197,94,.7); animation: wuBlink 1.6s ease-in-out infinite; }
-        .wu-dock.offline .wu-led { background: #e5484d; box-shadow: none; animation: none; }
-        @keyframes wuBlink { 0%,100% { opacity: 1; box-shadow: 0 0 6px 2px rgba(34,197,94,.7); } 50% { opacity: .3; box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+        /* ── WRITE US: small Gmail-style compose window, bottom-right ── */
+        .wu-dock { position: fixed; right: 12px; bottom: 52px; z-index: 20020; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
+        .wu-led { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex: none; animation: wuBlink 1.4s ease-in-out infinite; }
+        .wu-dock.offline .wu-led { background: #e5484d; animation: none; }
+        @keyframes wuBlink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
         @media (prefers-reduced-motion: reduce) { .wu-led { animation: none; } }
-        /* collapsed pill; shrinks to just the light when idle */
-        .wu-pill { display: inline-flex; align-items: center; gap: 7px; flex: none; margin: 0; padding: 6px 12px; min-height: 0;
-            background: rgba(255,255,255,.92); color: #041e49; font-size: 12px; font-weight: 600;
-            border: 1px solid rgba(20,40,60,.1); border-radius: 18px; box-shadow: 0 2px 10px rgba(20,40,60,.15);
-            -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); cursor: pointer; transition: all .3s ease; }
-        .wu-pill:hover { background: #fff; }
-        .wu-pill .wu-more { font-weight: 400; color: #5f6368; }
-        .wu-dock.idle .wu-pill { padding: 9px; gap: 0; opacity: .75; }
-        .wu-dock.idle .wu-pill span { display: none; }
+        /* collapsed: blinking light + "Write us" */
+        .wu-pill { display: inline-flex; align-items: center; gap: 8px; flex: none; margin: 0; padding: 7px 14px; min-height: 0;
+            background: #fff; color: #041e49; font-size: 13px; font-weight: 600;
+            border: 1px solid rgba(20,40,60,.12); border-radius: 18px; box-shadow: 0 2px 10px rgba(20,40,60,.18); cursor: pointer; }
+        .wu-pill:hover { background: #f2f6fc; }
         .wu-dock.open .wu-pill { display: none; }
         /* compose window */
-        .wu-compose { display: none; width: 340px; max-width: calc(100vw - 24px); background: #fff; border-radius: 12px;
+        .wu-compose { display: none; width: 320px; max-width: calc(100vw - 24px); background: #fff; border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,.28); border: 1px solid rgba(20,40,60,.1); overflow: hidden; text-align: left; }
-        .wu-dock.open .wu-compose { display: block; animation: wpUp .25s ease both; }
-        @keyframes wpUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .wu-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; background: #f2f6fc; color: #041e49; font-size: 13px; font-weight: 600; }
+        .wu-dock.open .wu-compose { display: block; }
+        .wu-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; background: #f2f6fc; color: #041e49; font-size: 14px; font-weight: 600; }
         .wu-head .wu-title { flex: 1; }
         .wu-head .wu-state { font-weight: 400; font-size: 11px; color: #5f6368; display: inline-flex; align-items: center; gap: 5px; }
         .wu-head button { background: transparent; color: #444746; width: 28px; height: 28px; min-height: 0; flex: none; padding: 0; margin: 0;
-            border-radius: 50%; font-size: 16px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+            border-radius: 50%; font-size: 18px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
         .wu-head button:hover { background: rgba(0,0,0,.08); }
         .wu-row { display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid #ebebeb; min-height: 36px; font-size: 13px; }
         .wu-row label { color: #5f6368; flex: none; width: 52px; margin: 0; font-size: 13px; }
         .wu-row .wu-to { background: #f1f3f4; border-radius: 12px; padding: 2px 10px; font-size: 12px; color: #1f1f1f; }
         .wu-row input { flex: 1; min-width: 0; width: auto; margin: 0; padding: 8px 0; border: none; border-radius: 0; background: transparent; font-size: 13px; text-align: left; outline: none; }
         .wu-row input:focus { box-shadow: none; }
-        .wu-compose textarea { display: block; width: 100%; min-height: 120px; padding: 10px 14px; border: none; outline: none; resize: none;
+        .wu-compose textarea { display: block; width: 100%; min-height: 110px; padding: 10px 14px; border: none; outline: none; resize: none;
             font-family: "Inter", sans-serif; font-size: 13px; line-height: 1.55; color: #1a1a1a; background: #fff; border-radius: 0; box-sizing: border-box; }
         .wu-foot { display: flex; align-items: center; gap: 10px; padding: 8px 14px 12px; }
         .wp-send { flex: none; width: auto; margin: 0; padding: 8px 22px; min-height: 0; background: #0b57d0; color: #fff; border: none; border-radius: 18px; font-size: 13px; font-weight: 600; }
@@ -888,12 +882,11 @@
         <a class="fab" href="vault" target="_blank" rel="noopener noreferrer" aria-label="Vault" title="Vault">🔐</a>
     </div>
 
-    <div class="wu-dock idle" id="wuDock">
+    <div class="wu-dock open" id="wuDock">
         <div class="wu-compose" id="wuCompose" role="dialog" aria-label="Write us">
             <div class="wu-head">
-                <span class="wu-title">New message</span>
+                <span class="wu-title">Write us ✍️</span>
                 <span class="wu-state"><i class="wu-led"></i><span id="wuState">Online</span></span>
-                <button type="button" id="wuMin" aria-label="Minimize">&minus;</button>
                 <button type="button" id="wuClose" aria-label="Close">&times;</button>
             </div>
             <div id="wpFormArea">
@@ -901,7 +894,6 @@
                     <input type="hidden" name="access_key" value="d745079a-5836-41cd-959c-b7bacc1be074">
                     <input type="checkbox" name="botcheck" style="display:none">
                     <div class="wu-row"><label>To</label><span class="wu-to">NIR8 team</span></div>
-                    <div class="wu-row"><label for="wuCc">Cc</label><input type="email" id="wuCc" name="ccemail" autocomplete="email" inputmode="email"></div>
                     <div class="wu-row"><label for="wuSubject">Subject</label><input type="text" id="wuSubject" name="subject" maxlength="100"></div>
                     <textarea id="wpMsg" name="message" placeholder="Write your message…" maxlength="1000"></textarea>
                     <div class="wp-err" id="wpErr"></div>
@@ -913,7 +905,7 @@
             </div>
             <div class="wp-success" id="wpSuccess">✓ Message sent</div>
         </div>
-        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us"><i class="wu-led"></i><span id="wuPillState">Online</span><span class="wu-more">· Write us</span></button>
+        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us"><i class="wu-led"></i><span>Write us ✍️</span></button>
     </div>
 
     <script>
@@ -1934,9 +1926,8 @@
         const wpFormArea   = document.getElementById('wpFormArea');
         const wpSuccess    = document.getElementById('wpSuccess');
         const writeusForm  = document.getElementById('writeusForm');
-        const subjectEl    = document.getElementById('wuSubject');
 
-        // Hamburger now only holds the Vault shortcut.
+        // Hamburger only holds the Vault shortcut.
         function openNav() { fabContainer.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); hamburger.textContent = '✕'; }
         function closeNav() { fabContainer.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); hamburger.textContent = '☰'; }
         hamburger.addEventListener('click', () => fabContainer.classList.contains('open') ? closeNav() : openNav());
@@ -1944,30 +1935,27 @@
         // Let the F1/F2/F3 shortcut handler ignore keys while the compose window is open.
         window.writeusIsOpen = () => dock.classList.contains('open');
 
-        // ── Auto-hide: the pill shrinks to a blinking light when idle, and the whole
-        // thing steps aside whenever you click into a calculator field. ──
-        let idleTimer = null;
-        const armIdle = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (!dock.classList.contains('open')) dock.classList.add('idle'); }, 4000); };
-        const wake = () => { dock.classList.remove('idle'); armIdle(); };
-        const openCompose = () => { dock.classList.remove('idle'); dock.classList.add('open'); setTimeout(() => (document.getElementById('wuCc').value ? wpMsg : wpMsg).focus(), 50); };
-        const collapse = () => { dock.classList.remove('open'); dock.classList.add('idle'); };
+        // ── Open on page load so it gets noticed, then collapse to the blinking "Write us" tag ──
+        let autoTimer = setTimeout(() => collapse(), 6000);
+        const keepOpen = () => clearTimeout(autoTimer);          // the user started using it
+        document.getElementById('wuCompose').addEventListener('focusin', keepOpen);
+        document.getElementById('wuCompose').addEventListener('pointerdown', keepOpen);
 
-        document.getElementById('wuPill').addEventListener('click', () => { if (dock.classList.contains('idle')) { wake(); } else { openCompose(); } });
-        document.getElementById('wuPill').addEventListener('mouseenter', wake);
-        document.getElementById('wuMin').addEventListener('click', () => { collapse(); armIdle(); });
-        document.getElementById('wuClose').addEventListener('click', () => { collapse(); resetForm(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNav(); if (dock.classList.contains('open')) collapse(); } });
-        // Clicking into a calculation field hides the compose window (text is kept) so nothing gets in the way.
+        function openCompose() { clearTimeout(autoTimer); dock.classList.add('open'); setTimeout(() => wpMsg.focus(), 0); }
+        function collapse() { dock.classList.remove('open'); }
+        document.getElementById('wuPill').addEventListener('click', openCompose);
+        document.getElementById('wuClose').addEventListener('click', collapse);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNav(); collapse(); } });
+        // Clicking into a calculation field tucks the window away (your text is kept).
         document.addEventListener('focusin', e => {
-            if (e.target.closest && e.target.closest('#formulaCalculator, #acbCalculator, .menu-card')) { collapse(); }
+            if (e.target.closest && e.target.closest('#formulaCalculator, #acbCalculator, .menu-card')) collapse();
         });
-        armIdle();
 
         // ── Online / offline light ──
         function paintOnline() {
             const on = navigator.onLine;
             dock.classList.toggle('offline', !on);
-            document.getElementById('wuState').textContent = document.getElementById('wuPillState').textContent = on ? 'Online' : 'Offline';
+            document.getElementById('wuState').textContent = on ? 'Online' : 'Offline';
         }
         window.addEventListener('online', paintOnline); window.addEventListener('offline', paintOnline); paintOnline();
 
@@ -1982,18 +1970,15 @@
             e.preventDefault();
             if (!wpMsg.value.trim()) { showErr('Please write something first.'); return; }
             if (!navigator.onLine) { showErr("You're offline. Try again when connected."); return; }
-            const cc = document.getElementById('wuCc');
-            if (cc.value.trim() && !cc.checkValidity()) { showErr('Enter a valid Cc email.'); return; }
             wpSend.disabled = true; wpSend.textContent = 'Sending…'; wpErr.classList.remove('show');
             const fd = new FormData(writeusForm);
             if (!String(fd.get('subject') || '').trim()) fd.set('subject', 'NIR8 — Write Us');
-            if (!String(fd.get('ccemail') || '').trim()) fd.delete('ccemail');
             try {
                 const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     wpFormArea.style.display = 'none'; wpSuccess.style.display = 'block';
-                    setTimeout(() => { collapse(); setTimeout(resetForm, 400); }, 2500);
+                    setTimeout(() => { collapse(); resetForm(); }, 2200);
                 } else { showErr(data.message || 'Something went wrong. Try again.'); resetBtn(); }
             } catch { showErr('Network error. Check your connection.'); resetBtn(); }
         });
