@@ -372,15 +372,22 @@
         #remainingQty:hover { color: #4facfe; text-decoration: underline; }
 
         /* ── WRITE US: small Gmail-style compose window, bottom-right ── */
-        .wu-dock { position: fixed; right: 12px; bottom: 52px; z-index: 20020; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
-        .wu-led { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex: none; animation: wuBlink 1.4s ease-in-out infinite; }
+        .wu-dock { position: fixed; right: 10px; bottom: 8px; z-index: 20020; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
+        .wu-led { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex: none; animation: wuBlink 1.4s ease-in-out infinite; }
         .wu-dock.offline .wu-led { background: #e5484d; animation: none; }
         @keyframes wuBlink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
         @media (prefers-reduced-motion: reduce) { .wu-led { animation: none; } }
-        /* collapsed: green dot + ✍️ only (no "Write us" text) */
-        .wu-pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: none; margin: 0; padding: 6px 10px; min-height: 0;
-            background: #fff; color: #041e49; font-size: 15px; font-weight: 600; line-height: 1;
-            border: 1px solid rgba(20,40,60,.12); border-radius: 999px; box-shadow: 0 2px 8px rgba(20,40,60,.16); cursor: pointer; }
+        /* collapsed: blinking light + "Write us" */
+        .wu-pill { display: inline-flex; align-items: center; gap: 6px; flex: none; margin: 0; padding: 4px 10px; min-height: 0; line-height: 1.2;
+            background: #fff; color: #041e49; font-size: 14px;
+            border: 1px solid rgba(20,40,60,.12); border-radius: 14px; box-shadow: 0 1px 6px rgba(20,40,60,.2); cursor: pointer; }
+        /* phones / small screens: even smaller, tucked into the corner */
+        @media (max-width: 600px) {
+            .wu-dock { right: 6px; bottom: 6px; }
+            .wu-pill { padding: 2px 7px; gap: 5px; font-size: 12px; border-radius: 12px; opacity: .92; }
+            .wu-led { width: 7px; height: 7px; }
+            .wu-compose { max-width: calc(100vw - 12px); }
+        }
         .wu-pill:hover { background: #f2f6fc; }
         .wu-dock.open .wu-pill { display: none; }
         /* compose window */
@@ -593,11 +600,6 @@
             .qty-tracker-value { font-size: 15px; }
             .menu-card { width: 100%; }
             .menu-card .tab-bar { width: auto; margin-right: 52px; }   /* hamburger floats over the card's right end */
-            /* Write-us pill: smaller on phones, clear of content/footer */
-            .wu-dock { right: 8px; bottom: 16px; }
-            .wu-pill { padding: 4px 8px; gap: 4px; font-size: 13px; box-shadow: 0 1px 5px rgba(20,40,60,.14); }
-            .wu-led { width: 6px; height: 6px; }
-            .wu-compose { width: min(300px, calc(100vw - 16px)); }
         }
 
         /* ── DESKTOP — a little more breathing room on larger screens; the layout
@@ -910,7 +912,7 @@
             </div>
             <div class="wp-success" id="wpSuccess">✓ Message sent</div>
         </div>
-        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us"><i class="wu-led"></i><span aria-hidden="true">✍️</span></button>
+        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us" title="Write us"><i class="wu-led"></i><span aria-hidden="true">✍️</span></button>
     </div>
 
     <script>
@@ -1940,7 +1942,7 @@
         // Let the F1/F2/F3 shortcut handler ignore keys while the compose window is open.
         window.writeusIsOpen = () => dock.classList.contains('open');
 
-        // Starts collapsed — opens only when the user taps the ✍️ pill
+        // Starts collapsed: just the small blinking tag. It opens only when tapped.
         function openCompose() { dock.classList.add('open'); setTimeout(() => wpMsg.focus(), 0); }
         function collapse() { dock.classList.remove('open'); }
         document.getElementById('wuPill').addEventListener('click', openCompose);
