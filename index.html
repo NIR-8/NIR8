@@ -72,40 +72,42 @@
             background: #f6f7f8;
             display: flex; justify-content: flex-start; align-items: center;
             min-height: 100vh; flex-direction: column;
-            padding: 8px 20px 60px; text-align: center; margin: 0;
+            padding: 120px 10px 56px; text-align: center; margin: 0;
         }
 
         /* ── CALCULATOR ── */
         .calculator-container {
-            display: none; background: #fff; padding: 16px;
-            width: 90%; max-width: 400px; border-radius: 16px;
-            box-shadow: none; margin-bottom: 14px; position: relative;
-            scroll-margin-top: 170px; border: 1px solid rgba(20,40,60,.05);
+            display: none; background: #fff; padding: 10px 12px;
+            width: 94%; max-width: 400px; border-radius: 12px;
+            box-shadow: none; margin-bottom: 10px; position: relative;
+            scroll-margin-top: 140px; border: 1px solid rgba(20,40,60,.05);
         }
         #acbCalculator { max-width: 900px; margin: 0 auto; }
         .calculator-container.active { display: block; }
 
         /* ── TAB BAR — minimal segmented control switching Formula / ACB screens ── */
         .tab-bar {
-            display: flex; gap: 4px; background: #fff;
-            border: 1px solid rgba(20,40,60,.06); border-radius: 12px;
-            padding: 3px; margin: 0 0 10px; width: 90%; max-width: 400px;
+            display: flex; gap: 3px; background: #fff;
+            border: 1px solid rgba(20,40,60,.06); border-radius: 10px;
+            padding: 2px; margin: 0 0 6px; width: 94%; max-width: 400px;
             box-shadow: none;
         }
                 .tab-btn {
             flex: 1; background: transparent; color: #6b7480; border: none;
-            border-radius: 9px; padding: 10px 8px; font-size: 14px; font-weight: 600;
+            border-radius: 8px; padding: 8px 6px; font-size: 13px; font-weight: 600;
             font-family: "Inter", sans-serif; cursor: pointer; transition: background .2s ease, color .2s ease;
         }
         .tab-btn.active { background: #157347; color: #fff; }
         .tab-btn:not(.active):hover { background: #f2f6f3; color: #157347; }
         .input-group { margin-top: 8px; text-align: left; }
 
-        /* ── UPPER MENU CARD: tabs + product + dispensed/remaining + lot ── */
+        /* ── UPPER MENU CARD: fixed to top (like footer is fixed to bottom) ── */
         .menu-card {
-            position: sticky; top: 8px; z-index: 50; width: 90%; max-width: 400px; margin-bottom: 10px; padding: 5px;
-            background: rgba(255,255,255,.88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-            border: 1px solid rgba(20,40,60,.08); border-radius: 14px; box-shadow: 0 2px 12px rgba(20,40,60,.08);
+            position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 50;
+            width: 94%; max-width: 400px; margin: 0; padding: 6px 8px 8px;
+            background: rgba(255,255,255,.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+            border: 1px solid rgba(20,40,60,.08); border-top: none;
+            border-radius: 0 0 14px 14px; box-shadow: 0 4px 16px rgba(20,40,60,.12);
         }
         .menu-card .tab-bar { width: 100%; max-width: none; margin: 0; padding: 0; border: none; background: transparent; }
         .menu-controls { margin-top: 6px; padding: 0 3px 2px; text-align: left; }
@@ -336,23 +338,23 @@
 
         /* ── FORMULA FRACTIONS (plain CSS, no MathJax — minimal, legible, tabular numerals for accurate hand-copying) ── */
         .calc-step {
-            margin-bottom: 40px; display: flex; align-items: center;
-            justify-content: center; flex-wrap: wrap; gap: 6px; text-align: center;
+            margin-bottom: 18px; display: flex; align-items: center;
+            justify-content: center; flex-wrap: wrap; gap: 4px; text-align: center;
             font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums;
             font-weight: 500; color: #111;
         }
         .calc-eq { margin-right: 2px; font-weight: 500; color: #111; }
         .frac {
             display: inline-flex; flex-direction: column; align-items: center;
-            vertical-align: middle; margin: 0 5px; font-size: 1.05em; line-height: 1.6;
+            vertical-align: middle; margin: 0 3px; font-size: 1em; line-height: 1.35;
             font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums;
             font-weight: 500; color: #111;
         }
-        .frac .frac-num, .frac .frac-den { padding: 4px 6px; white-space: nowrap; }
+        .frac .frac-num, .frac .frac-den { padding: 2px 4px; white-space: nowrap; }
         .frac .frac-num { border-bottom: 1.5px solid #111; }
         .calc-result {
-            margin-top: 30px; padding-top: 16px;
-            text-align: center; font-size: 1.15em; font-weight: 600; color: #111;
+            margin-top: 14px; padding-top: 8px;
+            text-align: center; font-size: 1.1em; font-weight: 600; color: #111;
             font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums;
         }
         .calc-result-original { font-weight: 500; color: #333; }
@@ -372,22 +374,15 @@
         #remainingQty:hover { color: #4facfe; text-decoration: underline; }
 
         /* ── WRITE US: small Gmail-style compose window, bottom-right ── */
-        .wu-dock { position: fixed; right: 10px; bottom: 8px; z-index: 20020; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
-        .wu-led { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex: none; animation: wuBlink 1.4s ease-in-out infinite; }
+        .wu-dock { position: fixed; right: 12px; bottom: 52px; z-index: 20020; display: flex; flex-direction: column; align-items: flex-end; font-family: "Inter", sans-serif; }
+        .wu-led { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex: none; animation: wuBlink 1.4s ease-in-out infinite; }
         .wu-dock.offline .wu-led { background: #e5484d; animation: none; }
         @keyframes wuBlink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
         @media (prefers-reduced-motion: reduce) { .wu-led { animation: none; } }
-        /* collapsed: blinking light + "Write us" */
-        .wu-pill { display: inline-flex; align-items: center; gap: 6px; flex: none; margin: 0; padding: 4px 10px; min-height: 0; line-height: 1.2;
-            background: #fff; color: #041e49; font-size: 14px;
-            border: 1px solid rgba(20,40,60,.12); border-radius: 14px; box-shadow: 0 1px 6px rgba(20,40,60,.2); cursor: pointer; }
-        /* phones / small screens: even smaller, tucked into the corner */
-        @media (max-width: 600px) {
-            .wu-dock { right: 6px; bottom: 6px; }
-            .wu-pill { padding: 2px 7px; gap: 5px; font-size: 12px; border-radius: 12px; opacity: .92; }
-            .wu-led { width: 7px; height: 7px; }
-            .wu-compose { max-width: calc(100vw - 12px); }
-        }
+        /* collapsed: green dot + ✍️ only (no "Write us" text) */
+        .wu-pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: none; margin: 0; padding: 6px 10px; min-height: 0;
+            background: #fff; color: #041e49; font-size: 15px; font-weight: 600; line-height: 1;
+            border: 1px solid rgba(20,40,60,.12); border-radius: 999px; box-shadow: 0 2px 8px rgba(20,40,60,.16); cursor: pointer; }
         .wu-pill:hover { background: #f2f6fc; }
         .wu-dock.open .wu-pill { display: none; }
         /* compose window */
@@ -483,39 +478,39 @@
 
         /* ── FORMULA CARD (above the input card) + PRODUCT GATE ── */
         .formula-spec-card {
-            display: none; background: #fff; padding: 8px 14px; width: 90%; max-width: 760px;
-            border-radius: 16px; box-shadow: none; margin-bottom: 10px;
-            border: 1px solid rgba(20,40,60,.05); border-left: 5px solid #157347; text-align: left;
+            display: none; background: #fff; padding: 5px 10px; width: 94%; max-width: 760px;
+            border-radius: 10px; box-shadow: none; margin-bottom: 8px;
+            border: 1px solid rgba(20,40,60,.05); border-left: 4px solid #157347; text-align: left;
         }
         .formula-spec-card.show { display: block; }
         .formula-spec-card.is-manual { border-left-color: #d98300; }
-        .spec-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
-        .spec-product { font-size: 13px; font-weight: 600; color: #157347; }
+        .spec-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px; }
+        .spec-product { font-size: 12px; font-weight: 600; color: #157347; }
         .is-manual .spec-product { color: #b86e00; }
         /* Formulas always fit the card: cells share the width and shrink, and the
            fraction text wraps instead of forcing a sideways scroll. */
-        #specRows { display: flex; align-items: stretch; overflow: visible; padding-bottom: 2px; }
+        #specRows { display: flex; align-items: stretch; overflow: visible; padding-bottom: 0; }
         .spec-cell { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 2px 12px; border-left: 1px solid #e3e7ee; }
+            padding: 1px 8px; border-left: 1px solid #e3e7ee; }
         .spec-cell:first-child { border-left: none; padding-left: 0; }
         .spec-cell:last-child { padding-right: 0; }
-        .spec-cell-label { font-weight: 700; font-size: 13px; margin-bottom: 2px; white-space: nowrap; }
-        .spec-cell-label small { font-weight: 500; color: #6b7480; font-size: 11px; margin-left: 4px; }
-        .spec-cell-body { font-size: 13px; min-width: 0; max-width: 100%; }
-        .spec-cell-body .frac { font-size: 13px; line-height: 1.45; margin: 0; max-width: 100%; }
-        .spec-cell-body .frac .frac-num, .spec-cell-body .frac .frac-den { padding: 2px 5px; white-space: normal; text-align: center; }
+        .spec-cell-label { font-weight: 700; font-size: 12px; margin-bottom: 1px; white-space: nowrap; }
+        .spec-cell-label small { font-weight: 500; color: #6b7480; font-size: 10px; margin-left: 3px; }
+        .spec-cell-body { font-size: 12px; min-width: 0; max-width: 100%; }
+        .spec-cell-body .frac { font-size: 12px; line-height: 1.3; margin: 0; max-width: 100%; }
+        .spec-cell-body .frac .frac-num, .spec-cell-body .frac .frac-den { padding: 1px 3px; white-space: normal; text-align: center; }
         @media (max-width: 640px) {
             /* Phones: one formula per row, stacked — nothing to scroll */
             #specRows { flex-direction: column; }
-            .spec-cell { flex-direction: row; justify-content: flex-start; gap: 10px; padding: 7px 0;
+            .spec-cell { flex-direction: row; justify-content: flex-start; gap: 8px; padding: 4px 0;
                 border-left: none; border-top: 1px solid #e3e7ee; }
-            .spec-cell:first-child { border-top: none; padding-top: 2px; }
-            .spec-cell:last-child { padding-bottom: 2px; }
+            .spec-cell:first-child { border-top: none; padding-top: 1px; }
+            .spec-cell:last-child { padding-bottom: 1px; }
             .spec-cell-label { margin-bottom: 0; flex: none; }
             .spec-cell-body { flex: 1 1 auto; display: flex; justify-content: center; }
         }
         @media (max-width: 380px) {
-            .spec-cell-body, .spec-cell-body .frac { font-size: 12px; }
+            .spec-cell-body, .spec-cell-body .frac { font-size: 11px; }
         }
         /* Verify pop-up: the formula wraps inside the box instead of overflowing */
         .verify-rows { max-width: 100%; }
@@ -575,7 +570,7 @@
             /* ── FOOTER — drop out of the fixed layer on phones so it can never
                overlap content; it flows at the end of the page instead (pinned
                to the viewport bottom on short pages via margin-top:auto) ── */
-            body { padding-bottom: 24px; }
+            body { padding-top: 110px; padding-bottom: 24px; }
             footer {
                 position: static; margin-top: auto; z-index: auto;
                 font-size: 11px; line-height: 1.4; padding: 7px 6px;
@@ -583,34 +578,38 @@
             }
             footer .info-btn { min-height: 32px; padding: 2px 8px; font-size: 11px; }
             .reference-values { font-size: 10pt; }
-            .calculator-container { width: 100%; padding: 12px; }
-            #acbCalculator { padding: 12px 8px; }
+            .calculator-container { width: 100%; padding: 8px 10px; }
+            #acbCalculator { padding: 8px 6px; }
             .acb-table { table-layout: fixed; }
-            .acb-table .acb-td, .acb-table .acb-th { font-size: 12px; padding: 4px 1px; min-width: 0; }
+            .acb-table .acb-td, .acb-table .acb-th { font-size: 12px; padding: 3px 1px; min-width: 0; }
             .acb-table th:first-child, .acb-table td:first-child { width: 17%; font-size: 11px; }
             .acb-table th:last-child, .acb-table td:last-child { width: 19%; }
-            .acb-table .acb-input { width: 100%; font-size: 12px; padding: 5px 1px; margin: 0; border-width: 1px; }
-            .acb-table .acb-span { font-size: 12px; padding: 4px 0; }
-            .formula-spec-card { width: 100%; padding: 6px 10px; border-radius: 12px; }
-            .hold-dates-row { gap: 8px; }
+            .acb-table .acb-input { width: 100%; font-size: 12px; padding: 4px 1px; margin: 0; border-width: 1px; }
+            .acb-table .acb-span { font-size: 12px; padding: 3px 0; }
+            .formula-spec-card { width: 100%; padding: 4px 8px; border-radius: 10px; }
+            .hold-dates-row { gap: 6px; }
             .hold-date-input, .hold-date-static { width: 118px; font-size: 13px; padding: 0 4px; }
             .hold-days-input { width: 62px !important; }
             input { font-size: 14px; }
-            button { font-size: 14px; padding: 10px; }
-            .qty-tracker-value { font-size: 15px; }
-            .menu-card { width: 100%; }
+            button { font-size: 13px; padding: 9px; }
+            .qty-tracker-value { font-size: 14px; }
+            .menu-card { width: 100%; left: 0; right: 0; transform: none; max-width: none; border-radius: 0 0 12px 12px; }
             .menu-card .tab-bar { width: auto; margin-right: 52px; }   /* hamburger floats over the card's right end */
+            /* Write-us pill: smaller on phones, clear of content/footer */
+            .wu-dock { right: 8px; bottom: 16px; }
+            .wu-pill { padding: 4px 8px; gap: 4px; font-size: 13px; box-shadow: 0 1px 5px rgba(20,40,60,.14); }
+            .wu-led { width: 6px; height: 6px; }
+            .wu-compose { width: min(300px, calc(100vw - 16px)); }
         }
 
         /* ── DESKTOP — a little more breathing room on larger screens; the layout
            stays a centered column (better for reading/printing) rather than
            stretching full-width. ── */
         @media (min-width: 900px) {
-            body { padding-top: 84px; }
-            .calculator-container:not(#acbCalculator) { max-width: 460px; padding: 20px; }
-            .formula-spec-card { max-width: 760px; padding: 14px 22px; }
+            body { padding-top: 130px; }
+            .calculator-container:not(#acbCalculator) { max-width: 460px; padding: 14px 16px; }
+            .formula-spec-card { max-width: 760px; padding: 8px 14px; }
             .menu-card, #formulaCalculator { max-width: 460px; }
-            .menu-card { top: 12px; }
             .hold-period-card { max-width: 460px; }
             .calculation-steps { max-width: 760px; }
         }
@@ -912,7 +911,7 @@
             </div>
             <div class="wp-success" id="wpSuccess">✓ Message sent</div>
         </div>
-        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us" title="Write us"><i class="wu-led"></i><span aria-hidden="true">✍️</span></button>
+        <button type="button" class="wu-pill" id="wuPill" aria-label="Write us"><i class="wu-led"></i><span aria-hidden="true">✍️</span></button>
     </div>
 
     <script>
@@ -1942,7 +1941,7 @@
         // Let the F1/F2/F3 shortcut handler ignore keys while the compose window is open.
         window.writeusIsOpen = () => dock.classList.contains('open');
 
-        // Starts collapsed: just the small blinking tag. It opens only when tapped.
+        // Starts collapsed — opens only when the user taps the ✍️ pill
         function openCompose() { dock.classList.add('open'); setTimeout(() => wpMsg.focus(), 0); }
         function collapse() { dock.classList.remove('open'); }
         document.getElementById('wuPill').addEventListener('click', openCompose);
