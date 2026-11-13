@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>NIR8 Admin</title>
+<style>
+:root { --g:#157347; --g2:#e8f5e9; --ink:#1a1a1a; --mut:#6b7480; --line:#e3e7ee; --bg:#f4f6f8; --warn:#b86e00; --bad:#c62828; }
+* { box-sizing: border-box; }
+html { color-scheme: light; }
+body { margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); font-size:14px; line-height:1.45; }
+[hidden] { display:none !important; }
+button, input, select { font: inherit; }
+button { cursor:pointer; }
+input[type=text], input[type=password], input[type=number], select { width:100%; padding:9px 10px; border:1px solid #cfd6df; border-radius:8px; background:#fff; color:var(--ink); }
+input:focus, select:focus, button:focus-visible { outline:2px solid var(--g); outline-offset:1px; }
+.muted { color:var(--mut); } .small { font-size:12px; } .mt { margin-top:12px; } .sp { flex:1; }
+
+/* login */
+#loginView { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+.login { width:100%; max-width:380px; background:#fff; border-radius:16px; padding:26px; box-shadow:0 10px 40px rgba(20,40,60,.12); }
+.login h1 { margin:0 0 4px; font-size:22px; } .login p { margin:0 0 16px; color:var(--mut); }
+.login label, .field { display:block; margin-top:12px; font-weight:600; font-size:12px; color:#394150; }
+.login input, .field input { margin-top:4px; font-weight:400; }
+.err, .msg.bad { color:var(--bad); font-size:13px; min-height:18px; margin-top:10px; } .msg.ok { color:#137333; font-size:13px; margin-top:10px; }
+.login details { margin-top:16px; font-size:12px; color:var(--mut); } .login summary { cursor:pointer; font-weight:600; }
+.login ol { padding-left:18px; } .login code, .code { background:#f1f3f4; padding:1px 5px; border-radius:4px; font-size:12px; word-break:break-all; }
+.btn { border:1px solid var(--line); background:#fff; color:var(--ink); padding:8px 14px; border-radius:8px; font-weight:600; }
+.btn:hover { background:#f2f6f3; } .btn:disabled { opacity:.45; cursor:not-allowed; }
+.btn.primary { background:var(--g); border-color:var(--g); color:#fff; } .btn.primary:hover { background:#106038; }
+.btn.danger { color:var(--bad); } .btn.ghost { background:transparent; } .btn.tiny { padding:3px 9px; font-size:12px; }
+.btn.block { width:100%; margin-top:16px; padding:11px; }
+.filebtn { display:inline-block; }
+
+/* app shell */
+.topbar { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 16px; background:#fff; border-bottom:1px solid var(--line); }
+.topbar h1 { font-size:16px; margin:0 8px 0 0; }
+.chip { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; } .chip.ok { background:#e6f4ea; color:#137333; } .chip.warn { background:#fff3dd; color:var(--warn); }
+.banner { background:#fff3dd; color:#7a4300; padding:10px 16px; font-size:13px; border-bottom:1px solid #f1d9a8; }
+.tabs { display:flex; gap:4px; padding:10px 16px 0; overflow-x:auto; }
+.tab { border:none; background:transparent; padding:9px 14px; border-radius:10px 10px 0 0; font-weight:600; color:var(--mut); white-space:nowrap; }
+.tab.on { background:#fff; color:var(--g); box-shadow:0 -1px 0 var(--line) inset; }
+main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
+.tabs, .topbar { max-width:none; }
+#tabBody { background:#fff; border-radius:0 12px 12px 12px; padding:16px; }
+.card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:14px; }
+.card.empty { text-align:center; padding:28px; }
+.cardhead { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.row { display:flex; align-items:center; } .row.gap { gap:8px; } .row.wrap { flex-wrap:wrap; }
+.split { display:grid; grid-template-columns:270px 1fr; gap:14px; align-items:start; }
+@media (max-width:820px) { .split { grid-template-columns:1fr; } }
+
+/* products */
+.plist { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.pitem { display:flex; align-items:center; gap:8px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:#fff; cursor:pointer; }
+.pitem.on { border-color:var(--g); background:var(--g2); } .pitem.over { outline:2px dashed var(--g); } .pitem.manual { background:#fafafa; }
+.grip { color:#9aa0a6; cursor:grab; user-select:none; } .pname { flex:1; font-weight:600; } .pmeta { color:var(--mut); font-size:12px; }
+.stepper { display:inline-flex; align-items:center; border:1px solid #cfd6df; border-radius:8px; overflow:hidden; }
+.sbtn { border:none; background:#f4f6f8; width:32px; height:32px; font-size:18px; } .sbtn:disabled { opacity:.4; }
+.stepval { min-width:34px; text-align:center; font-weight:700; }
+.tscroll { overflow-x:auto; } table.lots { border-collapse:collapse; width:100%; min-width:440px; }
+.lots th, .lots td { padding:5px; text-align:center; } .lots th { font-size:12px; color:var(--mut); }
+.lots td input { text-align:center; padding:7px 4px; } .rowlab { text-align:left !important; font-size:12px; font-weight:600; min-width:120px; } .tot { font-weight:700; }
+.switch { display:flex; align-items:center; gap:10px; margin:8px 0; } .switch input { width:auto; accent-color:var(--g); transform:scale(1.2); }
+.narrow { width:80px !important; }
+
+/* formula builder */
+.testbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; padding:8px 10px; background:#f7f8fa; border-radius:8px; }
+.testbar label { display:flex; align-items:center; gap:6px; font-weight:600; } .testbar input { width:90px; padding:6px 8px; }
+.fb { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px; }
+.fb-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; } .fb-head .btn { margin-left:auto; }
+.fb-canvas { min-height:56px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:10px; border:2px dashed #c5ced8; border-radius:10px; background:#fcfdfe; }
+.fb-canvas.over { border-color:var(--g); background:var(--g2); } .hint { color:#9aa0a6; }
+.chip { user-select:none; }
+.fb-canvas .chip, .fb-palette .chip { display:inline-flex; align-items:center; gap:4px; padding:6px 10px; border-radius:8px; font-weight:700; border:1px solid transparent; cursor:grab; }
+.chip.v { background:#e3f0ff; color:#0b57d0; border-color:#c4dcff; } .chip.o { background:#eef0f3; color:#394150; border-color:#d9dde3; }
+.chip.p { background:#f1e8ff; color:#6a1b9a; border-color:#dfccf5; } .chip.n { background:#fff4cc; color:#7a5a00; border-color:#f1dc8a; }
+.chip.ghost { opacity:.35; }
+.chip .x { border:none; background:transparent; color:inherit; opacity:.5; padding:0 0 0 2px; font-size:15px; line-height:1; } .chip .x:hover { opacity:1; }
+.numchip { width:62px !important; padding:2px 4px !important; text-align:center; border:1px solid #e0c968 !important; border-radius:5px !important; background:#fffbe9 !important; font-weight:700; }
+.fb-palette { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; } .fb-palette .chip { font-size:14px; }
+.fb-pretty { margin-top:10px; font-size:15px; font-weight:600; } .fb-status { margin-top:4px; font-size:12px; } .fb-status.ok { color:#137333; } .fb-status.bad { color:var(--bad); }
+.adv { margin-top:8px; font-size:12px; color:var(--mut); } .fb-text { margin-top:6px; font-family:ui-monospace, Menlo, Consolas, monospace; }
+
+/* layout editor */
+.lay-canvas { padding:10px; border-radius:10px; background:repeating-linear-gradient(90deg,#f3f6f4 0,#f3f6f4 calc(100%/12 - 1px),#e4ebe6 calc(100%/12 - 1px),#e4ebe6 calc(100%/12)); }
+.lay-row { display:flex; gap:12px; align-items:flex-start; justify-content:center; }
+.lay-strip { height:10px; margin:2px 0; border-radius:5px; transition:height .1s; } .lay-strip.over { height:28px; background:#c8e6c9; }
+.lay-block { position:relative; background:#fff; border:2px solid #b9c7be; border-radius:10px; padding:10px 14px 10px 10px; overflow:hidden; cursor:grab; min-width:0; }
+.lay-block.sel { border-color:var(--g); box-shadow:0 0 0 3px rgba(21,115,71,.18); }
+.lay-block.drop-before { box-shadow:inset 6px 0 0 var(--g); } .lay-block.drop-after { box-shadow:inset -6px 0 0 var(--g); }
+.lb-title { font-weight:700; } .lb-tab { font-size:11px; color:var(--g); font-weight:600; } .lb-meta { font-size:11px; color:var(--mut); margin-top:6px; }
+.lb-hr { position:absolute; top:0; right:0; bottom:0; width:12px; cursor:ew-resize; background:rgba(21,115,71,.22); touch-action:none; }
+.lb-hb { position:absolute; left:0; right:12px; bottom:0; height:10px; cursor:ns-resize; background:rgba(21,115,71,.14); touch-action:none; }
+.lay-panel { margin-top:12px; padding:10px 12px; background:#f7f8fa; border-radius:10px; }
+.hist .hrow { display:flex; gap:12px; align-items:center; padding:7px 0; border-bottom:1px solid var(--line); } .hist .hrow .btn { margin-left:auto; }
+
+/* modal + toast */
+.modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:16px; }
+.modal-card { background:#fff; border-radius:14px; padding:20px; max-width:440px; width:100%; } .modal-card ul { padding-left:18px; color:var(--bad); }
+.toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:#1f2933; color:#fff; padding:10px 16px; border-radius:10px; opacity:0; pointer-events:none; z-index:80; max-width:92vw; }
+.toast.show { opacity:1; } .toast.ok { background:#137333; } .toast.bad { background:var(--bad); }
+
+</style>
+</head>
+<body>
+<div id="loginView">
+  <div class="login">
+    <h1>NIR8 Admin</h1>
+    <p>Sign in to change products, formulas, lots and the page layout.</p>
+    <label for="loginId">User ID</label>
+    <input id="loginId" type="text" value="Admin" autocomplete="username" spellcheck="false">
+    <label for="loginPw">Password</label>
+    <input id="loginPw" type="password" autocomplete="current-password">
+    <div class="err" id="loginErr" role="alert"></div>
+    <button class="btn primary block" id="loginBtn" type="button">Sign in</button>
+    <details>
+      <summary>First-time setup (once)</summary>
+      <ol>
+        <li>Firebase console → <b>Authentication</b> → Sign-in method → turn on <b>Email/Password</b>.</li>
+        <li>Authentication → Users → <b>Add user</b>: email <code>admin@nir8.app</code>, password <code>Caps@1234</code>.</li>
+        <li>Firestore → <b>Rules</b>: add this block, then Publish.
+          <div class="code" style="display:block;white-space:pre-wrap;margin-top:6px">match /config/app {
+  allow read: if true;
+  allow write: if request.auth != null
+    &amp;&amp; request.auth.token.email == 'admin@nir8.app';
+}
+match /config/history {
+  allow read, write: if request.auth != null
+    &amp;&amp; request.auth.token.email == 'admin@nir8.app';
+}</div></li>
+        <li>Sign in here and change the password straight away.</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<div id="appView" hidden>
+  <div class="topbar">
+    <h1>NIR8 Admin</h1>
+    <span id="saveChip" class="chip ok">All changes published</span>
+    <span class="sp"></span>
+    <button class="btn ghost" id="undoBtn" type="button" title="Undo (Ctrl+Z)">↶ Undo</button>
+    <button class="btn ghost" id="redoBtn" type="button" title="Redo (Ctrl+Y)">↷ Redo</button>
+    <button class="btn" id="previewBtn" type="button">Preview</button>
+    <button class="btn primary" id="publishBtn" type="button">Publish</button>
+    <button class="btn ghost" id="signOutBtn" type="button">Sign out</button>
+  </div>
+  <div class="banner" id="banner" hidden>You are signed in with the default password. Change it in the <b>Account</b> tab.</div>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <main><div id="tabBody"></div></main>
+  <div class="modal" id="problems" hidden></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* NIR8 admin — core logic (pure, testable): formulas, layout engine, config */
+(function (root) {
+  'use strict';
+  const COLS = 12, MINW = 3, MAXLOTS = 12;
+  const BLOCKS = {
+    spec:  { label: 'Formula card',        hint: 'F1 / F2 / F3 shown above the inputs', w: 10, h: 90,  tab: 'Formula tab' },
+    input: { label: 'Input card',          hint: 'Quantity, Water, Assay and Calculate buttons', w: 5, h: 190, tab: 'Formula tab' },
+    steps: { label: 'Calculation sheets',  hint: 'The printable calculation cards', w: 10, h: 230, tab: 'Formula tab' },
+    acb:   { label: '(A+C)-B table',       hint: 'Lot table and hold-time card', w: 6, h: 240, tab: '(A+C)-B tab' }
+  };
+  const BLOCK_IDS = Object.keys(BLOCKS);
+  const STD = { F1: 'Q*100*100/(A*(100-W))', F2: 'Q*A*(100-W)/(100*100)', F3: 'Q*100*100/(A*(100-W))' };
+
+  const DEFAULT_CONFIG = {
+    v: 1,
+    manual: { enabled: true, lots: 4 },
+    products: [
+      { id: 'valacyclovir',  name: 'Valacyclovir',  formulas: { ...STD }, a: [417, 417, 417, 417],             c: [84.375, 84.375, 84.375, 84.375] },
+      { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD }, a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
+    ],
+    layout: null,
+    fixed: { footer: true, tag: true, tagSide: 'right' }
+  };
+
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const clampInt = (v, lo, hi, d) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+
+  /* ───────────── Formula tokens ───────────── */
+  // token: {t:'var',v:'Q'} {t:'num',v:'100'} {t:'op',v:'*'} {t:'lp'} {t:'rp'}
+  function tokenize(str) {
+    const s = String(str || '').replace(/\s+/g, '');
+    const re = /([QWA])|(\d+(?:\.\d+)?)|([+\-*\/])|(\()|(\))/y;
+    const out = []; let pos = 0;
+    while (pos < s.length) {
+      re.lastIndex = pos; const m = re.exec(s);
+      if (!m) return null;
+      if (m[1]) out.push({ t: 'var', v: m[1] });
+      else if (m[2]) out.push({ t: 'num', v: m[2] });
+      else if (m[3]) out.push({ t: 'op', v: m[3] });
+      else if (m[4]) out.push({ t: 'lp' });
+      else out.push({ t: 'rp' });
+      pos = re.lastIndex;
+    }
+    return out;
+  }
+  const tokText = (k) => (k.t === 'lp' ? '(' : k.t === 'rp' ? ')' : k.v);
+  const toExpr = (toks) => toks.map(tokText).join('');
+  const SHOW = { '*': '×', '/': '÷', '-': '−', '+': '+' };
+  const toPretty = (toks) => toks.map((k) => (k.t === 'op' ? ' ' + SHOW[k.v] + ' ' : tokText(k))).join('').trim();
+
+  // recursive-descent evaluator (same grammar the website accepts)
+  function evaluate(expr, vals) {
+    const s = String(expr || '').replace(/\s+/g, ''); let i = 0;
+    const fail = (m) => { throw new Error(m); };
+    function num() {
+      const m = /^\d+(?:\.\d+)?/.exec(s.slice(i)); if (!m) fail('Number expected'); i += m[0].length; return parseFloat(m[0]);
+    }
+    function factor() {
+      const c = s[i];
+      if (c === '-') { i++; return -factor(); }
+      if (c === '(') { i++; const v = sum(); if (s[i] !== ')') fail('Missing )'); i++; return v; }
+      if (c === 'Q' || c === 'W' || c === 'A') { i++; return Number(vals[c]); }
+      if (c !== undefined && /\d/.test(c)) return num();
+      return fail(c === undefined ? 'Formula ends too early' : 'Unexpected "' + c + '"');
+    }
+    function term() { let v = factor(); while (s[i] === '*' || s[i] === '/') { const o = s[i++]; const r = factor(); v = o === '*' ? v * r : v / r; } return v; }
+    function sum() { let v = term(); while (s[i] === '+' || s[i] === '-') { const o = s[i++]; const r = term(); v = o === '+' ? v + r : v - r; } return v; }
+    if (!s) fail('Formula is empty');
+    const v = sum(); if (i < s.length) fail('Unexpected "' + s[i] + '"');
+    return v;
+  }
+  // returns {ok, error, value}
+  function checkFormula(expr, vals) {
+    try {
+      if (!tokenize(expr)) return { ok: false, error: 'Only Q, W, A, numbers, + − × ÷ and brackets are allowed' };
+      const v = evaluate(expr, vals || { Q: 100, W: 5, A: 99 });
+      if (!/Q/.test(expr)) return { ok: false, error: 'The formula must use Q (quantity)' };
+      if (!Number.isFinite(v)) return { ok: false, error: 'Gives no valid number (division by zero?)' };
+      return { ok: true, value: v };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  /* ───────────── Layout engine: rows of blocks that reflow, never overlap ───────────── */
+  const rowSum = (row) => row.reduce((t, it) => t + it.w, 0);
+  function locate(rows, id) { for (let r = 0; r < rows.length; r++) { const i = rows[r].findIndex((it) => it.id === id); if (i >= 0) return { r, i }; } return null; }
+  function defaultRows() { return BLOCK_IDS.map((id) => [{ id, w: BLOCKS[id].w, h: 0 }]); }
+  function tidy(rows) { return rows.filter((r) => r.length); }
+
+  // make row r fit in 12 columns, keeping `keepId` as large as possible
+  function fitRow(rows, r, keepId) {
+    let guard = 0;
+    while (rowSum(rows[r]) > COLS && guard++ < 50) {
+      const row = rows[r], over = rowSum(row) - COLS;
+      const k = row.findIndex((it) => it.id === keepId);
+      const order = [];                                   // neighbours: right side nearest-first, then left side nearest-first
+      for (let j = k + 1; j < row.length; j++) order.push(j);
+      for (let j = k - 1; j >= 0; j--) order.push(j);
+      const room = order.reduce((t, j) => t + Math.max(0, row[j].w - MINW), 0);
+      if (over <= room) {
+        let left = over;
+        for (const j of order) { const cut = Math.min(left, row[j].w - MINW); if (cut > 0) { row[j].w -= cut; left -= cut; } if (left <= 0) break; }
+      } else {
+        // not enough room: wrap the right-most other block to a new row below and try again
+        const idx = order.length ? (k < row.length - 1 ? row.length - 1 : 0) : -1;
+        if (idx < 0 || row.length < 2) { row[0].w = COLS; break; }
+        const [moved] = row.splice(idx, 1);
+        rows.splice(r + 1, 0, [moved]);
+      }
+    }
+    return rows;
+  }
+
+  function resizeBlock(rows0, id, w) {
+    const rows = clone(rows0), at = locate(rows, id); if (!at) return rows;
+    rows[at.r][at.i].w = clampInt(w, MINW, COLS, rows[at.r][at.i].w);
+    fitRow(rows, at.r, id);
+    return tidy(rows);
+  }
+  function setBlockHeight(rows0, id, h) {
+    const rows = clone(rows0), at = locate(rows, id); if (at) rows[at.r][at.i].h = clampInt(h, 0, 2000, 0);
+    return rows;
+  }
+  // target: {type:'before'|'after', id}  or  {type:'row', at:index}
+  function moveBlock(rows0, id, target) {
+    const rows = clone(rows0), from = locate(rows, id); if (!from) return rows;
+    if (target.type !== 'row' && target.id === id) return rows0;
+    const [item] = rows[from.r].splice(from.i, 1);
+    if (!rows[from.r].length) { rows.splice(from.r, 1); if (target.type === 'row' && target.at > from.r) target.at--; }
+    if (target.type === 'row') {
+      rows.splice(Math.max(0, Math.min(rows.length, target.at)), 0, [item]);
+    } else {
+      const at = locate(rows, target.id);
+      if (!at) rows.push([item]);
+      else {
+        const row = rows[at.r];
+        row.splice(target.type === 'after' ? at.i + 1 : at.i, 0, item);
+        // a dropped block first takes the space that is left in the row; only if that is not enough do its neighbours give way
+        const others = row.filter((it) => it.id !== id).reduce((t, it) => t + it.w, 0);
+        if (rowSum(row) > COLS) item.w = Math.max(MINW, Math.min(item.w, COLS - others));
+        fitRow(rows, at.r, id);
+      }
+    }
+    return tidy(rows);
+  }
+  function sanitizeLayout(l) {
+    const seen = new Set(), rows = [];
+    (l && Array.isArray(l.rows) ? l.rows : []).forEach((r) => {
+      if (!Array.isArray(r)) return; let row = [], sum = 0;
+      r.forEach((it) => {
+        const id = it && it.id; if (!BLOCKS[id] || seen.has(id)) return; seen.add(id);
+        const w = clampInt(it.w, MINW, COLS, BLOCKS[id].w), h = clampInt(it.h, 0, 2000, 0);
+        if (sum + w > COLS) { if (row.length) rows.push(row); row = []; sum = 0; }
+        row.push({ id, w, h }); sum += w;
+      });
+      if (row.length) rows.push(row);
+    });
+    BLOCK_IDS.forEach((id) => { if (!seen.has(id)) rows.push([{ id, w: BLOCKS[id].w, h: 0 }]); });
+    return { rows };
+  }
+
+  /* ───────────── Config ───────────── */
+  const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'product';
+  function sanitizeConfig(raw) {
+    const out = clone(DEFAULT_CONFIG);
+    if (!raw || typeof raw !== 'object') return out;
+    if (Array.isArray(raw.products)) {
+      const seen = new Set(['manual']), prods = [];
+      raw.products.slice(0, 30).forEach((p) => {
+        const name = String((p && p.name) || '').trim().slice(0, 40); if (!name) return;
+        let id = slug(p.id || name); while (seen.has(id)) id += '-2'; seen.add(id);
+        const lots = clampInt(p.lots || (Array.isArray(p.a) ? p.a.length : 4), 1, MAXLOTS, 4);
+        const num = (v, d) => (v !== '' && v !== null && Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : d);
+        const arr = (src) => Array.from({ length: lots }, (_, i) => num((src || [])[i], num((src || [])[0], 0)));
+        const formulas = {};
+        ['F1', 'F2', 'F3'].forEach((k) => { const f = p.formulas && String(p.formulas[k] || '').trim(); formulas[k] = f && checkFormula(f).ok ? f : STD[k]; });
+        prods.push({ id, name, formulas, a: arr(p.a), c: arr(p.c) });
+      });
+      out.products = prods;
+    }
+    if (raw.manual) { out.manual.enabled = raw.manual.enabled !== false; out.manual.lots = clampInt(raw.manual.lots, 1, MAXLOTS, 4); }
+    if (!out.products.length) out.manual.enabled = true;
+    if (raw.layout && typeof raw.layout === 'object') out.layout = sanitizeLayout(raw.layout);
+    if (raw.fixed && typeof raw.fixed === 'object') {
+      out.fixed.footer = raw.fixed.footer !== false; out.fixed.tag = raw.fixed.tag !== false;
+      out.fixed.tagSide = raw.fixed.tagSide === 'left' ? 'left' : 'right';
+    }
+    return out;
+  }
+  // problems that should stop publishing (the website would silently fall back otherwise)
+  function validateForPublish(cfg) {
+    const errs = [], names = new Set();
+    cfg.products.forEach((p) => {
+      const nm = String(p.name || '').trim();
+      if (!nm) errs.push('A product has no name.');
+      else if (names.has(nm.toLowerCase())) errs.push('Two products are called "' + nm + '".');
+      names.add(nm.toLowerCase());
+      ['F1', 'F2', 'F3'].forEach((k) => { const r = checkFormula(p.formulas[k]); if (!r.ok) errs.push(nm + ' · ' + k + ': ' + r.error); });
+      for (let i = 0; i < p.a.length; i++) {
+        if (!(Number(p.a[i]) > 0)) errs.push(nm + ' · Lot ' + (i + 1) + ': A must be above 0.');
+        if (!(Number(p.c[i]) >= 0) || p.c[i] === '' || p.c[i] === null) errs.push(nm + ' · Lot ' + (i + 1) + ': C is missing.');
+      }
+    });
+    if (!cfg.products.length && !cfg.manual.enabled) errs.push('Keep at least one product or enable Manual.');
+    return errs;
+  }
+  function newProduct(name) {
+    return { id: slug(name), name, formulas: { ...STD }, a: [0, 0, 0, 0], c: [0, 0, 0, 0] };
+  }
+  function resizeLots(p, n) {
+    n = clampInt(n, 1, MAXLOTS, p.a.length);
+    const grow = (arr) => Array.from({ length: n }, (_, i) => (i < arr.length ? arr[i] : arr[arr.length - 1] || 0));
+    p.a = grow(p.a); p.c = grow(p.c); return p;
+  }
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
+  const api = { COLS, MINW, MAXLOTS, BLOCKS, BLOCK_IDS, STD, DEFAULT_CONFIG, ROMAN, clone, clampInt, slug,
+    tokenize, toExpr, toPretty, evaluate, checkFormula,
+    rowSum, locate, defaultRows, fitRow, resizeBlock, setBlockHeight, moveBlock, sanitizeLayout,
+    sanitizeConfig, validateForPublish, newProduct, resizeLots };
+  root.NIR8Core = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* NIR8 admin — interface */
+(function () {
+  'use strict';
+  const C = window.NIR8Core;
+  const $ = (id) => document.getElementById(id);
+  const DEFAULT_PW = 'Caps@1234';
+  const IDLE_MS = 15 * 60 * 1000;
+
+  // tiny DOM helper
+  function h(tag, props, ...kids) {
+    const e = document.createElement(tag);
+    Object.entries(props || {}).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === false) return;
+      if (k === 'class') e.className = v;
+      else if (k === 'text') e.textContent = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else if (k === 'value') e.value = v;
+      else if (k === 'checked') e.checked = !!v;
+      else if (k === 'disabled') e.disabled = !!v;
+      else if (k === 'draggable') e.draggable = !!v;
+      else e.setAttribute(k, v === true ? '' : v);
+    });
+    kids.flat().forEach((k) => { if (k !== null && k !== undefined && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k))); });
+    return e;
+  }
+
+  const S = {
+    cfg: null, cur: '', pubText: '', undo: [], redo: [], tab: 'products',
+    sel: 0, selBlock: 'input', defaultPw: false, test: { Q: 100, W: 5, A: 99 }, history: null, busy: false
+  };
+  let idleTimer = null;
+
+  /* ───────── state helpers ───────── */
+  const snap = () => JSON.stringify(S.cfg);
+  function status() {
+    const dirty = snap() !== S.pubText;
+    const chip = $('saveChip'); chip.textContent = dirty ? 'Unsaved changes' : 'All changes published'; chip.className = 'chip ' + (dirty ? 'warn' : 'ok');
+    $('undoBtn').disabled = !S.undo.length; $('redoBtn').disabled = !S.redo.length;
+    $('publishBtn').disabled = !dirty || S.busy;
+  }
+  // call after any change; set rerender=false for text typing so inputs keep focus
+  function commit(rerender = true) {
+    const next = snap();
+    if (next !== S.cur) { S.undo.push(S.cur); if (S.undo.length > 100) S.undo.shift(); S.cur = next; S.redo = []; }
+    status();
+    if (rerender) renderTab();
+  }
+  function setCfg(cfg, rerender = true) { S.cfg = cfg; S.cur = snap(); if (rerender) renderTab(); status(); }
+  function undo() { if (!S.undo.length) return; S.redo.push(S.cur); S.cur = S.undo.pop(); S.cfg = JSON.parse(S.cur); fixSel(); renderTab(); status(); }
+  function redo() { if (!S.redo.length) return; S.undo.push(S.cur); S.cur = S.redo.pop(); S.cfg = JSON.parse(S.cur); fixSel(); renderTab(); status(); }
+  function fixSel() { if (S.sel !== 'manual' && S.sel >= S.cfg.products.length) S.sel = S.cfg.products.length ? S.cfg.products.length - 1 : 'manual'; }
+
+  let toastTimer = null;
+  function toast(msg, kind) {
+    const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (kind || '');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = 'toast'; }, 3800);
+  }
+
+  /* ───────── tabs ───────── */
+  const TABS = [['products', 'Products & formulas'], ['layout', 'Page layout'], ['options', 'Page options'], ['backups', 'Backups'], ['account', 'Account']];
+  function renderTabs() {
+    const nav = $('tabs'); nav.textContent = '';
+    TABS.forEach(([id, label]) => nav.append(h('button', { class: 'tab' + (S.tab === id ? ' on' : ''), type: 'button', onclick: () => { S.tab = id; renderTabs(); renderTab(); } }, label)));
+  }
+  function renderTab() {
+    const root = $('tabBody'); root.textContent = '';
+    ({ products: renderProducts, layout: renderLayout, options: renderOptions, backups: renderBackups, account: renderAccount })[S.tab](root);
+    $('banner').hidden = !S.defaultPw;
+  }
+
+  /* ───────── PRODUCTS ───────── */
+  function uniqueId(base) {
+    let id = C.slug(base), n = 2; const taken = new Set(['manual', ...S.cfg.products.map((p) => p.id)]);
+    const root = id; while (taken.has(id)) id = root + '-' + n++;
+    return id;
+  }
+  function renderProducts(root) {
+    const list = h('div', { class: 'plist', id: 'plist' });
+    S.cfg.products.forEach((p, i) => {
+      const item = h('div', { class: 'pitem' + (S.sel === i ? ' on' : ''), draggable: true, 'data-i': i,
+        onclick: () => { S.sel = i; renderTab(); },
+        ondragstart: (e) => { e.dataTransfer.setData('text/plain', 'prod:' + i); e.dataTransfer.effectAllowed = 'move'; },
+        ondragover: (e) => { e.preventDefault(); item.classList.add('over'); },
+        ondragleave: () => item.classList.remove('over'),
+        ondrop: (e) => {
+          e.preventDefault(); item.classList.remove('over');
+          const m = /^prod:(\d+)$/.exec(e.dataTransfer.getData('text/plain')); if (!m) return;
+          const from = +m[1]; if (from === i) return;
+          const [mv] = S.cfg.products.splice(from, 1); S.cfg.products.splice(i, 0, mv); S.sel = i; commit();
+        } },
+        h('span', { class: 'grip', title: 'Drag to reorder' }, '⠿'),
+        h('span', { class: 'pname' }, p.name || '(unnamed)'),
+        h('span', { class: 'pmeta' }, p.a.length + ' lots'));
+      list.append(item);
+    });
+    list.append(h('div', { class: 'pitem manual' + (S.sel === 'manual' ? ' on' : ''), onclick: () => { S.sel = 'manual'; renderTab(); } },
+      h('span', { class: 'grip' }, '✎'), h('span', { class: 'pname' }, 'Manual (built-in)'), h('span', { class: 'pmeta' }, S.cfg.manual.enabled ? 'on' : 'off')));
+    const side = h('div', { class: 'pside card' },
+      h('div', { class: 'cardhead' }, h('b', {}, 'Products'), h('span', { class: 'muted' }, 'drag to reorder')),
+      list,
+      h('div', { class: 'row gap' },
+        h('button', { class: 'btn', type: 'button', onclick: addProduct }, '+ Add product'),
+        h('button', { class: 'btn ghost', type: 'button', disabled: S.sel === 'manual', onclick: dupProduct }, 'Duplicate'),
+        h('button', { class: 'btn danger', type: 'button', disabled: S.sel === 'manual', onclick: delProduct }, 'Delete')));
+    const main = h('div', { class: 'pmain' });
+    if (S.sel === 'manual') renderManual(main); else if (S.cfg.products[S.sel]) renderProductEditor(main, S.cfg.products[S.sel]); else main.append(h('div', { class: 'card empty' }, 'Add a product to get started.'));
+    root.append(h('div', { class: 'split' }, side, main));
+  }
+  function addProduct() {
+    let n = 1, name = 'New product'; const names = new Set(S.cfg.products.map((p) => p.name));
+    while (names.has(name)) name = 'New product ' + ++n;
+    const p = C.newProduct(name); p.id = uniqueId(name); S.cfg.products.push(p); S.sel = S.cfg.products.length - 1; commit();
+    setTimeout(() => { const i = $('pName'); if (i) { i.focus(); i.select(); } }, 0);
+  }
+  function dupProduct() {
+    const src = S.cfg.products[S.sel]; if (!src) return;
+    const p = C.clone(src); p.name = src.name + ' copy'; p.id = uniqueId(p.name);
+    S.cfg.products.splice(S.sel + 1, 0, p); S.sel++; commit();
+  }
+  function delProduct() {
+    const p = S.cfg.products[S.sel]; if (!p) return;
+    if (!confirm('Delete "' + p.name + '"? You can undo this until you leave the page.')) return;
+    S.cfg.products.splice(S.sel, 1); fixSel(); commit();
+  }
+
+  function stepper(value, min, max, onChange, label) {
+    const out = h('span', { class: 'stepval', text: String(value) });
+    const set = (v) => { v = Math.max(min, Math.min(max, v)); if (v !== value) onChange(v); };
+    return h('span', { class: 'stepper', 'aria-label': label || '' },
+      h('button', { type: 'button', class: 'sbtn', 'aria-label': 'Decrease', onclick: () => set(value - 1), disabled: value <= min }, '−'), out,
+      h('button', { type: 'button', class: 'sbtn', 'aria-label': 'Increase', onclick: () => set(value + 1), disabled: value >= max }, '+'));
+  }
+
+  function renderManual(main) {
+    const m = S.cfg.manual;
+    main.append(h('div', { class: 'card' },
+      h('div', { class: 'cardhead' }, h('b', {}, 'Manual mode'), h('span', { class: 'muted' }, 'for a new product / new BMR')),
+      h('p', { class: 'muted' }, 'Manual keeps the standard formulas. The person at the desk types the Std API and Std Excipient quantities.'),
+      h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: m.enabled, onchange: (e) => { m.enabled = e.target.checked; commit(); } }), h('span', {}, 'Show Manual on the product screen')),
+      h('div', { class: 'row gap mt' }, h('span', {}, 'Number of lots in the (A+C)-B table'), stepper(m.lots, 1, C.MAXLOTS, (v) => { m.lots = v; commit(); }, 'Manual lots'))));
+  }
+
+  function renderProductEditor(main, p) {
+    const nameIn = h('input', { id: 'pName', type: 'text', value: p.name, maxlength: 40, 'aria-label': 'Product name',
+      oninput: (e) => { p.name = e.target.value; const it = document.querySelector('.pitem.on .pname'); if (it) it.textContent = p.name || '(unnamed)'; commit(false); },
+      onchange: () => commit(false) });
+    // lots table
+    const head = h('tr', {}, h('th', {}, ''), p.a.map((_, i) => h('th', {}, 'Lot-' + C.ROMAN[i])), h('th', {}, 'Total'));
+    const inputRow = (arr, label) => {
+      const tot = h('td', { class: 'tot' }, fmt(sum(arr)));
+      return h('tr', {}, h('td', { class: 'rowlab' }, label), arr.map((v, i) =>
+        h('td', {}, h('input', { type: 'number', step: '0.001', min: '0', value: v, 'aria-label': label + ' lot ' + (i + 1),
+          oninput: (e) => { arr[i] = e.target.value === '' ? '' : Number(e.target.value); tot.textContent = fmt(sum(arr)); commit(false); }, onchange: () => commit(false) }))), tot);
+    };
+    const sum = (a) => a.reduce((t, v) => t + (Number(v) || 0), 0);
+    const fmt = (n) => (Math.round(n * 1000) / 1000).toFixed(3);
+    const table = h('div', { class: 'tscroll' }, h('table', { class: 'lots' },
+      h('thead', {}, head),
+      h('tbody', {}, inputRow(p.a, 'Std API qty (A) kg'), inputRow(p.c, 'Std Excipient qty (C) kg'))));
+    main.append(
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Product')),
+        h('label', { class: 'field' }, h('span', {}, 'Name shown on the website'), nameIn),
+        h('div', { class: 'row gap mt' }, h('span', {}, 'Number of lots in the (A+C)-B table'),
+          stepper(p.a.length, 1, C.MAXLOTS, (v) => { C.resizeLots(p, v); commit(); }, 'Lots'))),
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Lot values'), h('span', { class: 'muted' }, 'A also sets the Std Qty shown for this product (Lot-I)')),
+        table,
+        h('div', { class: 'row gap mt' },
+          h('button', { class: 'btn ghost', type: 'button', onclick: () => { p.a = p.a.map(() => p.a[0]); commit(); } }, 'A: copy Lot-I to all'),
+          h('button', { class: 'btn ghost', type: 'button', onclick: () => { p.c = p.c.map(() => p.c[0]); commit(); } }, 'C: copy Lot-I to all'))),
+      formulasCard(p));
+  }
+
+  /* ───────── formula builder (drag & drop) ───────── */
+  const DESC = { F1: 'Standard quantity → dispense quantity', F2: 'Dispensed quantity → standard equivalent', F3: 'Remaining quantity → dispense quantity' };
+  function formulasCard(p) {
+    const card = h('div', { class: 'card' },
+      h('div', { class: 'cardhead' }, h('b', {}, 'Formulas'), h('span', { class: 'muted' }, 'drag blocks into the formula, reorder by dragging, drag out to delete')),
+      h('div', { class: 'testbar' }, h('b', {}, 'Test values'),
+        ['Q', 'W', 'A'].map((k) => h('label', {}, k + ' ', h('input', { type: 'number', step: 'any', value: S.test[k], 'aria-label': 'Test ' + k,
+          oninput: (e) => { S.test[k] = Number(e.target.value) || 0; document.querySelectorAll('.fb').forEach((f) => f._refresh && f._refresh()); } })))));
+    ['F1', 'F2', 'F3'].forEach((k) => card.append(builder(p, k)));
+    return card;
+  }
+  const PALETTE = [
+    ['var', 'Q', 'Q'], ['var', 'W', 'W'], ['var', 'A', 'A'],
+    ['op', '*', '×'], ['op', '/', '÷'], ['op', '+', '+'], ['op', '-', '−'],
+    ['lp', '(', '('], ['rp', ')', ')'], ['num', '100', '123']
+  ];
+  function builder(p, key) {
+    let toks = C.tokenize(p.formulas[key]) || [];
+    const wrap = h('div', { class: 'fb' });
+    const canvas = h('div', { class: 'fb-canvas', 'aria-label': key + ' formula' });
+    const pretty = h('div', { class: 'fb-pretty' });
+    const status = h('div', { class: 'fb-status' });
+    const text = h('input', { type: 'text', class: 'fb-text', value: p.formulas[key], spellcheck: 'false', 'aria-label': key + ' as text' });
+    let dragFrom = null;
+
+    function save() { p.formulas[key] = C.toExpr(toks); text.value = p.formulas[key]; commit(false); refresh(); }
+    function refresh() {
+      const expr = C.toExpr(toks), r = C.checkFormula(expr, S.test);
+      pretty.textContent = toks.length ? key + ' = ' + C.toPretty(toks) : key + ' = (drop blocks here)';
+      status.className = 'fb-status ' + (r.ok ? 'ok' : 'bad');
+      status.textContent = r.ok ? '✓ With the test values: ' + (Math.round(r.value * 1e6) / 1e6) : '✕ ' + r.error;
+    }
+    wrap._refresh = refresh;
+    function insertIndexAt(x, y) {
+      const chips = [...canvas.querySelectorAll('.chip')];
+      for (let i = 0; i < chips.length; i++) {
+        const r = chips[i].getBoundingClientRect();
+        if (y < r.top - 2) return i;
+        if (y <= r.bottom + 2 && x < r.left + r.width / 2) return i;
+      }
+      return chips.length;
+    }
+    function drawCanvas() {
+      canvas.textContent = '';
+      toks.forEach((k, i) => {
+        const cls = 'chip ' + (k.t === 'var' ? 'v' : k.t === 'op' ? 'o' : k.t === 'num' ? 'n' : 'p');
+        const body = k.t === 'num'
+          ? h('input', { class: 'numchip', type: 'text', inputmode: 'decimal', value: k.v, 'aria-label': 'Number',
+              oninput: (e) => { e.target.value = e.target.value.replace(/[^\d.]/g, ''); k.v = e.target.value || '0'; save(); } })
+          : h('span', {}, k.t === 'op' ? SHOW[k.v] : k.t === 'lp' ? '(' : k.t === 'rp' ? ')' : k.v);
+        const chip = h('span', { class: cls, draggable: true, 'data-i': i,
+          ondragstart: (e) => { dragFrom = i; e.dataTransfer.setData('text/plain', 'tok:' + i); e.dataTransfer.effectAllowed = 'move'; setTimeout(() => chip.classList.add('ghost'), 0); },
+          ondragend: (e) => { chip.classList.remove('ghost'); if (dragFrom !== null && e.dataTransfer.dropEffect === 'none') { toks.splice(dragFrom, 1); drawCanvas(); save(); } dragFrom = null; } },
+          body, h('button', { type: 'button', class: 'x', 'aria-label': 'Remove', onclick: () => { toks.splice(i, 1); drawCanvas(); save(); } }, '×'));
+        canvas.append(chip);
+      });
+      if (!toks.length) canvas.append(h('span', { class: 'hint' }, 'Drag blocks here, or tap a block below'));
+      refresh();
+    }
+    const SHOW = { '*': '×', '/': '÷', '-': '−', '+': '+' };
+    canvas.addEventListener('dragover', (e) => { e.preventDefault(); canvas.classList.add('over'); });
+    canvas.addEventListener('dragleave', () => canvas.classList.remove('over'));
+    canvas.addEventListener('drop', (e) => {
+      e.preventDefault(); canvas.classList.remove('over');
+      const data = e.dataTransfer.getData('text/plain'); let at = insertIndexAt(e.clientX, e.clientY);
+      if (data.startsWith('pal:')) { const [, t, v] = data.split(':'); toks.splice(at, 0, mk(t, v)); }
+      else if (data.startsWith('tok:')) { const from = +data.slice(4); const [mv] = toks.splice(from, 1); if (from < at) at--; toks.splice(at, 0, mv); }
+      dragFrom = null; drawCanvas(); save();
+    });
+    const mk = (t, v) => (t === 'lp' || t === 'rp' ? { t } : { t, v });
+    const palette = h('div', { class: 'fb-palette' }, PALETTE.map(([t, v, label]) =>
+      h('button', { type: 'button', class: 'chip pal ' + (t === 'var' ? 'v' : t === 'op' ? 'o' : t === 'num' ? 'n' : 'p'), draggable: true, title: t === 'num' ? 'Number' : 'Add ' + label,
+        ondragstart: (e) => { e.dataTransfer.setData('text/plain', 'pal:' + t + ':' + v); e.dataTransfer.effectAllowed = 'copy'; },
+        onclick: () => { toks.push(mk(t, v)); drawCanvas(); save(); } }, label)));
+    text.addEventListener('change', () => {
+      const t = C.tokenize(text.value);
+      if (!t) { status.className = 'fb-status bad'; status.textContent = '✕ Only Q, W, A, numbers, + − × ÷ and brackets are allowed'; text.value = C.toExpr(toks); return; }
+      toks = t; drawCanvas(); save();
+    });
+    wrap.append(
+      h('div', { class: 'fb-head' }, h('b', {}, key), h('span', { class: 'muted' }, DESC[key]),
+        h('button', { type: 'button', class: 'btn tiny ghost', onclick: () => { toks = C.tokenize(C.STD[key]); drawCanvas(); save(); } }, 'Reset to standard')),
+      canvas, palette, pretty, status,
+      h('details', { class: 'adv' }, h('summary', {}, 'Edit as text'), text));
+    drawCanvas();
+    return wrap;
+  }
+
+  /* ───────── LAYOUT (reflowing grid editor) ───────── */
+  const GAP = 12;
+  const wCalc = (w) => 'calc((100% - ' + 11 * GAP + 'px) / 12 * ' + w + ' + ' + GAP * (w - 1) + 'px)';
+  function renderLayout(root) {
+    if (!S.cfg.layout) {
+      root.append(h('div', { class: 'card empty' },
+        h('b', {}, 'Your pages use the standard layout'),
+        h('p', { class: 'muted' }, 'Customize it to place the formula card, input card, calculation sheets and (A+C)-B table side by side, resize them, and set heights. Blocks reflow automatically and can never overlap.'),
+        h('button', { class: 'btn primary', type: 'button', onclick: () => { S.cfg.layout = { rows: C.defaultRows() }; commit(); } }, 'Customize layout')));
+      return;
+    }
+    const wrap = h('div', { class: 'card' });
+    wrap.append(h('div', { class: 'cardhead' }, h('b', {}, 'Page layout'),
+      h('span', { class: 'muted' }, 'drag blocks to move · drag the right edge to widen · bottom edge for height')));
+    wrap.append(h('div', { id: 'layCanvas', class: 'lay-canvas' }));
+    wrap.append(h('div', { id: 'layPanel', class: 'lay-panel' }));
+    wrap.append(h('div', { class: 'row gap mt' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => { if (confirm('Go back to the standard layout?')) { S.cfg.layout = null; commit(); } } }, 'Back to standard layout'),
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => { S.cfg.layout = { rows: C.defaultRows() }; commit(); } }, 'Reset arrangement')));
+    wrap.append(h('p', { class: 'muted small' }, 'On phones and narrow screens the blocks always stack in this order, one under the other. The (A+C)-B table only appears on its own tab.'));
+    root.append(wrap);
+    drawLayout();
+  }
+  function drawLayout() {
+    const canvas = $('layCanvas'); if (!canvas) return; canvas.textContent = '';
+    const rows = S.cfg.layout.rows;
+    const strip = (at) => h('div', { class: 'lay-strip', 'data-at': at, title: 'Drop here for a new row',
+      ondragover: (e) => { e.preventDefault(); e.currentTarget.classList.add('over'); },
+      ondragleave: (e) => e.currentTarget.classList.remove('over'),
+      ondrop: (e) => { e.preventDefault(); e.currentTarget.classList.remove('over'); dropBlock(e, { type: 'row', at }); } });
+    rows.forEach((row, ri) => {
+      canvas.append(strip(ri));
+      const r = h('div', { class: 'lay-row' });
+      row.forEach((it) => {
+        const B = C.BLOCKS[it.id];
+        const blk = h('div', { class: 'lay-block' + (S.selBlock === it.id ? ' sel' : ''), draggable: true, 'data-id': it.id,
+          style: 'flex:0 0 ' + wCalc(it.w) + ';min-height:' + (it.h || B.h) + 'px',
+          onclick: () => { S.selBlock = it.id; drawLayout(); },
+          ondragstart: (e) => { e.dataTransfer.setData('text/plain', 'blk:' + it.id); e.dataTransfer.effectAllowed = 'move'; },
+          ondragover: (e) => { e.preventDefault(); const rc = blk.getBoundingClientRect(); const left = e.clientX < rc.left + rc.width / 2; blk.classList.toggle('drop-before', left); blk.classList.toggle('drop-after', !left); },
+          ondragleave: () => blk.classList.remove('drop-before', 'drop-after'),
+          ondrop: (e) => { e.preventDefault(); const rc = blk.getBoundingClientRect(); const left = e.clientX < rc.left + rc.width / 2; blk.classList.remove('drop-before', 'drop-after'); dropBlock(e, { type: left ? 'before' : 'after', id: it.id }); } },
+          h('div', { class: 'lb-title' }, B.label), h('div', { class: 'lb-tab' }, B.tab),
+          h('div', { class: 'lb-meta' }, it.w + ' of 12 columns · ' + (it.h ? it.h + ' px tall' : 'auto height')),
+          h('div', { class: 'lb-hr', title: 'Drag to change width', onpointerdown: (e) => startResize(e, it.id, 'w', blk) }),
+          h('div', { class: 'lb-hb', title: 'Drag to change height', onpointerdown: (e) => startResize(e, it.id, 'h', blk) }));
+        r.append(blk);
+      });
+      canvas.append(r);
+    });
+    canvas.append(strip(rows.length));
+    drawPanel();
+  }
+  function dropBlock(e, target) {
+    const m = /^blk:(\w+)$/.exec(e.dataTransfer.getData('text/plain')); if (!m) return;
+    S.cfg.layout.rows = C.moveBlock(S.cfg.layout.rows, m[1], target); S.selBlock = m[1]; commit(false); drawLayout();
+  }
+  function startResize(e, id, mode, blk) {
+    e.preventDefault(); e.stopPropagation();
+    blk.draggable = false;
+    const canvas = $('layCanvas'), base = C.clone(S.cfg.layout.rows), at = C.locate(base, id), item = base[at.r][at.i];
+    const rowW = blk.parentElement.getBoundingClientRect().width, col = (rowW - 11 * GAP) / 12, step = col + GAP;
+    const startX = e.clientX, startY = e.clientY, w0 = item.w, h0 = item.h || blk.getBoundingClientRect().height;
+    function move(ev) {
+      if (mode === 'w') S.cfg.layout.rows = C.resizeBlock(base, id, w0 + Math.round((ev.clientX - startX) / step));
+      else S.cfg.layout.rows = C.setBlockHeight(base, id, Math.round((h0 + ev.clientY - startY) / 10) * 10);
+      drawLayout();
+    }
+    function up() { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); commit(false); drawLayout(); }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  }
+  function drawPanel() {
+    const panel = $('layPanel'); if (!panel) return; panel.textContent = '';
+    const rows = S.cfg.layout.rows, at = C.locate(rows, S.selBlock); if (!at) return;
+    const it = rows[at.r][at.i], B = C.BLOCKS[it.id];
+    panel.append(h('div', { class: 'row gap wrap' },
+      h('b', {}, B.label), h('span', { class: 'muted' }, B.hint),
+      h('span', { class: 'sp' }),
+      h('span', {}, 'Width'), stepper(it.w, C.MINW, C.COLS, (v) => { S.cfg.layout.rows = C.resizeBlock(rows, it.id, v); commit(false); drawLayout(); }, 'Width'),
+      h('span', {}, 'Height'),
+      h('input', { type: 'number', min: '0', max: '2000', step: '10', class: 'narrow', value: it.h || '', placeholder: 'auto', 'aria-label': 'Height in pixels',
+        onchange: (e) => { S.cfg.layout.rows = C.setBlockHeight(rows, it.id, e.target.value); commit(false); drawLayout(); } }),
+      h('span', { class: 'muted' }, 'px'),
+      h('button', { class: 'btn tiny ghost', type: 'button', onclick: () => { S.cfg.layout.rows = C.setBlockHeight(rows, it.id, 0); commit(false); drawLayout(); } }, 'Auto'),
+      h('button', { class: 'btn tiny ghost', type: 'button', onclick: () => { S.cfg.layout.rows = C.moveBlock(rows, it.id, { type: 'row', at: Math.min(rows.length, at.r + (rows[at.r].length > 1 ? 1 : 2)) }); commit(false); drawLayout(); } }, 'Move down'),
+      h('button', { class: 'btn tiny ghost', type: 'button', onclick: () => { S.cfg.layout.rows = C.moveBlock(rows, it.id, { type: 'row', at: Math.max(0, at.r - (rows[at.r].length > 1 ? 0 : 1)) }); commit(false); drawLayout(); } }, 'Move up')));
+  }
+
+  /* ───────── OPTIONS ───────── */
+  function renderOptions(root) {
+    const f = S.cfg.fixed;
+    root.append(h('div', { class: 'card' },
+      h('div', { class: 'cardhead' }, h('b', {}, 'Page options')),
+      h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: f.footer, onchange: (e) => { f.footer = e.target.checked; commit(false); } }), h('span', {}, 'Show the footer bar (Help & Shortcuts)')),
+      h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: f.tag, onchange: (e) => { f.tag = e.target.checked; commit(false); } }), h('span', {}, 'Show the ✍️ Write us tag')),
+      h('div', { class: 'row gap mt' }, h('span', {}, 'Write us tag side'),
+        h('select', { 'aria-label': 'Tag side', onchange: (e) => { f.tagSide = e.target.value; commit(false); } },
+          h('option', { value: 'right', selected: f.tagSide !== 'left' }, 'Right'), h('option', { value: 'left', selected: f.tagSide === 'left' }, 'Left')))));
+  }
+
+  /* ───────── BACKUPS ───────── */
+  function renderBackups(root) {
+    const hist = h('div', { id: 'histList', class: 'hist' }, h('span', { class: 'muted' }, 'Loading…'));
+    root.append(
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Backup file')),
+        h('p', { class: 'muted' }, 'Download everything you have set up, or load a file you downloaded earlier.'),
+        h('div', { class: 'row gap' },
+          h('button', { class: 'btn', type: 'button', onclick: exportJson }, 'Download backup'),
+          h('label', { class: 'btn ghost filebtn' }, 'Load backup file', h('input', { type: 'file', accept: 'application/json,.json', hidden: true, onchange: importJson })),
+          h('button', { class: 'btn ghost', type: 'button', onclick: () => { if (confirm('Replace everything in the editor with the built-in defaults? Nothing goes live until you publish.')) { S.cfg = C.clone(C.DEFAULT_CONFIG); S.sel = 0; commit(); toast('Defaults loaded — publish to make them live.'); } } }, 'Load factory defaults'))),
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Previously published versions'), h('span', { class: 'muted' }, 'last 10')),
+        hist));
+    loadHistory(hist);
+  }
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(S.cfg, null, 2)], { type: 'application/json' });
+    const a = h('a', { href: URL.createObjectURL(blob), download: 'nir8-config-' + new Date().toISOString().slice(0, 10) + '.json' }); document.body.append(a); a.click(); a.remove();
+  }
+  function importJson(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { try { S.cfg = C.sanitizeConfig(JSON.parse(r.result)); S.sel = 0; commit(); toast('Backup loaded — publish to make it live.'); } catch { toast('That file is not a valid backup.', 'bad'); } };
+    r.readAsText(f);
+  }
+  async function loadHistory(box) {
+    try {
+      S.history = await NIR8Backend.loadHistory(); box.textContent = '';
+      if (!S.history.length) { box.append(h('span', { class: 'muted' }, 'Nothing yet — versions appear here after you publish.')); return; }
+      S.history.forEach((v) => {
+        let n = '?'; try { n = JSON.parse(v.json).products.length; } catch {}
+        box.append(h('div', { class: 'hrow' }, h('span', {}, new Date(v.ts).toLocaleString()), h('span', { class: 'muted' }, n + ' products'),
+          h('button', { class: 'btn tiny ghost', type: 'button', onclick: () => { try { S.cfg = C.sanitizeConfig(JSON.parse(v.json)); S.sel = 0; commit(); toast('Version loaded — publish to make it live.'); } catch { toast('Could not read that version.', 'bad'); } } }, 'Load')));
+      });
+    } catch { box.textContent = 'Could not load versions.'; }
+  }
+
+  /* ───────── ACCOUNT ───────── */
+  function renderAccount(root) {
+    const msg = h('div', { class: 'msg', role: 'status' });
+    const cur = h('input', { type: 'password', autocomplete: 'current-password', 'aria-label': 'Current password' });
+    const nw = h('input', { type: 'password', autocomplete: 'new-password', 'aria-label': 'New password' });
+    const nw2 = h('input', { type: 'password', autocomplete: 'new-password', 'aria-label': 'Repeat new password' });
+    root.append(h('div', { class: 'card' },
+      h('div', { class: 'cardhead' }, h('b', {}, 'Account'), h('span', { class: 'muted' }, 'Signed in as ' + (NIR8Backend.userId ? NIR8Backend.userId() : 'Admin'))),
+      h('label', { class: 'field' }, h('span', {}, 'Current password'), cur),
+      h('label', { class: 'field' }, h('span', {}, 'New password (10+ characters, with upper, lower, number and symbol)'), nw),
+      h('label', { class: 'field' }, h('span', {}, 'Repeat new password'), nw2),
+      msg,
+      h('div', { class: 'row gap mt' },
+        h('button', { class: 'btn primary', type: 'button', onclick: async () => {
+          msg.className = 'msg bad';
+          if (nw.value !== nw2.value) { msg.textContent = 'The new passwords do not match.'; return; }
+          const problem = passwordProblem(nw.value); if (problem) { msg.textContent = problem; return; }
+          try { await NIR8Backend.changePassword(cur.value, nw.value); msg.className = 'msg ok'; msg.textContent = 'Password changed.'; S.defaultPw = false; $('banner').hidden = true; cur.value = nw.value = nw2.value = ''; }
+          catch (e) { msg.textContent = e && e.message ? e.message : 'Could not change the password.'; }
+        } }, 'Change password'),
+        h('button', { class: 'btn ghost', type: 'button', onclick: () => NIR8Backend.signOut() }, 'Sign out')),
+      h('p', { class: 'muted small mt' }, 'You are signed out automatically after 15 minutes without activity.')));
+  }
+  function passwordProblem(p) {
+    if (p === DEFAULT_PW) return 'Choose a password different from the default.';
+    if (p.length < 10) return 'Use at least 10 characters.';
+    if (!/[a-z]/.test(p) || !/[A-Z]/.test(p) || !/\d/.test(p) || !/[^A-Za-z0-9]/.test(p)) return 'Include an upper-case letter, a lower-case letter, a number and a symbol.';
+    return '';
+  }
+
+  /* ───────── publish / preview ───────── */
+  async function publish() {
+    const errs = C.validateForPublish(S.cfg);
+    if (errs.length) { showProblems(errs); return; }
+    if (S.defaultPw && !confirm('You are still using the default password. Publishing is allowed, but please change the password soon (Account tab). Publish now?')) return;
+    S.busy = true; status();
+    try {
+      const clean = C.sanitizeConfig(S.cfg); const text = JSON.stringify(clean);
+      await NIR8Backend.saveConfig(text);
+      S.cfg = clean; S.pubText = snap(); S.cur = S.pubText; S.history = null;
+      toast('Published ✓  Live for everyone within a few seconds.', 'ok'); renderTab();
+    } catch (e) { toast('Could not publish: ' + (e && e.message ? e.message : 'check your connection and sign-in'), 'bad'); }
+    S.busy = false; status();
+  }
+  function showProblems(errs) {
+    const m = $('problems'); m.textContent = '';
+    m.append(h('div', { class: 'modal-card' }, h('b', {}, 'Fix these before publishing'),
+      h('ul', {}, errs.map((e) => h('li', {}, e))),
+      h('button', { class: 'btn primary', type: 'button', onclick: () => { m.hidden = true; } }, 'OK')));
+    m.hidden = false;
+  }
+  function preview() {
+    const errs = C.validateForPublish(S.cfg); if (errs.length) { showProblems(errs); return; }
+    try { localStorage.setItem('nir8_cfg_preview', JSON.stringify(C.sanitizeConfig(S.cfg))); } catch { toast('Preview needs browser storage.', 'bad'); return; }
+    window.open('index.html?preview=1', '_blank');
+  }
+
+  /* ───────── session ───────── */
+  function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { toast('Signed out after 15 minutes of inactivity.'); NIR8Backend.signOut(); }, IDLE_MS); }
+  async function startApp() {
+    $('loginView').hidden = true; $('appView').hidden = false; resetIdle();
+    let cfg = null, text = null;
+    try { text = await NIR8Backend.loadConfig(); cfg = text ? JSON.parse(text) : null; } catch { toast('Could not read the published settings — showing defaults.', 'bad'); }
+    S.cfg = C.sanitizeConfig(cfg); S.pubText = JSON.stringify(S.cfg); S.cur = S.pubText; S.undo = []; S.redo = []; S.sel = S.cfg.products.length ? 0 : 'manual'; S.tab = 'products';
+    renderTabs(); renderTab(); status();
+  }
+  function endApp() { clearTimeout(idleTimer); $('appView').hidden = true; $('loginView').hidden = false; $('loginPw').value = ''; S.cfg = null; }
+
+  async function doLogin() {
+    const id = $('loginId').value.trim(), pw = $('loginPw').value, err = $('loginErr'), btn = $('loginBtn');
+    err.textContent = ''; if (!id || !pw) { err.textContent = 'Enter your User ID and password.'; return; }
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    S.defaultPw = pw === DEFAULT_PW;       // set before signing in: the app screen is drawn as soon as sign-in succeeds
+    try { await NIR8Backend.signIn(id, pw); }
+    catch (e) { S.defaultPw = false; err.textContent = e && e.message ? e.message : 'Could not sign in.'; }
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+
+  function init() {
+    $('loginBtn').addEventListener('click', doLogin);
+    ['loginId', 'loginPw'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); }));
+    $('undoBtn').addEventListener('click', undo); $('redoBtn').addEventListener('click', redo);
+    $('publishBtn').addEventListener('click', publish); $('previewBtn').addEventListener('click', preview);
+    $('signOutBtn').addEventListener('click', () => NIR8Backend.signOut());
+    document.addEventListener('keydown', (e) => {
+      if ($('appView').hidden) return; resetIdle();
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); undo(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z')) && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); redo(); }
+    });
+    ['pointerdown', 'touchstart'].forEach((ev) => document.addEventListener(ev, () => { if (!$('appView').hidden) resetIdle(); }, { passive: true }));
+    window.addEventListener('beforeunload', (e) => { if (S.cfg && snap() !== S.pubText) { e.preventDefault(); e.returnValue = ''; } });
+    NIR8Backend.onAuth((user) => { if (user) startApp(); else endApp(); });
+  }
+  window.NIR8UI = { init, _S: S, _commit: commit, _publish: publish };
+})();
+
+</script>
+<script type="module">
+// Firebase glue — loaded as a module; provides window.NIR8Backend to the interface
+const V = '10.12.2', BASE = 'https://www.gstatic.com/firebasejs/' + V + '/';
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE', authDomain: 'onekey-5067d.firebaseapp.com', projectId: 'onekey-5067d',
+  storageBucket: 'onekey-5067d.firebasestorage.app', messagingSenderId: '1098836590874', appId: '1:1098836590874:web:9c62490ce2670a4418aca3'
+};
+const EMAIL_DOMAIN = '@nir8.app';
+const AUTH_ERR = {
+  'auth/invalid-credential': 'Wrong User ID or password.', 'auth/wrong-password': 'Wrong User ID or password.', 'auth/user-not-found': 'Wrong User ID or password.',
+  'auth/invalid-email': 'Wrong User ID or password.', 'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.',
+  'auth/operation-not-allowed': 'Email/Password sign-in is not switched on in Firebase yet (see First-time setup).',
+  'auth/network-request-failed': 'No connection. Check your internet and try again.', 'auth/requires-recent-login': 'Please sign out and sign in again, then retry.'
+};
+const niceErr = (e) => new Error(AUTH_ERR[e && e.code] || (e && e.code === 'permission-denied' ? 'This account is not allowed to publish (check the Firestore rules).' : (e && e.message) || 'Something went wrong.'));
+
+(async function boot() {
+  try {
+    const [{ initializeApp }, A, F] = await Promise.all([import(BASE + 'firebase-app.js'), import(BASE + 'firebase-auth.js'), import(BASE + 'firebase-firestore.js')]);
+    const app = initializeApp(FIREBASE_CONFIG), auth = A.getAuth(app), db = F.getFirestore(app);
+    await A.setPersistence(auth, A.browserSessionPersistence);          // signed out when the tab is closed
+    const cfgRef = F.doc(db, 'config', 'app'), histRef = F.doc(db, 'config', 'history');
+    window.NIR8Backend = {
+      onAuth: (cb) => A.onAuthStateChanged(auth, cb),
+      userId: () => (auth.currentUser && auth.currentUser.email ? auth.currentUser.email.split('@')[0] : ''),
+      async signIn(id, pw) { try { await A.signInWithEmailAndPassword(auth, id.trim().toLowerCase() + EMAIL_DOMAIN, pw); } catch (e) { throw niceErr(e); } },
+      signOut: () => A.signOut(auth),
+      async loadConfig() { const s = await F.getDoc(cfgRef); return s.exists() ? s.data().json || null : null; },
+      async saveConfig(text) {
+        try {
+          const prev = await F.getDoc(cfgRef);
+          if (prev.exists() && prev.data().json) {
+            const h = await F.getDoc(histRef), items = (h.exists() && h.data().items) || [];
+            items.unshift({ ts: Date.now(), json: prev.data().json });
+            await F.setDoc(histRef, { items: items.slice(0, 10) });
+          }
+          await F.setDoc(cfgRef, { json: text, updatedAt: F.serverTimestamp(), by: auth.currentUser.email });
+        } catch (e) { throw niceErr(e); }
+      },
+      async loadHistory() { const h = await F.getDoc(histRef); return h.exists() ? h.data().items || [] : []; },
+      async changePassword(cur, next) {
+        try {
+          const u = auth.currentUser;
+          await A.reauthenticateWithCredential(u, A.EmailAuthProvider.credential(u.email, cur));
+          await A.updatePassword(u, next);
+        } catch (e) {
+          if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) throw new Error('The current password is wrong.');
+          throw niceErr(e);
+        }
+      }
+    };
+  } catch (e) {
+    const fail = () => Promise.reject(new Error('Could not reach Firebase. Check your internet connection and reload.'));
+    window.NIR8Backend = { onAuth() {}, signIn: fail, signOut() {}, loadConfig: fail, saveConfig: fail, loadHistory: () => Promise.resolve([]), changePassword: fail, userId: () => '' };
+  }
+  window.NIR8UI.init();
+})();
+
+</script>
+</body>
+</html>

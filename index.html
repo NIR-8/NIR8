@@ -225,7 +225,7 @@
         /* Keep the delete button a comfortable tap size even when the sheet is scaled down */
         .delete-button {
             position: absolute; top: 10px; left: 10px; background: transparent; border: none;
-            cursor: pointer; font-size: 20px; color: red; padding: 0; z-index: 6;
+            cursor: pointer; font-size: 20px; color: red; padding: 0; z-index: 1;
             width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
             zoom: var(--sheet-inv, 1);
         }
@@ -358,6 +358,29 @@
             font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums;
         }
         .calc-result-original { font-weight: 500; color: #333; }
+
+        /* ── PAGE GRID: admin-controlled layout (rows of blocks that reflow, never overlap) ── */
+        #pageGrid { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        #pageGrid .pg-row { display: contents; }
+        @media screen and (min-width: 900px) {
+            #pageGrid.custom .pg-row { display: flex; justify-content: center; align-items: flex-start; gap: 12px; width: min(1200px, 96%); margin: 0 auto; }
+            #pageGrid.custom .pg-row > * { flex: 0 0 calc((100% - 132px) / 12 * var(--pg-w) + 12px * (var(--pg-w) - 1)); width: auto !important; max-width: none !important;
+                min-width: 0; margin: 0 0 10px !important; min-height: var(--pg-h, 0px); box-sizing: border-box; }
+        }
+
+        /* More breathing room between steps on screen only — @media print is untouched */
+        @media screen {
+            .calculation-entry .calc-step { margin-bottom: 40px; gap: 8px; }
+            .calculation-entry .frac { margin: 0 6px; line-height: 1.6; }
+            .calculation-entry .frac .frac-num, .calculation-entry .frac .frac-den { padding: 4px 7px; }
+            .calculation-entry .calc-result { margin-top: 30px; padding-top: 16px; }
+        }
+
+        /* Floating bars fade while the page is scrolling, and come back when you hover / touch / focus them */
+        .menu-card, footer, .wu-dock { transition: opacity .15s ease; }
+        .is-scrolling .menu-card:not(:hover):not(:focus-within),
+        .is-scrolling footer:not(:hover):not(:focus-within),
+        .is-scrolling .wu-dock:not(:hover):not(:focus-within):not(.open) { opacity: .3; }
 
         /* ── FOOTER ── */
         footer {
@@ -691,12 +714,7 @@
             <div class="menu-row">
         <div class="mc product-group">
             <label for="drugSelector" class="mc-label">Product</label>
-            <select id="drugSelector">
-                <option value="" disabled selected>Select product</option>
-                <option value="valacyclovir">Valacyclovir</option>
-                <option value="levetiracetam">Levetiracetam</option>
-                <option value="manual">Manual</option>
-            </select>
+            <select id="drugSelector"></select>
         </div>
         <div class="qty-tracker-card" id="menuQtyTracker">
             <div class="qty-tracker-item">
@@ -733,6 +751,7 @@
         </div>
     </div>
 
+    <div id="pageGrid">
     <div class="formula-spec-card" id="formulaSpecCard" aria-live="polite">
         <div class="spec-head">
             <span class="spec-product" id="specProduct"></span>
@@ -835,7 +854,6 @@
         </div>
     </div>
 
-    <div id="printArea" aria-hidden="true"></div>
 
     <div class="calculation-steps hidden" id="calculationSteps" role="region" aria-label="Calculation steps">
         <div class="calc-toolbar">
@@ -843,6 +861,9 @@
         </div>
         <div id="stepsContainer"></div>
     </div>
+
+    </div>
+    <div id="printArea" aria-hidden="true"></div>
 
     <div id="infoModal" class="info-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
         <div class="modal-content">
@@ -859,10 +880,6 @@
     <div id="productGate" class="info-modal" role="dialog" aria-modal="true" aria-labelledby="gateTitle" style="z-index:20000">
         <div class="product-gate-card">
             <h2 id="gateTitle">Select product</h2>
-            
-            <button type="button" class="gate-btn" data-product="valacyclovir">Valacyclovir<span class="std-pill" data-std="valacyclovir"></span></button>
-            <button type="button" class="gate-btn" data-product="levetiracetam">Levetiracetam<span class="std-pill" data-std="levetiracetam"></span></button>
-            <button type="button" class="gate-btn manual" data-product="manual">Manual<span class="std-pill" data-std="manual">Enter your own Std API Qty</span></button>
         </div>
     </div>
 
@@ -916,17 +933,8 @@
 
     <script>
         const CONSTANTS = {
-            // Valacyclovir preset
-            ACB_DEFAULT_A: 417.000, ACB_DEFAULT_C: 84.375,
-            ACB_TOTAL_A: 1668.000, ACB_TOTAL_C: 337.500,
-            // Levetiracetam preset (from BMR: A=268.750 x4, C=14.674 x3 + 14.673 x1)
-            LEVA_A: 268.750,
-            LEVA_TOTAL_A: 1075.000, LEVA_TOTAL_C: 58.695,
             Q_MAX: 9999999, W_MAX: 99.99, A_MAX: 100.00
         };
-
-        // Per-lot C values for Levetiracetam (Lot-IV has 14.673 per BMR)
-        const LEVA_C_PER_LOT = [14.674, 14.674, 14.674, 14.673];
 
         const domCache = {
             QInput: document.getElementById("Q"),
@@ -1014,11 +1022,181 @@
             F2: 'Q*A*(100-W)/(100*100)',
             F3: 'Q*100*100/(A*(100-W))'
         };
-        const PRODUCTS = {
-            valacyclovir:  { name: 'Valacyclovir',  formulas: STD_FORMULAS },
-            levetiracetam: { name: 'Levetiracetam', formulas: STD_FORMULAS },
-            manual:        { name: 'Manual',        formulas: STD_FORMULAS }   // fixed standard formulas — only the Std Qty is typed by the user
+        // ── CONFIG: products, formulas, lots, layout ───────────────────────────
+        // Defaults below are used until the admin publishes changes (admin.html). The admin's
+        // config is read from Firestore, cached on this device, and sanitised before use.
+        const DEFAULT_CONFIG = {
+            v: 1,
+            manual: { enabled: true, lots: 4 },
+            products: [
+                { id: 'valacyclovir',  name: 'Valacyclovir',  formulas: { ...STD_FORMULAS }, a: [417, 417, 417, 417],             c: [84.375, 84.375, 84.375, 84.375] },
+                { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD_FORMULAS }, a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
+            ],
+            layout: null,
+            fixed: { footer: true, tag: true, tagSide: 'right' }
         };
+        const CFG_KEY = 'nir8_cfg_v1';
+        const CFG_URL = 'https://firestore.googleapis.com/v1/projects/onekey-5067d/databases/(default)/documents/config/app?key=AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE';
+        const BLOCK_IDS = ['spec', 'input', 'steps', 'acb'];
+        const BLOCK_EL = { spec: 'formulaSpecCard', input: 'formulaCalculator', steps: 'calculationSteps', acb: 'acbCalculator' };
+        const BLOCK_W = { spec: 10, input: 5, steps: 10, acb: 6 };
+        const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+        let CFG = null, PRODUCTS = {};
+
+        const clampInt = (v, lo, hi, d) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+        const cloneCfg = o => JSON.parse(JSON.stringify(o));
+
+        function sanitizeLayout(l) {
+            const seen = new Set(), rows = [];
+            (Array.isArray(l.rows) ? l.rows : []).forEach(r => {
+                if (!Array.isArray(r)) return;
+                let row = [], sum = 0;
+                r.forEach(it => {
+                    const id = it && it.id;
+                    if (!BLOCK_IDS.includes(id) || seen.has(id)) return;
+                    seen.add(id);
+                    const w = clampInt(it.w, 3, 12, BLOCK_W[id]), h = clampInt(it.h, 0, 2000, 0);
+                    if (sum + w > 12) { if (row.length) rows.push(row); row = []; sum = 0; }
+                    row.push({ id, w, h }); sum += w;
+                });
+                if (row.length) rows.push(row);
+            });
+            BLOCK_IDS.forEach(id => { if (!seen.has(id)) rows.push([{ id, w: BLOCK_W[id], h: 0 }]); });
+            return { rows };
+        }
+
+        function sanitizeConfig(raw) {
+            const out = cloneCfg(DEFAULT_CONFIG);
+            if (!raw || typeof raw !== 'object') return out;
+            try {
+                if (Array.isArray(raw.products)) {
+                    const seen = new Set(['manual']), prods = [];
+                    raw.products.slice(0, 30).forEach(p => {
+                        const name = String((p && p.name) || '').trim().slice(0, 40);
+                        if (!name) return;
+                        let id = String(p.id || name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'product';
+                        while (seen.has(id)) id += '-2';
+                        seen.add(id);
+                        const lots = clampInt(p.lots || (Array.isArray(p.a) ? p.a.length : 4), 1, 12, 4);
+                        const num = (v, d) => (v !== '' && v !== null && Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : d);
+                        const arr = src => Array.from({ length: lots }, (_, i) => num((src || [])[i], num((src || [])[0], 0)));
+                        const formulas = {};
+                        ['F1', 'F2', 'F3'].forEach(k => {
+                            const f = p.formulas && String(p.formulas[k] || '').trim();
+                            let ok = false; try { ok = !!f && !!validateFormulaText(f); } catch { ok = false; }
+                            formulas[k] = ok ? f : STD_FORMULAS[k];
+                        });
+                        prods.push({ id, name, formulas, a: arr(p.a), c: arr(p.c) });
+                    });
+                    out.products = prods;
+                }
+                if (raw.manual) { out.manual.enabled = raw.manual.enabled !== false; out.manual.lots = clampInt(raw.manual.lots, 1, 12, 4); }
+                if (!out.products.length) out.manual.enabled = true;       // always keep at least one way in
+                if (raw.layout && typeof raw.layout === 'object') out.layout = sanitizeLayout(raw.layout);
+                if (raw.fixed && typeof raw.fixed === 'object') {
+                    out.fixed.footer = raw.fixed.footer !== false;
+                    out.fixed.tag = raw.fixed.tag !== false;
+                    out.fixed.tagSide = raw.fixed.tagSide === 'left' ? 'left' : 'right';
+                }
+            } catch { return cloneCfg(DEFAULT_CONFIG); }
+            return out;
+        }
+
+        function buildProducts() {
+            PRODUCTS = {};
+            CFG.products.forEach(p => { PRODUCTS[p.id] = { name: p.name, formulas: p.formulas, a: p.a, c: p.c }; });
+            if (CFG.manual.enabled) PRODUCTS.manual = { name: 'Manual', formulas: STD_FORMULAS, manual: true };
+        }
+
+        function rebuildProductUi() {
+            const sel = document.getElementById('drugSelector');
+            const gate = document.querySelector('#productGate .product-gate-card');
+            sel.textContent = '';
+            const ph = new Option('Select product', '', true, true); ph.disabled = true; sel.add(ph);
+            gate.querySelectorAll('.gate-btn').forEach(b => b.remove());
+            Object.entries(PRODUCTS).forEach(([id, p]) => {
+                sel.add(new Option(p.name, id));
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'gate-btn' + (p.manual ? ' manual' : ''); b.dataset.product = id;
+                b.appendChild(document.createTextNode(p.name));
+                const pill = document.createElement('span'); pill.className = 'std-pill';
+                pill.textContent = p.manual ? 'Enter your own Std API Qty' : `Std API Qty ${formatNumber(new Decimal(p.a[0]))} kg`;
+                b.appendChild(pill); gate.appendChild(b);
+            });
+            sel.value = currentProduct && PRODUCTS[currentProduct] ? currentProduct : '';
+        }
+
+        function applyLayout() {
+            const grid = document.getElementById('pageGrid');
+            BLOCK_IDS.forEach(id => { const el = document.getElementById(BLOCK_EL[id]); el.style.removeProperty('--pg-w'); el.style.removeProperty('--pg-h'); grid.appendChild(el); });
+            grid.querySelectorAll('.pg-row').forEach(r => r.remove());
+            grid.classList.remove('custom');
+            const L = CFG.layout;
+            if (!L) return;
+            grid.classList.add('custom');
+            L.rows.forEach(row => {
+                const div = document.createElement('div'); div.className = 'pg-row';
+                row.forEach(it => {
+                    const el = document.getElementById(BLOCK_EL[it.id]);
+                    el.style.setProperty('--pg-w', String(it.w));
+                    if (it.h) el.style.setProperty('--pg-h', it.h + 'px');
+                    div.appendChild(el);
+                });
+                grid.appendChild(div);
+            });
+        }
+
+        function applyFixed() {
+            const f = CFG.fixed, dock = document.getElementById('wuDock');
+            document.querySelector('footer').style.display = f.footer ? '' : 'none';
+            dock.style.display = f.tag ? '' : 'none';
+            dock.style.left = f.tagSide === 'left' ? '10px' : '';
+            dock.style.right = f.tagSide === 'left' ? 'auto' : '';
+        }
+
+        function applyConfig(cfg) {
+            CFG = cfg; buildProducts(); rebuildProductUi(); applyLayout(); applyFixed();
+        }
+
+        async function fetchRemoteConfigText() {
+            const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 5000);
+            try {
+                const r = await fetch(CFG_URL, { signal: ctl.signal, cache: 'no-store' });
+                if (!r.ok) return null;
+                const d = await r.json();
+                return (d.fields && d.fields.json && d.fields.json.stringValue) || null;
+            } catch { return null; } finally { clearTimeout(t); }
+        }
+
+        // Build the (A+C)-B table for n lots (ids lotN-a / -b / -c / -result are what the rest of the code uses)
+        function refreshAcbCache(n) {
+            const g = id => document.getElementById(id), ids = t => Array.from({ length: n }, (_, i) => g(`lot${i + 1}-${t}`));
+            domCache.acbInputs = {
+                a: ids('a'), b: ids('b'), c: ids('c'), results: ids('result'),
+                totals: { a: g('total-a'), b: g('total-b'), c: g('total-c'), result: g('total-result') }
+            };
+        }
+        function buildAcbTable(n) {
+            const tbl = document.querySelector('#acbCalculator .acb-table');
+            const r = Array.from({ length: n }, (_, i) => i + 1);
+            const inp = (i, t) => `<td class="acb-td"><label for="lot${i}-${t}" class="hidden">Lot ${i} ${t.toUpperCase()}</label><input type="number" step="0.001" id="lot${i}-${t}" class="acb-input${t === 'b' ? '' : ' acb-prefilled'}"${t === 'b' ? ' placeholder="B"' : ' readonly'}></td>`;
+            tbl.innerHTML = `<caption class="hidden">(A+C)-B Calculator Table</caption>
+                <thead><tr><th class="acb-th" scope="col"></th>${r.map(i => `<th class="acb-th" scope="col">Lot-${ROMAN[i - 1]}</th>`).join('')}<th class="acb-th" scope="col">TOTAL (kg)</th></tr></thead>
+                <tbody>
+                <tr><td class="acb-td">Std API qty (A)<br>kg</td>${r.map(i => inp(i, 'a')).join('')}<td class="acb-td"><span id="total-a" class="acb-span acb-prefilled">0.000</span></td></tr>
+                <tr class="acb-highlight-row"><td class="acb-td">Issued Qty (B)<br>kg</td>${r.map(i => inp(i, 'b')).join('')}<td class="acb-td"><span id="total-b" class="acb-span acb-prefilled">0.000</span></td></tr>
+                <tr><td class="acb-td">Std Excipient qty (C)<br>kg</td>${r.map(i => inp(i, 'c')).join('')}<td class="acb-td"><span id="total-c" class="acb-span acb-prefilled">0.000</span></td></tr>
+                <tr class="acb-highlight-row"><td class="acb-td">(A+C)-(B)<br>kg</td>${r.map(i => `<td class="acb-td"><span id="lot${i}-result">-</span></td>`).join('')}<td class="acb-td"><span id="total-result" class="acb-span acb-prefilled">0.000</span></td></tr>
+                </tbody>`;
+            refreshAcbCache(n);
+            const sel = document.getElementById('lotAssignSelect');
+            if (sel) {
+                const first = sel.options[0] ? sel.options[0].cloneNode(true) : new Option('Select lot…', '');
+                sel.textContent = ''; sel.add(first);
+                r.forEach(i => sel.add(new Option(`Lot-${ROMAN[i - 1]}`, String(i))));
+            }
+        }
+
         let currentProduct = '';                      // '' until chosen on the gate
 
         // ── Safe formula parser (no eval) ───────────────────────────────────────
@@ -1223,7 +1401,7 @@
             card.classList.toggle('is-manual', manual);
             document.getElementById('specProduct').textContent = PRODUCTS[currentProduct].name;
             const stdPill = document.getElementById('specStd');
-            const stdVal = currentProduct === 'valacyclovir' ? CONSTANTS.ACB_DEFAULT_A : currentProduct === 'levetiracetam' ? CONSTANTS.LEVA_A : null;
+            const stdVal = PRODUCTS[currentProduct].a ? PRODUCTS[currentProduct].a[0] : null;
             stdPill.textContent = stdVal !== null ? `Std API Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std API Qty: enter below';
             rows.innerHTML = '';
             ['F1', 'F2', 'F3'].forEach(type => {
@@ -1370,7 +1548,7 @@
         function resetACBCalculator() {
             if (!confirm("Reset the (A+C)-B calculator? This will clear all entered values.")) return;
             // Re-apply the current product's preset (Manual re-reads the Std API / Excipient qty fields)
-            applyDrugPreset(currentProduct || 'valacyclovir');
+            applyDrugPreset(currentProduct || '');
         }
 
         function handleInput(event) {
@@ -1545,8 +1723,8 @@
         function updateACB(input, lotIndex, type) {
             try {
                 const value = new Decimal(input.value || 0);
-                const preset = document.getElementById('drugSelector')?.value || 'valacyclovir';
-                const isManual = preset === 'manual';
+                const preset = PRODUCTS[currentProduct] ? currentProduct : (CFG.products[0] ? CFG.products[0].id : 'manual');
+                const isManual = !!PRODUCTS[preset].manual;
                 if (type === 'a' || type === 'c') {
                     if (isManual) {
                         // Manual mode: freely editable, propagate lot-1 to others
@@ -1559,17 +1737,12 @@
                         }
                     } else {
                         // Preset mode: compare against preset original to show 'edited' highlight
-                        let origA, origC;
-                        if (preset === 'levetiracetam') {
-                            origA = CONSTANTS.LEVA_A; origC = LEVA_C_PER_LOT[lotIndex];
-                        } else {
-                            origA = CONSTANTS.ACB_DEFAULT_A; origC = CONSTANTS.ACB_DEFAULT_C;
-                        }
-                        const original = new Decimal(type === 'a' ? origA : origC);
+                        const prod = PRODUCTS[preset];
+                        const original = new Decimal(type === 'a' ? prod.a[lotIndex] : prod.c[lotIndex]);
                         input.classList.toggle('edited', !value.eq(original)); input.classList.remove('acb-prefilled'); input.classList.add('acb-manual-input');
                         if (lotIndex === 0) {
                             domCache.acbInputs[type].slice(1).forEach((other, oi) => {
-                                const otherOrig = new Decimal(type === 'a' ? origA : (preset === 'levetiracetam' ? LEVA_C_PER_LOT[oi+1] : origC));
+                                const otherOrig = new Decimal((type === 'a' ? prod.a : prod.c)[oi + 1]);
                                 other.value = formatNumber(value); other.classList.toggle('edited', !value.eq(otherOrig));
                                 other.classList.remove('acb-manual-input'); other.classList.add('acb-prefilled');
                             });
@@ -1713,12 +1886,13 @@
         }
 
         function applyDrugPreset(preset) {
-            const isManual = preset === 'manual';
-            const isLeva   = preset === 'levetiracetam';
-            const isVala   = preset === 'valacyclovir';
+            if (!PRODUCTS[preset]) preset = CFG.products[0] ? CFG.products[0].id : 'manual';
+            const prod = PRODUCTS[preset], isManual = !!prod.manual;
+            const n = isManual ? CFG.manual.lots : prod.a.length;
+            if (domCache.acbInputs.a.length !== n || !document.getElementById(`lot${n}-a`)) buildAcbTable(n);
 
             if (isManual) {
-                // Manual mode: A and C both come from the setup card; fields stay editable
+                // Manual mode: A and C both come from the setup card; table cells follow them
                 const aVal = domCache.stdQtyInput.value || '';
                 const cVal = domCache.stdCInput.value || '';
                 domCache.acbInputs.a.forEach(input => {
@@ -1733,44 +1907,23 @@
                     if (cVal) input.classList.add('acb-manual-input');
                     input.placeholder = 'C';
                 });
-                domCache.acbInputs.totals.a.textContent = new Decimal(aVal || 0).times(domCache.acbInputs.a.length).toFixed(3);
-                domCache.acbInputs.totals.c.textContent = new Decimal(cVal || 0).times(domCache.acbInputs.c.length).toFixed(3);
+                domCache.acbInputs.totals.a.textContent = new Decimal(aVal || 0).times(n).toFixed(3);
+                domCache.acbInputs.totals.c.textContent = new Decimal(cVal || 0).times(n).toFixed(3);
                 domCache.acbInputs.results.forEach(span => { span.textContent = '-'; span.classList.remove('acb-output','acb-prefilled'); });
                 domCache.acbInputs.totals.result.textContent = '0.000';
                 updateQuantityTracker();
-
-            } else if (isLeva) {
-                // Levetiracetam preset: A=268.750 each lot, C per-lot per BMR
-                domCache.acbInputs.a.forEach(input => {
-                    input.value = CONSTANTS.LEVA_A.toFixed(3);
-                    input.classList.remove('acb-manual-input', 'edited'); input.classList.add('acb-prefilled');
-                    input.readOnly = true;
-                });
-                domCache.acbInputs.c.forEach((input, i) => {
-                    input.value = LEVA_C_PER_LOT[i].toFixed(3);
-                    input.classList.remove('acb-manual-input', 'edited'); input.classList.add('acb-prefilled');
-                    input.readOnly = true;
-                });
-                domCache.acbInputs.totals.a.textContent = CONSTANTS.LEVA_TOTAL_A.toFixed(3);
-                domCache.acbInputs.totals.c.textContent = CONSTANTS.LEVA_TOTAL_C.toFixed(3);
-                domCache.stdQtyInput.value = CONSTANTS.LEVA_A.toFixed(3);
-                updateQuantityTracker();
-
             } else {
-                // Valacyclovir preset (default)
-                domCache.acbInputs.a.forEach(input => {
-                    input.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
+                // Product preset: A and C per lot come from the config (BMR values)
+                const fill = (inputs, vals) => inputs.forEach((input, i) => {
+                    input.value = Number(vals[i]).toFixed(3);
                     input.classList.remove('acb-manual-input', 'edited'); input.classList.add('acb-prefilled');
                     input.readOnly = true;
                 });
-                domCache.acbInputs.c.forEach(input => {
-                    input.value = CONSTANTS.ACB_DEFAULT_C.toFixed(3);
-                    input.classList.remove('acb-manual-input', 'edited'); input.classList.add('acb-prefilled');
-                    input.readOnly = true;
-                });
-                domCache.acbInputs.totals.a.textContent = CONSTANTS.ACB_TOTAL_A.toFixed(3);
-                domCache.acbInputs.totals.c.textContent = CONSTANTS.ACB_TOTAL_C.toFixed(3);
-                domCache.stdQtyInput.value = CONSTANTS.ACB_DEFAULT_A.toFixed(3);
+                fill(domCache.acbInputs.a, prod.a); fill(domCache.acbInputs.c, prod.c);
+                const sum = arr => arr.reduce((t, v) => t.plus(v), new Decimal(0));
+                domCache.acbInputs.totals.a.textContent = sum(prod.a).toFixed(3);
+                domCache.acbInputs.totals.c.textContent = sum(prod.c).toFixed(3);
+                domCache.stdQtyInput.value = Number(prod.a[0]).toFixed(3);
                 updateQuantityTracker();
             }
 
@@ -1791,6 +1944,24 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
+            // Products, formulas, lots and layout: cached admin config first (instant), then refresh from Firestore.
+            // admin.html "Preview" opens this page with ?preview=1: use the unpublished draft and never touch the live cache
+            const isPreview = /[?&]preview=1(&|$)/.test(location.search);
+            let cachedText = null; try { cachedText = localStorage.getItem(isPreview ? 'nir8_cfg_preview' : CFG_KEY); } catch {}
+            let cachedRaw = null; try { cachedRaw = cachedText ? JSON.parse(cachedText) : null; } catch {}
+            applyConfig(sanitizeConfig(cachedRaw));
+            if (isPreview) {
+                const b = document.createElement('div');
+                b.textContent = 'Preview — not published yet';
+                b.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:20050;background:#b86e00;color:#fff;font:600 12px Inter,sans-serif;padding:5px 10px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+                document.body.appendChild(b);
+            } else fetchRemoteConfigText().then(text => {
+                if (!text || text === cachedText) return;
+                let raw; try { raw = JSON.parse(text); } catch { return; }
+                try { localStorage.setItem(CFG_KEY, text); } catch {}
+                if (!currentProduct) { applyConfig(sanitizeConfig(raw)); applyDrugPreset(''); }   // still on the product screen: update live
+                // otherwise it takes effect on the next load, so a running batch is never disturbed
+            });
             domCache.assayGroup.style.display = "none"; domCache.waterGroup.style.display = "none";
             domCache.buttons.style.display = "none"; domCache.calculationSteps.classList.add("hidden");
             // Only steal focus to Q if the user hasn't already started typing somewhere
@@ -1813,15 +1984,11 @@
                 }
             });
 
-            const inputFields = ['a','b','c'].flatMap(type => [1,2,3,4].map(i => `lot${i}-${type}`));
-            inputFields.forEach((id, index) => {
-                const input = document.getElementById(id);
-                if (input) input.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault(); let next = index + 1;
-                        while (next < inputFields.length) { const ni = document.getElementById(inputFields[next]); if (ni && !ni.readOnly) { ni.focus(); break; } next++; }
-                    }
-                });
+            domCache.acbCalculator.addEventListener('keydown', e => {
+                if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('acb-input')) return;
+                e.preventDefault();
+                const order = ['a', 'b', 'c'].flatMap(t => domCache.acbInputs[t]);
+                for (let k = order.indexOf(e.target) + 1; k < order.length; k++) if (!order[k].readOnly) { order[k].focus(); break; }
             });
 
             window.addEventListener('click', e => {
@@ -1869,9 +2036,7 @@
             // Plain product dropdown: switching it applies the preset immediately.
             const drugSelector = document.getElementById('drugSelector');
             drugSelector.addEventListener('change', () => { if (drugSelector.value) selectProduct(drugSelector.value); });
-            document.querySelectorAll('#productGate .gate-btn').forEach(btn => btn.addEventListener('click', () => selectProduct(btn.dataset.product)));
-            const stdFor = { valacyclovir: CONSTANTS.ACB_DEFAULT_A, levetiracetam: CONSTANTS.LEVA_A };
-            document.querySelectorAll('.std-pill[data-std]').forEach(p => { const v = stdFor[p.dataset.std]; if (v !== undefined) p.textContent = `Std API Qty ${formatNumber(new Decimal(v))} kg`; });
+            document.getElementById('productGate').addEventListener('click', e => { const b = e.target.closest('.gate-btn'); if (b) selectProduct(b.dataset.product); });
             openProductGate();
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (!el) return;
@@ -1932,6 +2097,15 @@
         const wpFormArea   = document.getElementById('wpFormArea');
         const wpSuccess    = document.getElementById('wpSuccess');
         const writeusForm  = document.getElementById('writeusForm');
+
+        // Mark the page as "scrolling" so floating bars can fade (CSS above)
+        (function () {
+            let t = null; const root = document.documentElement;
+            addEventListener('scroll', () => {
+                root.classList.add('is-scrolling'); clearTimeout(t);
+                t = setTimeout(() => root.classList.remove('is-scrolling'), 450);
+            }, { passive: true, capture: true });
+        })();
 
         // Hamburger only holds the Vault shortcut.
         function openNav() { fabContainer.classList.add('open'); hamburger.setAttribute('aria-expanded','true'); hamburger.textContent = '✕'; }
