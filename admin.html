@@ -118,19 +118,12 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     <details>
       <summary>First-time setup (once)</summary>
       <ol>
-        <li>Firebase console → <b>Authentication</b> → Sign-in method → turn on <b>Email/Password</b>.</li>
-        <li>Authentication → Users → <b>Add user</b>: email <code>admin@nir8.app</code>, password <code>Caps@1234</code>.</li>
-        <li>Firestore → <b>Rules</b>: add this block, then Publish.
-          <div class="code" style="display:block;white-space:pre-wrap;margin-top:6px">match /config/app {
-  allow read: if true;
-  allow write: if request.auth != null
-    &amp;&amp; request.auth.token.email == 'admin@nir8.app';
-}
-match /config/history {
-  allow read, write: if request.auth != null
-    &amp;&amp; request.auth.token.email == 'admin@nir8.app';
+        <li>Firebase console → <b>Firestore Database</b> → <b>Rules</b>.</li>
+        <li>Add this block inside <code>match /databases/{database}/documents</code>, then <b>Publish</b>:
+          <div class="code" style="display:block;white-space:pre-wrap;margin-top:6px">match /config/{doc} {
+  allow read, write: if true;
 }</div></li>
-        <li>Sign in here and change the password straight away.</li>
+        <li>Sign in here (User ID <b>Admin</b>) and change the password in the <b>Account</b> tab.</li>
       </ol>
     </details>
   </div>
@@ -877,61 +870,76 @@ match /config/history {
 })();
 
 </script>
-<script type="module">
-// Firebase glue — loaded as a module; provides window.NIR8Backend to the interface
-const V = '10.12.2', BASE = 'https://www.gstatic.com/firebasejs/' + V + '/';
-const FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE', authDomain: 'onekey-5067d.firebaseapp.com', projectId: 'onekey-5067d',
-  storageBucket: 'onekey-5067d.firebasestorage.app', messagingSenderId: '1098836590874', appId: '1:1098836590874:web:9c62490ce2670a4418aca3'
-};
-const EMAIL_DOMAIN = '@nir8.app';
-const AUTH_ERR = {
-  'auth/invalid-credential': 'Wrong User ID or password.', 'auth/wrong-password': 'Wrong User ID or password.', 'auth/user-not-found': 'Wrong User ID or password.',
-  'auth/invalid-email': 'Wrong User ID or password.', 'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.',
-  'auth/operation-not-allowed': 'Email/Password sign-in is not switched on in Firebase yet (see First-time setup).',
-  'auth/network-request-failed': 'No connection. Check your internet and try again.', 'auth/requires-recent-login': 'Please sign out and sign in again, then retry.'
-};
-const niceErr = (e) => new Error(AUTH_ERR[e && e.code] || (e && e.code === 'permission-denied' ? 'This account is not allowed to publish (check the Firestore rules).' : (e && e.message) || 'Something went wrong.'));
+<script>
+/* NIR8 admin — simple backend: plain User ID + password, settings saved straight to Firestore (REST). No Firebase sign-in. */
+(function () {
+  'use strict';
+  const PROJECT = 'onekey-5067d', KEY = 'AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE';
+  const DOCS = 'https://firestore.googleapis.com/v1/projects/' + PROJECT + '/databases/(default)/documents/config/';
+  const ADMIN_ID = 'admin';
+  const DEFAULT_SALT = 'nir8-default', DEFAULT_HASH = 'a8b7d3103753fff46c64388997864c55e015ca6f44a159ab60a880ce31d3b786';   // PBKDF2 of the default password (see README in chat)
+  const ITER = 150000;
+  const enc = new TextEncoder();
+  const hex = (buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 
-(async function boot() {
-  try {
-    const [{ initializeApp }, A, F] = await Promise.all([import(BASE + 'firebase-app.js'), import(BASE + 'firebase-auth.js'), import(BASE + 'firebase-firestore.js')]);
-    const app = initializeApp(FIREBASE_CONFIG), auth = A.getAuth(app), db = F.getFirestore(app);
-    await A.setPersistence(auth, A.browserSessionPersistence);          // signed out when the tab is closed
-    const cfgRef = F.doc(db, 'config', 'app'), histRef = F.doc(db, 'config', 'history');
-    window.NIR8Backend = {
-      onAuth: (cb) => A.onAuthStateChanged(auth, cb),
-      userId: () => (auth.currentUser && auth.currentUser.email ? auth.currentUser.email.split('@')[0] : ''),
-      async signIn(id, pw) { try { await A.signInWithEmailAndPassword(auth, id.trim().toLowerCase() + EMAIL_DOMAIN, pw); } catch (e) { throw niceErr(e); } },
-      signOut: () => A.signOut(auth),
-      async loadConfig() { const s = await F.getDoc(cfgRef); return s.exists() ? s.data().json || null : null; },
-      async saveConfig(text) {
-        try {
-          const prev = await F.getDoc(cfgRef);
-          if (prev.exists() && prev.data().json) {
-            const h = await F.getDoc(histRef), items = (h.exists() && h.data().items) || [];
-            items.unshift({ ts: Date.now(), json: prev.data().json });
-            await F.setDoc(histRef, { items: items.slice(0, 10) });
-          }
-          await F.setDoc(cfgRef, { json: text, updatedAt: F.serverTimestamp(), by: auth.currentUser.email });
-        } catch (e) { throw niceErr(e); }
-      },
-      async loadHistory() { const h = await F.getDoc(histRef); return h.exists() ? h.data().items || [] : []; },
-      async changePassword(cur, next) {
-        try {
-          const u = auth.currentUser;
-          await A.reauthenticateWithCredential(u, A.EmailAuthProvider.credential(u.email, cur));
-          await A.updatePassword(u, next);
-        } catch (e) {
-          if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) throw new Error('The current password is wrong.');
-          throw niceErr(e);
-        }
-      }
-    };
-  } catch (e) {
-    const fail = () => Promise.reject(new Error('Could not reach Firebase. Check your internet connection and reload.'));
-    window.NIR8Backend = { onAuth() {}, signIn: fail, signOut() {}, loadConfig: fail, saveConfig: fail, loadHistory: () => Promise.resolve([]), changePassword: fail, userId: () => '' };
+  async function hashPw(pw, salt) {
+    const base = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode(salt), iterations: ITER, hash: 'SHA-256' }, base, 256));
   }
+
+  async function api(method, name, body, mask) {
+    const url = DOCS + name + '?key=' + KEY + (mask || []).map((m) => '&updateMask.fieldPaths=' + m).join('');
+    let res;
+    try { res = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }); }
+    catch { throw new Error('No connection. Check your internet and try again.'); }
+    if (res.status === 404) return null;
+    if (res.status === 403) throw new Error('Firestore refused this. Add the rules shown under "First-time setup" and try again.');
+    if (!res.ok) throw new Error('Could not reach the database (' + res.status + ').');
+    return res.json();
+  }
+  const str = (d, f) => (d && d.fields && d.fields[f] && d.fields[f].stringValue) || null;
+  const put = (name, fields) => api('PATCH', name, { fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v])) }, Object.keys(fields));
+
+  let authCb = null, signedIn = false, fails = 0;
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  async function credentials() {
+    const d = await api('GET', 'admin');
+    const salt = str(d, 'salt'), hash = str(d, 'hash');
+    return salt && hash ? { salt, hash } : { salt: DEFAULT_SALT, hash: DEFAULT_HASH };
+  }
+
+  window.NIR8Backend = {
+    onAuth(cb) { authCb = cb; },
+    userId: () => 'Admin',
+    async signIn(id, pw) {
+      if (fails >= 3) await wait(Math.min(8000, 1000 * (fails - 2)));        // slow down repeated wrong guesses
+      const cred = await credentials();
+      const ok = String(id).trim().toLowerCase() === ADMIN_ID && (await hashPw(pw, cred.salt)) === cred.hash;
+      if (!ok) { fails++; throw new Error('Wrong User ID or password.'); }
+      fails = 0; signedIn = true; if (authCb) authCb({ id: 'Admin' });
+    },
+    signOut() { signedIn = false; if (authCb) authCb(null); },
+    async loadConfig() { return str(await api('GET', 'app'), 'json'); },
+    async saveConfig(text) {
+      if (!signedIn) throw new Error('Please sign in again.');
+      const prev = str(await api('GET', 'app'), 'json');
+      if (prev) {
+        let items = []; try { items = JSON.parse(str(await api('GET', 'history'), 'items') || '[]'); } catch {}
+        items.unshift({ ts: Date.now(), json: prev });
+        await put('history', { items: { stringValue: JSON.stringify(items.slice(0, 10)) } });
+      }
+      await put('app', { json: { stringValue: text }, updatedAt: { timestampValue: new Date().toISOString() } });
+    },
+    async loadHistory() { try { return JSON.parse(str(await api('GET', 'history'), 'items') || '[]'); } catch { return []; } },
+    async changePassword(cur, next) {
+      const c = await credentials();
+      if ((await hashPw(cur, c.salt)) !== c.hash) throw new Error('The current password is wrong.');
+      const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+      await put('admin', { salt: { stringValue: salt }, hash: { stringValue: await hashPw(next, salt) } });
+    },
+    _hashPw: hashPw
+  };
   window.NIR8UI.init();
 })();
 
