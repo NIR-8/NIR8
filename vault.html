@@ -190,6 +190,10 @@ select.sel option{background:#0e0e1c}
 .btn-g{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--b);margin-top:10px}
 .btn-g:hover{border-color:var(--bhi);color:var(--text);background:rgba(255,255,255,.08)}
 .btn-sm{padding:7px 14px;font-size:11px;width:auto;margin-top:0}
+.ext-link{display:flex;align-items:center;gap:12px;margin-top:18px;padding:11px 14px;border:1px dashed var(--b);border-radius:10px;color:var(--muted);text-decoration:none;font-size:11px;line-height:1.5;transition:.15s}
+.ext-link:hover{border-color:var(--bhi);color:var(--text);background:rgba(255,255,255,.05)}
+.ext-link b{display:block;color:var(--text);font-size:12px;margin-bottom:1px}
+.ext-link .ei{font-size:20px;line-height:1}
 .btn-danger{background:var(--danger);color:#fff}
 .btn-danger:hover:not(:disabled){box-shadow:0 0 24px rgba(255,77,106,.4);transform:translateY(-1px)}
 
@@ -542,6 +546,10 @@ select.sel option{background:#0e0e1c}
       </div>
       <button class="btn btn-p" id="loginBtn" onclick="login()">Unlock Vault</button>
       <button class="btn btn-g" onclick="go('regScreen')">Create new vault</button>
+      <a class="ext-link" href="https://microsoftedge.microsoft.com/addons/detail/lmmbnoekeehdekbjhkgebaohalghhbfe" target="_blank" rel="noopener noreferrer">
+        <span class="ei" aria-hidden="true">🧩</span>
+        <span><b>Get the autofill extension</b>For Microsoft Edge — fill your logins in one click</span>
+      </a>
     </div>
 
   </div>
