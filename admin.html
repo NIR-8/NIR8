@@ -169,7 +169,20 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD }, a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
     ],
     layout: null,
-    fixed: { footer: true, tag: true, tagSide: 'right' }
+    fixed: { footer: true, tag: true, tagSide: 'right' },
+    ui: {
+      pageTitle: 'NIR8 Calculators',
+      footerText: 'Always double-check results.',
+      helpBtnText: 'ℹ️ Help & Shortcuts',
+      tabFormula: 'Formula',
+      tabAcb: '(A+C)-B',
+      productGateTitle: 'Select product',
+      showHoldPeriod: true,
+      holdTitle: 'Hold time period',
+      qMax: 9999999,
+      waterMax: 99.99,
+      assayMax: 100
+    }
   };
 
   const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -333,6 +346,22 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     if (raw.fixed && typeof raw.fixed === 'object') {
       out.fixed.footer = raw.fixed.footer !== false; out.fixed.tag = raw.fixed.tag !== false;
       out.fixed.tagSide = raw.fixed.tagSide === 'left' ? 'left' : 'right';
+    }
+    if (raw.ui && typeof raw.ui === 'object') {
+      const u = raw.ui, d = DEFAULT_CONFIG.ui;
+      const str = (v, fb, max) => { const s = String(v == null ? fb : v).trim(); return (s || fb).slice(0, max); };
+      const num = (v, fb, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fb; };
+      out.ui.pageTitle = str(u.pageTitle, d.pageTitle, 80);
+      out.ui.footerText = str(u.footerText, d.footerText, 120);
+      out.ui.helpBtnText = str(u.helpBtnText, d.helpBtnText, 60);
+      out.ui.tabFormula = str(u.tabFormula, d.tabFormula, 24);
+      out.ui.tabAcb = str(u.tabAcb, d.tabAcb, 24);
+      out.ui.productGateTitle = str(u.productGateTitle, d.productGateTitle, 40);
+      out.ui.showHoldPeriod = u.showHoldPeriod !== false;
+      out.ui.holdTitle = str(u.holdTitle, d.holdTitle, 40);
+      out.ui.qMax = num(u.qMax, d.qMax, 1, 99999999);
+      out.ui.waterMax = num(u.waterMax, d.waterMax, 0.01, 99.99);
+      out.ui.assayMax = num(u.assayMax, d.assayMax, 0.01, 100);
     }
     return out;
   }
@@ -726,13 +755,40 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   /* ───────── OPTIONS ───────── */
   function renderOptions(root) {
     const f = S.cfg.fixed;
-    root.append(h('div', { class: 'card' },
-      h('div', { class: 'cardhead' }, h('b', {}, 'Page options')),
-      h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: f.footer, onchange: (e) => { f.footer = e.target.checked; commit(false); } }), h('span', {}, 'Show the footer bar (Help & Shortcuts)')),
-      h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: f.tag, onchange: (e) => { f.tag = e.target.checked; commit(false); } }), h('span', {}, 'Show the ✍️ Write us tag')),
-      h('div', { class: 'row gap mt' }, h('span', {}, 'Write us tag side'),
-        h('select', { 'aria-label': 'Tag side', onchange: (e) => { f.tagSide = e.target.value; commit(false); } },
-          h('option', { value: 'right', selected: f.tagSide !== 'left' }, 'Right'), h('option', { value: 'left', selected: f.tagSide === 'left' }, 'Left')))));
+    if (!S.cfg.ui) S.cfg.ui = C.clone(C.DEFAULT_CONFIG.ui);
+    const u = S.cfg.ui;
+    const setStr = (key, max) => (e) => { u[key] = String(e.target.value || '').trim().slice(0, max); commit(false); };
+    const setNum = (key) => (e) => { const n = Number(e.target.value); if (Number.isFinite(n)) { u[key] = n; commit(false); } };
+
+    root.append(
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Visibility')),
+        h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: f.footer, onchange: (e) => { f.footer = e.target.checked; commit(false); } }), h('span', {}, 'Show the footer bar (Help & Shortcuts)')),
+        h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: f.tag, onchange: (e) => { f.tag = e.target.checked; commit(false); } }), h('span', {}, 'Show the ✍️ Write us tag')),
+        h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: u.showHoldPeriod !== false, onchange: (e) => { u.showHoldPeriod = e.target.checked; commit(false); } }), h('span', {}, 'Show Hold time period card on (A+C)-B tab')),
+        h('div', { class: 'row gap mt' }, h('span', {}, 'Write us tag side'),
+          h('select', { 'aria-label': 'Tag side', onchange: (e) => { f.tagSide = e.target.value; commit(false); } },
+            h('option', { value: 'right', selected: f.tagSide !== 'left' }, 'Right'),
+            h('option', { value: 'left', selected: f.tagSide === 'left' }, 'Left')))),
+
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Text & labels'), h('span', { class: 'muted' }, 'shown on the calculator')),
+        h('label', { class: 'field' }, h('span', {}, 'Browser tab title'), h('input', { type: 'text', value: u.pageTitle || '', maxlength: 80, onchange: setStr('pageTitle', 80) })),
+        h('label', { class: 'field' }, h('span', {}, 'Footer text'), h('input', { type: 'text', value: u.footerText || '', maxlength: 120, onchange: setStr('footerText', 120) })),
+        h('label', { class: 'field' }, h('span', {}, 'Help button text'), h('input', { type: 'text', value: u.helpBtnText || '', maxlength: 60, onchange: setStr('helpBtnText', 60) })),
+        h('label', { class: 'field' }, h('span', {}, 'Formula tab label'), h('input', { type: 'text', value: u.tabFormula || '', maxlength: 24, onchange: setStr('tabFormula', 24) })),
+        h('label', { class: 'field' }, h('span', {}, '(A+C)-B tab label'), h('input', { type: 'text', value: u.tabAcb || '', maxlength: 24, onchange: setStr('tabAcb', 24) })),
+        h('label', { class: 'field' }, h('span', {}, 'Product selection title'), h('input', { type: 'text', value: u.productGateTitle || '', maxlength: 40, onchange: setStr('productGateTitle', 40) })),
+        h('label', { class: 'field' }, h('span', {}, 'Hold period title'), h('input', { type: 'text', value: u.holdTitle || '', maxlength: 40, onchange: setStr('holdTitle', 40) })),
+        h('p', { class: 'muted' }, 'Products, formulas and lot values are edited on the Products & formulas tab.')),
+
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Input limits'), h('span', { class: 'muted' }, 'max values allowed in the calculator')),
+        h('div', { class: 'row gap' },
+          h('label', { class: 'field' }, h('span', {}, 'Quantity (Q) max'), h('input', { type: 'number', min: 1, max: 99999999, step: 1, value: u.qMax, onchange: setNum('qMax') })),
+          h('label', { class: 'field' }, h('span', {}, 'Water % max'), h('input', { type: 'number', min: 0.01, max: 99.99, step: 0.01, value: u.waterMax, onchange: setNum('waterMax') })),
+          h('label', { class: 'field' }, h('span', {}, 'Assay % max'), h('input', { type: 'number', min: 0.01, max: 100, step: 0.01, value: u.assayMax, onchange: setNum('assayMax') })))
+    );
   }
 
   /* ───────── BACKUPS ───────── */

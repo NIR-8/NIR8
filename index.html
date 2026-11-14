@@ -376,13 +376,12 @@
             .calculation-entry .calc-result { margin-top: 30px; padding-top: 16px; }
         }
 
-        /* Floating bars dim to 30% after the user scrolls. They stay dimmed
-           until hovered / focused / opened (so they don't flash back to 100%
-           the moment scrolling stops). */
-        .menu-card, footer, .wu-dock { transition: opacity .15s ease; }
-        .is-scrolling .menu-card:not(:hover):not(:focus-within),
+        /* Floating chrome: the TOP menu-card stays fully opaque (you need to
+           read Product / Dispensed / Remaining while working). Only the footer
+           and Write-us dock dim while scrolling, then restore shortly after. */
+        footer, .wu-dock { transition: opacity .2s ease; }
         .is-scrolling footer:not(:hover):not(:focus-within),
-        .is-scrolling .wu-dock:not(:hover):not(:focus-within):not(.open) { opacity: .3; }
+        .is-scrolling .wu-dock:not(:hover):not(:focus-within):not(.open) { opacity: .45; }
 
         /* ── FOOTER ── */
         footer {
@@ -1035,7 +1034,21 @@
                 { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD_FORMULAS }, a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
             ],
             layout: null,
-            fixed: { footer: true, tag: true, tagSide: 'right' }
+            fixed: { footer: true, tag: true, tagSide: 'right' },
+            // All of these are editable from Admin → Page options (no code needed)
+            ui: {
+                pageTitle: 'NIR8 Calculators',
+                footerText: 'Always double-check results.',
+                helpBtnText: 'ℹ️ Help & Shortcuts',
+                tabFormula: 'Formula',
+                tabAcb: '(A+C)-B',
+                productGateTitle: 'Select product',
+                showHoldPeriod: true,
+                holdTitle: 'Hold time period',
+                qMax: 9999999,
+                waterMax: 99.99,
+                assayMax: 100
+            }
         };
         const CFG_KEY = 'nir8_cfg_v1';
         const CFG_URL = 'https://firestore.googleapis.com/v1/projects/onekey-5067d/databases/(default)/documents/config/app?key=AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE';
@@ -1100,6 +1113,22 @@
                     out.fixed.tag = raw.fixed.tag !== false;
                     out.fixed.tagSide = raw.fixed.tagSide === 'left' ? 'left' : 'right';
                 }
+                if (raw.ui && typeof raw.ui === 'object') {
+                    const u = raw.ui, d = DEFAULT_CONFIG.ui;
+                    const str = (v, fb, max) => { const s = String(v == null ? fb : v).trim(); return (s || fb).slice(0, max); };
+                    const num = (v, fb, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fb; };
+                    out.ui.pageTitle = str(u.pageTitle, d.pageTitle, 80);
+                    out.ui.footerText = str(u.footerText, d.footerText, 120);
+                    out.ui.helpBtnText = str(u.helpBtnText, d.helpBtnText, 60);
+                    out.ui.tabFormula = str(u.tabFormula, d.tabFormula, 24);
+                    out.ui.tabAcb = str(u.tabAcb, d.tabAcb, 24);
+                    out.ui.productGateTitle = str(u.productGateTitle, d.productGateTitle, 40);
+                    out.ui.showHoldPeriod = u.showHoldPeriod !== false;
+                    out.ui.holdTitle = str(u.holdTitle, d.holdTitle, 40);
+                    out.ui.qMax = num(u.qMax, d.qMax, 1, 99999999);
+                    out.ui.waterMax = num(u.waterMax, d.waterMax, 0.01, 99.99);
+                    out.ui.assayMax = num(u.assayMax, d.assayMax, 0.01, 100);
+                }
             } catch { return cloneCfg(DEFAULT_CONFIG); }
             return out;
         }
@@ -1149,11 +1178,50 @@
         }
 
         function applyFixed() {
-            const f = CFG.fixed, dock = document.getElementById('wuDock');
+            const f = CFG.fixed, u = CFG.ui || DEFAULT_CONFIG.ui, dock = document.getElementById('wuDock');
+            // Visibility
             document.querySelector('footer').style.display = f.footer ? '' : 'none';
             dock.style.display = f.tag ? '' : 'none';
             dock.style.left = f.tagSide === 'left' ? '10px' : '';
             dock.style.right = f.tagSide === 'left' ? 'auto' : '';
+            // Labels & text (admin-controlled, zero code)
+            document.title = u.pageTitle;
+            const footer = document.querySelector('footer');
+            if (footer) {
+                // Keep the help button; replace only the leading text node
+                const helpBtn = document.getElementById('infoBtn');
+                const text = (u.footerText || '') + ' ';
+                // Rebuild footer content cleanly
+                footer.textContent = '';
+                footer.appendChild(document.createTextNode(text));
+                if (helpBtn) {
+                    helpBtn.textContent = u.helpBtnText;
+                    footer.appendChild(helpBtn);
+                }
+            }
+            const tabF = document.getElementById('tabFormulaBtn');
+            const tabA = document.getElementById('tabAcbBtn');
+            if (tabF) tabF.textContent = u.tabFormula;
+            if (tabA) tabA.textContent = u.tabAcb;
+            const gateTitle = document.getElementById('gateTitle');
+            if (gateTitle) gateTitle.textContent = u.productGateTitle;
+            const holdCard = document.getElementById('holdPeriodCard');
+            if (holdCard) holdCard.style.display = u.showHoldPeriod ? '' : 'none';
+            const holdTitleEl = document.querySelector('.hold-title');
+            if (holdTitleEl) holdTitleEl.textContent = u.holdTitle;
+            // Input limits
+            const Q = document.getElementById('Q');
+            const water = document.getElementById('water');
+            const assay = document.getElementById('assay');
+            if (Q) Q.max = u.qMax;
+            if (water) water.max = u.waterMax;
+            if (assay) assay.max = u.assayMax;
+            // Keep JS constants in sync for validation
+            if (typeof CONSTANTS === 'object') {
+                CONSTANTS.Q_MAX = u.qMax;
+                CONSTANTS.W_MAX = u.waterMax;
+                CONSTANTS.A_MAX = u.assayMax;
+            }
         }
 
         function applyConfig(cfg) {
@@ -2107,13 +2175,15 @@
         const wpSuccess    = document.getElementById('wpSuccess');
         const writeusForm  = document.getElementById('writeusForm');
 
-        // After the user scrolls, keep floating bars at 30% opacity until they
-        // hover / focus / open them (see .is-scrolling CSS). Do not auto-restore
-        // to 100% just because scrolling stopped.
+        // Dim footer + Write-us dock while scrolling; restore after a short pause.
+        // Top menu-card is intentionally never dimmed.
         (function () {
+            let t = null;
             const root = document.documentElement;
             addEventListener('scroll', () => {
                 root.classList.add('is-scrolling');
+                clearTimeout(t);
+                t = setTimeout(() => root.classList.remove('is-scrolling'), 700);
             }, { passive: true, capture: true });
         })();
 
