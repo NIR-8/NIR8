@@ -72,7 +72,7 @@
             background: #f6f7f8;
             display: flex; justify-content: flex-start; align-items: center;
             min-height: 100vh; flex-direction: column;
-            padding: 120px 10px 56px; text-align: center; margin: 0;
+            padding: calc(120px + var(--menu-extra, 0px)) 10px 56px; text-align: center; margin: 0;
         }
 
         /* ── CALCULATOR ── */
@@ -94,7 +94,7 @@
         }
                 .tab-btn {
             flex: 1; background: transparent; color: #6b7480; border: none;
-            border-radius: 8px; padding: 8px 6px; font-size: 13px; font-weight: 600;
+            border-radius: 8px; padding: var(--tab-pad, 8px) 6px; font-size: var(--tab-fs, 13px); font-weight: 600;
             font-family: "Inter", sans-serif; cursor: pointer; transition: background .2s ease, color .2s ease;
         }
         .tab-btn.active { background: #157347; color: #fff; }
@@ -104,7 +104,7 @@
         /* ── UPPER MENU CARD: fixed to top (like footer is fixed to bottom) ── */
         .menu-card {
             position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 50;
-            width: 94%; max-width: 400px; margin: 0; padding: 6px 8px 8px;
+            width: 94%; max-width: var(--menu-w, 400px); margin: 0; padding: 6px 8px 8px;
             background: rgba(255,255,255,.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
             border: 1px solid rgba(20,40,60,.08); border-top: none;
             border-radius: 0 0 14px 14px; box-shadow: 0 4px 16px rgba(20,40,60,.12);
@@ -115,7 +115,7 @@
         .mc { min-width: 0; }
         .product-group { flex: 1.15; }
         .mc-label { font-size: 10px; font-weight: 600; color: #767676; text-transform: uppercase; letter-spacing: .3px; margin: 0 0 2px; }
-        .product-group select { width: 100%; margin: 0; padding: 7px 4px; font-size: 13px; text-align: left; }
+        .product-group select { width: 100%; margin: 0; padding: var(--sel-pad, 7px) 4px; font-size: var(--sel-fs, 13px); text-align: left; }
         .menu-card .qty-tracker-card { flex: 1.85; margin: 0; padding: 4px 6px; }
         .menu-card .quantity-warning-banner { margin-top: 6px; }
         .menu-card .lot-assign-panel { margin-top: 6px; padding: 6px; }
@@ -545,22 +545,50 @@
             .verify-label { width: auto; text-align: left; margin-right: 6px; }
         }
         /* Orange glass — same translucent look as the hamburger button */
-        .std-pill, .gate-btn.manual {
+        .std-pill {
             background: linear-gradient(135deg, rgba(255,176,64,.34), rgba(255,140,0,.16));
             border: 1px solid rgba(255,160,40,.5); color: #7a4300;
             box-shadow: 0 2px 10px rgba(217,131,0,.16), inset 0 1px 0 rgba(255,255,255,.65);
             -webkit-backdrop-filter: blur(10px) saturate(160%); backdrop-filter: blur(10px) saturate(160%);
         }
         .std-pill { display: inline-block; font-weight: 700; padding: 3px 10px; border-radius: 8px; font-size: 12px; }
-        .gate-btn .std-pill { margin-top: 6px; background: linear-gradient(135deg, rgba(255,190,90,.8), rgba(255,160,40,.6)); color: #4d2900; }
         .spec-error { margin: 2px 0 0; font-size: 11px; color: #c0392b; }
         .spec-error:empty { display: none; }
-        .product-gate-card { background: #fff; border-radius: 16px; padding: 26px 22px; width: 92%; max-width: 380px; min-height: 180px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
-        .product-gate-card h2 { margin: 0 0 4px; font-size: 20px; }
-        .gate-btn { display: block; width: 100%; margin-bottom: 10px; text-align: left; padding: 14px 16px; }
-        .gate-btn.manual { border-radius: 8px; }
-        .gate-btn.manual:hover { background: linear-gradient(135deg, rgba(255,176,64,.5), rgba(255,140,0,.28)); }
-        .gate-btn.manual .std-pill { background: rgba(255,255,255,.45); }
+        /* ── PRODUCT PICKER (popup): search + sort + a clean scrolling list ──
+           Width / height / row size come from Admin → Page options → Sizes. */
+        .product-gate-card {
+            --gate-row: 48px;
+            display: flex; flex-direction: column; text-align: left; overflow: hidden;
+            width: min(var(--gate-w, 380px), 94vw); max-height: var(--gate-h, 80vh);
+            background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.25);
+        }
+        .product-gate-card h2 { margin: 0; padding: 18px 20px 10px; font-size: 17px; font-weight: 700; color: #1a1a1a; }
+        .gate-tools { display: flex; gap: 8px; padding: 0 16px 8px; }
+        .gate-tools[hidden] { display: none; }
+        .gate-tools input, .gate-tools select {
+            width: auto; height: 38px; margin: 0; padding: 0 10px; font-size: 14px; text-align: left;
+            border: 1px solid #dde2e8; border-radius: 8px; background: #fbfcfd; color: #1a1a1a;
+        }
+        .gate-tools input { flex: 1; min-width: 0; }
+        .gate-tools select { flex: none; max-width: 44%; cursor: pointer; }
+        .gate-count { padding: 0 20px 6px; font-size: 11px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: #8a929c; }
+        .gate-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 8px 6px; }
+        .gate-btn {
+            display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--gate-row); margin: 0; padding: 0 12px;
+            background: transparent; color: #1a1a1a; border: none; border-bottom: 1px solid #f1f3f5; border-radius: 0;
+            font-size: 15px; font-weight: 500; text-align: left; flex: none;
+        }
+        .gate-btn:hover, .gate-btn:focus-visible { background: #f0f7f3; color: #157347; }
+        .gate-btn:focus-visible { outline: 2px solid #157347; outline-offset: -2px; border-radius: 8px; }
+        .gate-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .gate-name small { display: block; margin-top: 1px; font-size: 12px; font-weight: 400; color: #7a828c; white-space: normal; }
+        .gate-meta { flex: none; font-size: 12px; font-weight: 500; color: #7a828c; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .gate-last { flex: none; font-size: 10px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: #157347; background: #e6f4ea; padding: 2px 7px; border-radius: 10px; }
+        .gate-empty { padding: 22px 20px; text-align: center; font-size: 14px; color: #7a828c; }
+        .gate-empty[hidden] { display: none; }
+        .gate-foot { border-top: 1px solid #e9edf1; padding: 4px 8px; background: #fafbfc; }
+        .gate-foot:empty { display: none; }
+        .gate-foot .gate-btn { border-bottom: none; padding: 6px 12px; }
         .product-label { font-size: 12pt; font-weight: 600; text-align: center; flex: 1; }
         @media print { .formula-spec-card, #productGate, .toast, .menu-card { display: none !important; } }
 
@@ -594,7 +622,7 @@
             /* ── FOOTER — drop out of the fixed layer on phones so it can never
                overlap content; it flows at the end of the page instead (pinned
                to the viewport bottom on short pages via margin-top:auto) ── */
-            body { padding-top: 110px; padding-bottom: 24px; }
+            body { padding-top: calc(110px + var(--menu-extra, 0px)); padding-bottom: 24px; }
             footer {
                 position: static; margin-top: auto; z-index: auto;
                 font-size: 11px; line-height: 1.4; padding: 7px 6px;
@@ -630,10 +658,11 @@
            stays a centered column (better for reading/printing) rather than
            stretching full-width. ── */
         @media (min-width: 900px) {
-            body { padding-top: 130px; }
+            body { padding-top: calc(130px + var(--menu-extra, 0px)); }
             .calculator-container:not(#acbCalculator) { max-width: 460px; padding: 14px 16px; }
             .formula-spec-card { max-width: 760px; padding: 8px 14px; }
-            .menu-card, #formulaCalculator { max-width: 460px; }
+            #formulaCalculator { max-width: 460px; }
+            .menu-card { max-width: var(--menu-w, 460px); }
             .hold-period-card { max-width: 460px; }
             .calculation-steps { max-width: 760px; }
         }
@@ -694,9 +723,11 @@
             .acb-table { font-size: 12pt; }
             .acb-td, .acb-th { font-size: 12pt; padding: 6px; }
             .acb-input, .acb-span { font-size: 12pt; padding: 4px; border-width: 1px; }
-            .calc-step { margin-bottom: 5mm; }
-            .frac .frac-num, .frac .frac-den { padding: 1.5mm 2mm; }
-            .calc-result { margin-top: 3mm; padding-top: 0; }
+            /* Printed calculation card spacing = the on-screen card spacing (same values as the @media screen block) */
+            .calculation-entry .calc-step { margin-bottom: 40px; gap: 8px; }
+            .calculation-entry .frac { margin: 0 6px; line-height: 1.6; }
+            .calculation-entry .frac .frac-num, .calculation-entry .frac .frac-den { padding: 4px 7px; }
+            .calculation-entry .calc-result { margin-top: 30px; padding-top: 16px; }
         }
     </style>
 </head>
@@ -881,6 +912,21 @@
     <div id="productGate" class="info-modal" role="dialog" aria-modal="true" aria-labelledby="gateTitle" style="display:none;z-index:20000">
         <div class="product-gate-card">
             <h2 id="gateTitle">Select product</h2>
+            <div class="gate-tools" id="gateTools">
+                <input type="search" id="gateSearch" placeholder="Search product" autocomplete="off" spellcheck="false" aria-label="Search products">
+                <select id="gateSort" aria-label="Sort products">
+                    <option value="admin">Default order</option>
+                    <option value="az">Name A → Z</option>
+                    <option value="za">Name Z → A</option>
+                    <option value="qtyAsc">Std qty low → high</option>
+                    <option value="qtyDesc">Std qty high → low</option>
+                    <option value="recent">Last used first</option>
+                </select>
+            </div>
+            <div class="gate-count" id="gateCount" aria-live="polite"></div>
+            <div class="gate-list" id="gateList" role="list"></div>
+            <div class="gate-empty" id="gateEmpty" hidden>No products match your search</div>
+            <div class="gate-foot" id="gateFoot"></div>
         </div>
     </div>
 
@@ -1047,7 +1093,14 @@
                 holdTitle: 'Hold time period',
                 qMax: 9999999,
                 waterMax: 99.99,
-                assayMax: 100
+                assayMax: 100,
+                // Sizes (Admin → Page options → Sizes)
+                gateSearch: true,      // search + sort bar in the product popup
+                gateWidth: 380,        // product popup width, px
+                gateMaxH: 80,          // product popup max height, % of the screen (the list scrolls inside)
+                gateRow: 'normal',     // product row size: compact | normal | large
+                menuWidth: 0,          // top calculator/product selector width, px (0 = automatic)
+                selSize: 'normal'      // top selector controls: small | normal | large
             }
         };
         const CFG_KEY = 'nir8_cfg_v1';
@@ -1128,6 +1181,12 @@
                     out.ui.qMax = num(u.qMax, d.qMax, 1, 99999999);
                     out.ui.waterMax = num(u.waterMax, d.waterMax, 0.01, 99.99);
                     out.ui.assayMax = num(u.assayMax, d.assayMax, 0.01, 100);
+                    out.ui.gateSearch = u.gateSearch !== false;
+                    out.ui.gateWidth = Math.round(num(u.gateWidth, d.gateWidth, 260, 720));
+                    out.ui.gateMaxH = Math.round(num(u.gateMaxH, d.gateMaxH, 40, 95));
+                    out.ui.gateRow = ['compact', 'normal', 'large'].includes(u.gateRow) ? u.gateRow : d.gateRow;
+                    out.ui.menuWidth = Number(u.menuWidth) > 0 ? Math.round(num(u.menuWidth, 0, 300, 900)) : 0;
+                    out.ui.selSize = ['small', 'normal', 'large'].includes(u.selSize) ? u.selSize : d.selSize;
                 }
             } catch { return cloneCfg(DEFAULT_CONFIG); }
             return out;
@@ -1139,22 +1198,61 @@
             if (CFG.manual.enabled) PRODUCTS.manual = { name: 'Manual', formulas: STD_FORMULAS, manual: true };
         }
 
+        // ── PRODUCT PICKER: search + sort, remembers the last product and sort choice on this device ──
+        const LAST_KEY = 'nir8_last_product', SORT_KEY = 'nir8_gate_sort';
+        const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+        const GATE_SORTS = ['admin', 'az', 'za', 'qtyAsc', 'qtyDesc', 'recent'];
+
+        function renderGateList() {
+            const list = document.getElementById('gateList'), empty = document.getElementById('gateEmpty'),
+                  count = document.getElementById('gateCount'), search = document.getElementById('gateSearch'),
+                  sortSel = document.getElementById('gateSort'), tools = document.getElementById('gateTools');
+            const u = (CFG && CFG.ui) || DEFAULT_CONFIG.ui;
+            const all = CFG.products.map((p, i) => ({ id: p.id, name: p.name, std: Number(p.a[0]) || 0, i }));
+            tools.hidden = !u.gateSearch || all.length < 2;
+            const q = tools.hidden ? '' : (search.value || '').trim().toLowerCase();
+            const mode = tools.hidden ? 'admin' : sortSel.value, last = lsGet(LAST_KEY);
+            const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+            const cmp = {
+                admin: (a, b) => a.i - b.i, az: byName, za: (a, b) => byName(b, a),
+                qtyAsc: (a, b) => a.std - b.std || byName(a, b), qtyDesc: (a, b) => b.std - a.std || byName(a, b),
+                recent: (a, b) => (b.id === last) - (a.id === last) || a.i - b.i
+            }[mode] || ((a, b) => a.i - b.i);
+            const items = all.filter(it => !q || it.name.toLowerCase().includes(q)).sort(cmp);
+            list.textContent = '';
+            items.forEach(it => {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'gate-btn'; b.dataset.product = it.id;
+                const n = document.createElement('span'); n.className = 'gate-name'; n.textContent = it.name; b.appendChild(n);
+                if (it.id === last && all.length > 1) { const t = document.createElement('span'); t.className = 'gate-last'; t.textContent = 'Last used'; b.appendChild(t); }
+                const m = document.createElement('span'); m.className = 'gate-meta'; m.textContent = `${formatNumber(new Decimal(it.std))} kg`; b.appendChild(m);
+                list.appendChild(b);
+            });
+            empty.hidden = items.length > 0 || all.length === 0;
+            count.hidden = all.length === 0;
+            count.textContent = q ? `${items.length} of ${all.length}` : `${all.length} product${all.length === 1 ? '' : 's'}`;
+        }
+
         function rebuildProductUi() {
             const sel = document.getElementById('drugSelector');
-            const gate = document.querySelector('#productGate .product-gate-card');
+            const foot = document.getElementById('gateFoot'), sortSel = document.getElementById('gateSort');
             sel.textContent = '';
             const ph = new Option('Select product', '', true, true); ph.disabled = true; sel.add(ph);
-            gate.querySelectorAll('.gate-btn').forEach(b => b.remove());
-            Object.entries(PRODUCTS).forEach(([id, p]) => {
-                sel.add(new Option(p.name, id));
-                const b = document.createElement('button');
-                b.type = 'button'; b.className = 'gate-btn' + (p.manual ? ' manual' : ''); b.dataset.product = id;
-                b.appendChild(document.createTextNode(p.name));
-                const pill = document.createElement('span'); pill.className = 'std-pill';
-                pill.textContent = p.manual ? 'Enter your own Std API Qty' : `Std API Qty ${formatNumber(new Decimal(p.a[0]))} kg`;
-                b.appendChild(pill); gate.appendChild(b);
-            });
+            CFG.products.forEach(p => sel.add(new Option(p.name, p.id)));
+            if (PRODUCTS.manual) sel.add(new Option('Manual', 'manual'));
             sel.value = currentProduct && PRODUCTS[currentProduct] ? currentProduct : '';
+            // popup: manual entry is pinned under the scrolling list
+            foot.textContent = '';
+            if (PRODUCTS.manual) {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'gate-btn manual'; b.dataset.product = 'manual';
+                const n = document.createElement('span'); n.className = 'gate-name';
+                n.append('Manual entry'); const sm = document.createElement('small'); sm.textContent = 'Enter your own Std API Qty'; n.appendChild(sm);
+                b.appendChild(n); foot.appendChild(b);
+            }
+            const saved = lsGet(SORT_KEY); if (GATE_SORTS.includes(saved)) sortSel.value = saved;
+            renderGateList();
         }
 
         function applyLayout() {
@@ -1216,6 +1314,17 @@
             if (Q) Q.max = u.qMax;
             if (water) water.max = u.waterMax;
             if (assay) assay.max = u.assayMax;
+            // Sizes: product popup + top calculator/product selector
+            const rs = document.documentElement.style;
+            rs.setProperty('--gate-w', u.gateWidth + 'px'); rs.setProperty('--gate-h', u.gateMaxH + 'vh');
+            const gateCard = document.querySelector('.product-gate-card');
+            if (gateCard) gateCard.style.setProperty('--gate-row', ({ compact: 40, normal: 48, large: 58 })[u.gateRow] + 'px');
+            if (u.menuWidth > 0) rs.setProperty('--menu-w', u.menuWidth + 'px'); else rs.removeProperty('--menu-w');
+            const SZ = {
+                small: { '--sel-pad': '5px', '--sel-fs': '12px', '--tab-pad': '6px', '--tab-fs': '12px', '--menu-extra': '-8px' },
+                large: { '--sel-pad': '11px', '--sel-fs': '15px', '--tab-pad': '12px', '--tab-fs': '15px', '--menu-extra': '16px' }
+            }[u.selSize] || {};
+            ['--sel-pad', '--sel-fs', '--tab-pad', '--tab-fs', '--menu-extra'].forEach(k => SZ[k] ? rs.setProperty(k, SZ[k]) : rs.removeProperty(k));
             // Keep JS constants in sync for validation
             if (typeof CONSTANTS === 'object') {
                 CONSTANTS.Q_MAX = u.qMax;
@@ -1494,9 +1603,15 @@
             const gate = document.getElementById('productGate');
             // Ensure product buttons exist before showing the modal (avoids CLS)
             if (!gate.querySelector('.gate-btn')) rebuildProductUi();
+            document.getElementById('gateSearch').value = '';
+            renderGateList();
             gate.style.display = 'flex';
-            // Focus after paint so the browser does not measure an empty card
-            requestAnimationFrame(() => gate.querySelector('.gate-btn')?.focus());
+            // Focus after paint. Desktop: straight into search so you can type; touch devices: no keyboard pop-up.
+            requestAnimationFrame(() => {
+                const search = document.getElementById('gateSearch');
+                if (!search.closest('.gate-tools').hidden && matchMedia('(pointer: fine)').matches) search.focus();
+                else gate.querySelector('.gate-btn')?.focus();
+            });
         }
         function clearAllCalculations() {
             dismissUndo(); calculations = []; calculationCount = 0; batchAssigned = false; domCache.stepsContainer.innerHTML = '';
@@ -1512,6 +1627,7 @@
                 clearAllCalculations();
             }
             currentProduct = val; sel.value = val;
+            if (val !== 'manual') lsSet(LAST_KEY, val);
             toggleManualStdRow(val);
             if (val === 'manual') { domCache.stdQtyInput.value = ''; domCache.stdCInput.value = ''; }
             applyDrugPreset(val);
@@ -2113,7 +2229,26 @@
             // Plain product dropdown: switching it applies the preset immediately.
             const drugSelector = document.getElementById('drugSelector');
             drugSelector.addEventListener('change', () => { if (drugSelector.value) selectProduct(drugSelector.value); });
-            document.getElementById('productGate').addEventListener('click', e => { const b = e.target.closest('.gate-btn'); if (b) selectProduct(b.dataset.product); });
+            const gateEl = document.getElementById('productGate'), gateSearch = document.getElementById('gateSearch'), gateSort = document.getElementById('gateSort');
+            gateEl.addEventListener('click', e => { const b = e.target.closest('.gate-btn'); if (b) selectProduct(b.dataset.product); });
+            gateSearch.addEventListener('input', renderGateList);
+            gateSort.addEventListener('change', () => { lsSet(SORT_KEY, gateSort.value); renderGateList(); });
+            // Keyboard: type to filter, ↑/↓ to move, Enter to pick (from the search box Enter picks the first match), Esc clears the search
+            gateEl.addEventListener('keydown', e => {
+                const btns = [...gateEl.querySelectorAll('.gate-btn')], i = btns.indexOf(document.activeElement);
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    if (!btns.length || document.activeElement === gateSort) return;
+                    e.preventDefault();
+                    if (document.activeElement === gateSearch) { if (e.key === 'ArrowDown') btns[0].focus(); return; }
+                    if (e.key === 'ArrowDown') (btns[i + 1] || btns[i]).focus();
+                    else if (i <= 0) gateSearch.focus(); else btns[i - 1].focus();
+                } else if (e.key === 'Enter' && document.activeElement === gateSearch) {
+                    const first = document.querySelector('#gateList .gate-btn');
+                    if (first) { e.preventDefault(); selectProduct(first.dataset.product); }
+                } else if (e.key === 'Escape' && gateSearch.value) {
+                    e.preventDefault(); gateSearch.value = ''; renderGateList();
+                }
+            });
             openProductGate();
             [domCache.stdQtyInput, domCache.stdCInput].forEach(el => {
                 if (!el) return;

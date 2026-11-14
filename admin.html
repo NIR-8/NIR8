@@ -48,8 +48,9 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
 .card.empty { text-align:center; padding:28px; }
 .cardhead { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
 .row { display:flex; align-items:center; } .row.gap { gap:8px; } .row.wrap { flex-wrap:wrap; }
-.split { display:grid; grid-template-columns:270px 1fr; gap:14px; align-items:start; }
-@media (max-width:820px) { .split { grid-template-columns:1fr; } }
+.split { display:grid; grid-template-columns:270px minmax(0,1fr); gap:14px; align-items:start; } .split > * { min-width:0; }
+@media (max-width:820px) { .split { grid-template-columns:minmax(0,1fr); } }
+@media (max-width:600px) { .topbar { padding:6px 10px; gap:6px; } .topbar h1 { display:none; } .topbar .btn { padding:6px 10px; font-size:13px; } .lbl, #signOutBtn { display:none; } main { padding:0 8px 40px; } .tabs { padding:8px 8px 0; } #tabBody { padding:12px; } }
 
 /* products */
 .plist { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
@@ -65,23 +66,13 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
 .switch { display:flex; align-items:center; gap:10px; margin:8px 0; } .switch input { width:auto; accent-color:var(--g); transform:scale(1.2); }
 .narrow { width:80px !important; }
 
-/* formula builder */
+/* formulas (typed as text) */
 .testbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; padding:8px 10px; background:#f7f8fa; border-radius:8px; }
 .testbar label { display:flex; align-items:center; gap:6px; font-weight:600; } .testbar input { width:90px; padding:6px 8px; }
 .fb { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px; }
 .fb-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; } .fb-head .btn { margin-left:auto; }
-.fb-canvas { min-height:56px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:10px; border:2px dashed #c5ced8; border-radius:10px; background:#fcfdfe; }
-.fb-canvas.over { border-color:var(--g); background:var(--g2); } .hint { color:#9aa0a6; }
-.chip { user-select:none; }
-.fb-canvas .chip, .fb-palette .chip { display:inline-flex; align-items:center; gap:4px; padding:6px 10px; border-radius:8px; font-weight:700; border:1px solid transparent; cursor:grab; }
-.chip.v { background:#e3f0ff; color:#0b57d0; border-color:#c4dcff; } .chip.o { background:#eef0f3; color:#394150; border-color:#d9dde3; }
-.chip.p { background:#f1e8ff; color:#6a1b9a; border-color:#dfccf5; } .chip.n { background:#fff4cc; color:#7a5a00; border-color:#f1dc8a; }
-.chip.ghost { opacity:.35; }
-.chip .x { border:none; background:transparent; color:inherit; opacity:.5; padding:0 0 0 2px; font-size:15px; line-height:1; } .chip .x:hover { opacity:1; }
-.numchip { width:62px !important; padding:2px 4px !important; text-align:center; border:1px solid #e0c968 !important; border-radius:5px !important; background:#fffbe9 !important; font-weight:700; }
-.fb-palette { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; } .fb-palette .chip { font-size:14px; }
 .fb-pretty { margin-top:10px; font-size:15px; font-weight:600; } .fb-status { margin-top:4px; font-size:12px; } .fb-status.ok { color:#137333; } .fb-status.bad { color:var(--bad); }
-.adv { margin-top:8px; font-size:12px; color:var(--mut); } .fb-text { margin-top:6px; font-family:ui-monospace, Menlo, Consolas, monospace; }
+.fb-text { width:100%; margin-top:6px; font-family:ui-monospace, Menlo, Consolas, monospace; font-size:16px; }
 
 /* layout editor */
 .lay-canvas { padding:10px; border-radius:10px; background:repeating-linear-gradient(90deg,#f3f6f4 0,#f3f6f4 calc(100%/12 - 1px),#e4ebe6 calc(100%/12 - 1px),#e4ebe6 calc(100%/12)); }
@@ -95,6 +86,12 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
 .lb-hb { position:absolute; left:0; right:12px; bottom:0; height:10px; cursor:ns-resize; background:rgba(21,115,71,.14); touch-action:none; }
 .lay-panel { margin-top:12px; padding:10px 12px; background:#f7f8fa; border-radius:10px; }
 .hist .hrow { display:flex; gap:12px; align-items:center; padding:7px 0; border-bottom:1px solid var(--line); } .hist .hrow .btn { margin-left:auto; }
+.hent { border-bottom:1px solid var(--line); padding:8px 0; }
+.hent summary { display:flex; gap:10px; align-items:center; cursor:pointer; flex-wrap:wrap; }
+.hent summary .btn { margin-left:auto; }
+.hchg { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:7px 4px 7px 18px; border-top:1px dashed var(--line); }
+.hchg .lab { font-weight:600; } .hchg .vals { flex:1; min-width:160px; color:var(--mut); font-size:12px; word-break:break-word; }
+.hchg .btn { margin-left:auto; } .chip.done { background:#eef0f3; color:#394150; }
 
 /* modal + toast */
 .modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:16px; }
@@ -123,8 +120,8 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     <h1>NIR8 Admin</h1>
     <span id="saveChip" class="chip ok">All changes published</span>
     <span class="sp"></span>
-    <button class="btn ghost" id="undoBtn" type="button" title="Undo (Ctrl+Z)">↶ Undo</button>
-    <button class="btn ghost" id="redoBtn" type="button" title="Redo (Ctrl+Y)">↷ Redo</button>
+    <button class="btn ghost" id="undoBtn" type="button" title="Undo (Ctrl+Z)" aria-label="Undo">↶<span class="lbl"> Undo</span></button>
+    <button class="btn ghost" id="redoBtn" type="button" title="Redo (Ctrl+Y)" aria-label="Redo">↷<span class="lbl"> Redo</span></button>
     <button class="btn" id="previewBtn" type="button">Preview</button>
     <button class="btn primary" id="publishBtn" type="button">Publish</button>
     <button class="btn ghost" id="signOutBtn" type="button">Sign out</button>
@@ -170,7 +167,13 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       holdTitle: 'Hold time period',
       qMax: 9999999,
       waterMax: 99.99,
-      assayMax: 100
+      assayMax: 100,
+      gateSearch: true,
+      gateWidth: 380,
+      gateMaxH: 80,
+      gateRow: 'normal',
+      menuWidth: 0,
+      selSize: 'normal'
     }
   };
 
@@ -351,6 +354,12 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       out.ui.qMax = num(u.qMax, d.qMax, 1, 99999999);
       out.ui.waterMax = num(u.waterMax, d.waterMax, 0.01, 99.99);
       out.ui.assayMax = num(u.assayMax, d.assayMax, 0.01, 100);
+      out.ui.gateSearch = u.gateSearch !== false;
+      out.ui.gateWidth = Math.round(num(u.gateWidth, d.gateWidth, 260, 720));
+      out.ui.gateMaxH = Math.round(num(u.gateMaxH, d.gateMaxH, 40, 95));
+      out.ui.gateRow = ['compact', 'normal', 'large'].includes(u.gateRow) ? u.gateRow : d.gateRow;
+      out.ui.menuWidth = Number(u.menuWidth) > 0 ? Math.round(num(u.menuWidth, 0, 300, 900)) : 0;
+      out.ui.selSize = ['small', 'normal', 'large'].includes(u.selSize) ? u.selSize : d.selSize;
     }
     return out;
   }
@@ -381,7 +390,93 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   }
   const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
-  const api = { COLS, MINW, MAXLOTS, BLOCKS, BLOCK_IDS, STD, DEFAULT_CONFIG, ROMAN, clone, clampInt, slug,
+  /* ───────────── Change history: what changed in a publish, and how to undo each change ───────────── */
+  const UI_LABELS = { pageTitle: 'Browser tab title', footerText: 'Footer text', helpBtnText: 'Help button text', tabFormula: 'Formula tab label',
+    tabAcb: '(A+C)-B tab label', productGateTitle: 'Product selection title', showHoldPeriod: 'Hold time period card', holdTitle: 'Hold period title',
+    qMax: 'Quantity (Q) max', waterMax: 'Water % max', assayMax: 'Assay % max', gateSearch: 'Popup search & sort', gateWidth: 'Popup width',
+    gateMaxH: 'Popup max height', gateRow: 'Popup row size', menuWidth: 'Top bar width', selSize: 'Top bar control size' };
+  const FIXED_LABELS = { footer: 'Footer bar', tag: 'Write us tag', tagSide: 'Write us tag side' };
+  const same = (x, y) => JSON.stringify(x === undefined ? null : x) === JSON.stringify(y === undefined ? null : y);
+  const show = (v) => {
+    if (v === null || v === undefined || v === '') return '—';
+    if (typeof v === 'boolean') return v ? 'on' : 'off';
+    if (typeof v === 'object') return '…';
+    const t = String(v); return t.length > 48 ? t.slice(0, 45) + '…' : t;
+  };
+  const getPath = (o, path) => { let c = o; for (const k of path) { if (c == null) return null; c = c[k]; } return c === undefined ? null : c; };
+  const setPath = (o, path, v) => { let c = o; for (let i = 0; i < path.length - 1; i++) { if (c[path[i]] == null || typeof c[path[i]] !== 'object') c[path[i]] = {}; c = c[path[i]]; } c[path[path.length - 1]] = v; };
+  const findProd = (cfg, id) => cfg.products.find((p) => p.id === id);
+
+  // list of individual changes between two sanitised configs; each carries what is needed to undo it
+  function diffConfig(a, b) {
+    const out = [];
+    const cfgChange = (path, label, before, after, fmt) => {
+      if (same(before, after)) return;
+      const f = fmt || show;
+      out.push({ t: 'cfg', path, label, before: clone(before === undefined ? null : before), after: clone(after === undefined ? null : after), from: f(before), to: f(after) });
+    };
+    cfgChange(['manual', 'enabled'], 'Manual mode on the product screen', a.manual.enabled, b.manual.enabled);
+    cfgChange(['manual', 'lots'], 'Manual · number of lots', a.manual.lots, b.manual.lots);
+    new Set([...Object.keys(a.fixed || {}), ...Object.keys(b.fixed || {})]).forEach((k) => cfgChange(['fixed', k], FIXED_LABELS[k] || k, (a.fixed || {})[k], (b.fixed || {})[k]));
+    new Set([...Object.keys(a.ui || {}), ...Object.keys(b.ui || {})]).forEach((k) => cfgChange(['ui', k], UI_LABELS[k] || k, (a.ui || {})[k], (b.ui || {})[k]));
+    cfgChange(['layout'], 'Page layout', a.layout, b.layout, (v) => (v ? 'custom layout' : 'standard layout'));
+
+    const A = a.products || [], B = b.products || [], idsA = A.map((p) => p.id), idsB = B.map((p) => p.id);
+    A.forEach((p, i) => { if (!idsB.includes(p.id)) out.push({ t: 'prodDel', id: p.id, index: i, product: clone(p), label: 'Product "' + p.name + '"', from: 'existed', to: 'deleted' }); });
+    B.forEach((p, i) => { if (!idsA.includes(p.id)) out.push({ t: 'prodAdd', id: p.id, index: i, label: 'Product "' + p.name + '"', from: 'did not exist', to: 'added' }); });
+    B.forEach((pb) => {
+      const pa = A.find((x) => x.id === pb.id); if (!pa) return;
+      const nm = pa.name, add = (field, idx, label, before, after, extra) => out.push(Object.assign({ t: 'prod', id: pb.id, field, idx, label, before: clone(before), after: clone(after), from: show(before), to: show(after) }, extra || {}));
+      if (pa.name !== pb.name) add('name', undefined, 'Product name', pa.name, pb.name, { label: 'Product "' + nm + '" · name' });
+      ['F1', 'F2', 'F3'].forEach((k) => { if (pa.formulas[k] !== pb.formulas[k]) add(k, undefined, nm + ' · ' + k + ' formula', pa.formulas[k], pb.formulas[k]); });
+      if (pa.a.length !== pb.a.length) add('lots', undefined, nm + ' · number of lots', { a: pa.a, c: pa.c }, { a: pb.a, c: pb.c }, { from: pa.a.length + ' lots', to: pb.a.length + ' lots' });
+      else ['a', 'c'].forEach((f) => pa[f].forEach((v, i) => { if (!same(v, pb[f][i])) add(f, i, nm + ' · Lot-' + ROMAN[i] + ' ' + f.toUpperCase() + (f === 'a' ? ' (Std API)' : ' (Std Excipient)'), v, pb[f][i]); }));
+    });
+    const ca = idsA.filter((id) => idsB.includes(id)), cb = idsB.filter((id) => idsA.includes(id));
+    if (!same(ca, cb)) out.push({ t: 'order', before: ca, after: cb, label: 'Product order', from: 'previous order', to: 'reordered' });
+    return out;
+  }
+  const readProd = (p, ch) => ch.field === 'name' ? p.name : /^F\d$/.test(ch.field) ? p.formulas[ch.field] : ch.field === 'lots' ? { a: p.a, c: p.c } : p[ch.field][ch.idx];
+  // true when the editor already holds the "before" value of this change
+  function isReverted(cfg, ch) {
+    switch (ch.t) {
+      case 'cfg': return same(getPath(cfg, ch.path), ch.before);
+      case 'prod': { const p = findProd(cfg, ch.id); return !!p && same(readProd(p, ch), ch.before); }
+      case 'prodAdd': return !findProd(cfg, ch.id);
+      case 'prodDel': return !!findProd(cfg, ch.id);
+      case 'order': { const cur = cfg.products.map((p) => p.id).filter((id) => ch.before.includes(id)); return same(cur, ch.before.filter((id) => cur.includes(id))); }
+      default: return false;
+    }
+  }
+  // puts the "before" value back into cfg (the editor draft). Returns '' on success, otherwise why it could not.
+  function revertChange(cfg, ch) {
+    switch (ch.t) {
+      case 'cfg': setPath(cfg, ch.path, clone(ch.before)); return '';
+      case 'prod': {
+        const p = findProd(cfg, ch.id); if (!p) return 'That product no longer exists.';
+        if (ch.field === 'name') p.name = ch.before;
+        else if (/^F\d$/.test(ch.field)) p.formulas[ch.field] = ch.before;
+        else if (ch.field === 'lots') { p.a = clone(ch.before.a); p.c = clone(ch.before.c); }
+        else { if (ch.idx >= p[ch.field].length) return 'That lot no longer exists.'; p[ch.field][ch.idx] = ch.before; }
+        return '';
+      }
+      case 'prodAdd': { const i = cfg.products.findIndex((p) => p.id === ch.id); if (i < 0) return 'That product is already gone.'; cfg.products.splice(i, 1); return ''; }
+      case 'prodDel': {
+        if (findProd(cfg, ch.id)) return 'A product with this name already exists.';
+        cfg.products.splice(Math.min(ch.index, cfg.products.length), 0, clone(ch.product)); return '';
+      }
+      case 'order': {
+        const set = new Set(ch.before), slots = [], items = [];
+        cfg.products.forEach((p, i) => { if (set.has(p.id)) { slots.push(i); items.push(p); } });
+        items.sort((x, y) => ch.before.indexOf(x.id) - ch.before.indexOf(y.id));
+        slots.forEach((sl, k) => { cfg.products[sl] = items[k]; });
+        return '';
+      }
+      default: return 'Unknown change.';
+    }
+  }
+
+  const api = { diffConfig, isReverted, revertChange, COLS, MINW, MAXLOTS, BLOCKS, BLOCK_IDS, STD, DEFAULT_CONFIG, ROMAN, clone, clampInt, slug,
     tokenize, toExpr, toPretty, evaluate, checkFormula,
     rowSum, locate, defaultRows, fitRow, resizeBlock, setBlockHeight, moveBlock, sanitizeLayout,
     sanitizeConfig, validateForPublish, newProduct, resizeLots };
@@ -539,11 +634,17 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       onchange: () => commit(false) });
     // lots table
     const head = h('tr', {}, h('th', {}, ''), p.a.map((_, i) => h('th', {}, 'Lot-' + C.ROMAN[i])), h('th', {}, 'Total'));
+    // Typing in Lot-I fills every lot; editing any other lot changes only that lot.
     const inputRow = (arr, label) => {
       const tot = h('td', { class: 'tot' }, fmt(sum(arr)));
-      return h('tr', {}, h('td', { class: 'rowlab' }, label), arr.map((v, i) =>
-        h('td', {}, h('input', { type: 'number', step: '0.001', min: '0', value: v, 'aria-label': label + ' lot ' + (i + 1),
-          oninput: (e) => { arr[i] = e.target.value === '' ? '' : Number(e.target.value); tot.textContent = fmt(sum(arr)); commit(false); }, onchange: () => commit(false) }))), tot);
+      const inputs = arr.map((v, i) => h('input', { type: 'number', step: '0.001', min: '0', value: v, 'aria-label': label + ' lot ' + (i + 1),
+        oninput: (e) => {
+          const val = e.target.value === '' ? '' : Number(e.target.value);
+          arr[i] = val;
+          if (i === 0) for (let j = 1; j < arr.length; j++) { arr[j] = val; inputs[j].value = e.target.value; }
+          tot.textContent = fmt(sum(arr)); commit(false);
+        }, onchange: () => commit(false) }));
+      return h('tr', {}, h('td', { class: 'rowlab' }, label), inputs.map((inp) => h('td', {}, inp)), tot);
     };
     const sum = (a) => a.reduce((t, v) => t + (Number(v) || 0), 0);
     const fmt = (n) => (Math.round(n * 1000) / 1000).toFixed(3);
@@ -557,99 +658,45 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
         h('div', { class: 'row gap mt' }, h('span', {}, 'Number of lots in the (A+C)-B table'),
           stepper(p.a.length, 1, C.MAXLOTS, (v) => { C.resizeLots(p, v); commit(); }, 'Lots'))),
       h('div', { class: 'card' },
-        h('div', { class: 'cardhead' }, h('b', {}, 'Lot values'), h('span', { class: 'muted' }, 'A also sets the Std Qty shown for this product (Lot-I)')),
-        table,
-        h('div', { class: 'row gap mt' },
-          h('button', { class: 'btn ghost', type: 'button', onclick: () => { p.a = p.a.map(() => p.a[0]); commit(); } }, 'A: copy Lot-I to all'),
-          h('button', { class: 'btn ghost', type: 'button', onclick: () => { p.c = p.c.map(() => p.c[0]); commit(); } }, 'C: copy Lot-I to all'))),
+        h('div', { class: 'cardhead' }, h('b', {}, 'Lot values'), h('span', { class: 'muted' }, 'Lot-I fills every lot; edit another lot to make it different. A (Lot-I) is the Std Qty shown for this product.')),
+        table),
       formulasCard(p));
   }
 
-  /* ───────── formula builder (drag & drop) ───────── */
+  /* ───────── formulas (typed as text) ───────── */
   const DESC = { F1: 'Standard quantity → dispense quantity', F2: 'Dispensed quantity → standard equivalent', F3: 'Remaining quantity → dispense quantity' };
+  // accept the pretty symbols too (× ÷ −) and lower-case letters, so typing on a phone is easy
+  const normalize = (t) => String(t).replace(/×/g, '*').replace(/÷/g, '/').replace(/[−–—]/g, '-').replace(/[qwa]/g, (c) => c.toUpperCase());
   function formulasCard(p) {
     const card = h('div', { class: 'card' },
-      h('div', { class: 'cardhead' }, h('b', {}, 'Formulas'), h('span', { class: 'muted' }, 'drag blocks into the formula, reorder by dragging, drag out to delete')),
+      h('div', { class: 'cardhead' }, h('b', {}, 'Formulas'), h('span', { class: 'muted' }, 'type using Q, W, A, numbers, + − × ÷ and ( )')),
       h('div', { class: 'testbar' }, h('b', {}, 'Test values'),
         ['Q', 'W', 'A'].map((k) => h('label', {}, k + ' ', h('input', { type: 'number', step: 'any', value: S.test[k], 'aria-label': 'Test ' + k,
           oninput: (e) => { S.test[k] = Number(e.target.value) || 0; document.querySelectorAll('.fb').forEach((f) => f._refresh && f._refresh()); } })))));
-    ['F1', 'F2', 'F3'].forEach((k) => card.append(builder(p, k)));
+    ['F1', 'F2', 'F3'].forEach((k) => card.append(formulaEditor(p, k)));
     return card;
   }
-  const PALETTE = [
-    ['var', 'Q', 'Q'], ['var', 'W', 'W'], ['var', 'A', 'A'],
-    ['op', '*', '×'], ['op', '/', '÷'], ['op', '+', '+'], ['op', '-', '−'],
-    ['lp', '(', '('], ['rp', ')', ')'], ['num', '100', '123']
-  ];
-  function builder(p, key) {
-    let toks = C.tokenize(p.formulas[key]) || [];
+  function formulaEditor(p, key) {
     const wrap = h('div', { class: 'fb' });
-    const canvas = h('div', { class: 'fb-canvas', 'aria-label': key + ' formula' });
-    const pretty = h('div', { class: 'fb-pretty' });
-    const status = h('div', { class: 'fb-status' });
-    const text = h('input', { type: 'text', class: 'fb-text', value: p.formulas[key], spellcheck: 'false', 'aria-label': key + ' as text' });
-    let dragFrom = null;
-
-    function save() { p.formulas[key] = C.toExpr(toks); text.value = p.formulas[key]; commit(false); refresh(); }
+    const input = h('input', { type: 'text', class: 'fb-text', value: p.formulas[key], spellcheck: 'false', autocomplete: 'off', autocapitalize: 'characters', 'aria-label': key + ' formula' });
+    const pretty = h('div', { class: 'fb-pretty' }), status = h('div', { class: 'fb-status' });
     function refresh() {
-      const expr = C.toExpr(toks), r = C.checkFormula(expr, S.test);
-      pretty.textContent = toks.length ? key + ' = ' + C.toPretty(toks) : key + ' = (drop blocks here)';
+      const expr = normalize(input.value), toks = C.tokenize(expr), r = C.checkFormula(expr, S.test);
+      pretty.textContent = toks && toks.length ? key + ' = ' + C.toPretty(toks) : key + ' = …';
       status.className = 'fb-status ' + (r.ok ? 'ok' : 'bad');
-      status.textContent = r.ok ? '✓ With the test values: ' + (Math.round(r.value * 1e6) / 1e6) : '✕ ' + r.error;
+      status.textContent = r.ok ? '✓ With the test values: ' + (Math.round(r.value * 1e6) / 1e6) : '✕ ' + r.error + ' — fix this before publishing';
     }
+    input.addEventListener('input', () => {
+      const norm = normalize(input.value);
+      if (norm !== input.value) { const pos = input.selectionStart; input.value = norm; try { input.setSelectionRange(pos, pos); } catch {} }
+      p.formulas[key] = norm.replace(/\s+/g, ''); commit(false); refresh();
+    });
     wrap._refresh = refresh;
-    function insertIndexAt(x, y) {
-      const chips = [...canvas.querySelectorAll('.chip')];
-      for (let i = 0; i < chips.length; i++) {
-        const r = chips[i].getBoundingClientRect();
-        if (y < r.top - 2) return i;
-        if (y <= r.bottom + 2 && x < r.left + r.width / 2) return i;
-      }
-      return chips.length;
-    }
-    function drawCanvas() {
-      canvas.textContent = '';
-      toks.forEach((k, i) => {
-        const cls = 'chip ' + (k.t === 'var' ? 'v' : k.t === 'op' ? 'o' : k.t === 'num' ? 'n' : 'p');
-        const body = k.t === 'num'
-          ? h('input', { class: 'numchip', type: 'text', inputmode: 'decimal', value: k.v, 'aria-label': 'Number',
-              oninput: (e) => { e.target.value = e.target.value.replace(/[^\d.]/g, ''); k.v = e.target.value || '0'; save(); } })
-          : h('span', {}, k.t === 'op' ? SHOW[k.v] : k.t === 'lp' ? '(' : k.t === 'rp' ? ')' : k.v);
-        const chip = h('span', { class: cls, draggable: true, 'data-i': i,
-          ondragstart: (e) => { dragFrom = i; e.dataTransfer.setData('text/plain', 'tok:' + i); e.dataTransfer.effectAllowed = 'move'; setTimeout(() => chip.classList.add('ghost'), 0); },
-          ondragend: (e) => { chip.classList.remove('ghost'); if (dragFrom !== null && e.dataTransfer.dropEffect === 'none') { toks.splice(dragFrom, 1); drawCanvas(); save(); } dragFrom = null; } },
-          body, h('button', { type: 'button', class: 'x', 'aria-label': 'Remove', onclick: () => { toks.splice(i, 1); drawCanvas(); save(); } }, '×'));
-        canvas.append(chip);
-      });
-      if (!toks.length) canvas.append(h('span', { class: 'hint' }, 'Drag blocks here, or tap a block below'));
-      refresh();
-    }
-    const SHOW = { '*': '×', '/': '÷', '-': '−', '+': '+' };
-    canvas.addEventListener('dragover', (e) => { e.preventDefault(); canvas.classList.add('over'); });
-    canvas.addEventListener('dragleave', () => canvas.classList.remove('over'));
-    canvas.addEventListener('drop', (e) => {
-      e.preventDefault(); canvas.classList.remove('over');
-      const data = e.dataTransfer.getData('text/plain'); let at = insertIndexAt(e.clientX, e.clientY);
-      if (data.startsWith('pal:')) { const [, t, v] = data.split(':'); toks.splice(at, 0, mk(t, v)); }
-      else if (data.startsWith('tok:')) { const from = +data.slice(4); const [mv] = toks.splice(from, 1); if (from < at) at--; toks.splice(at, 0, mv); }
-      dragFrom = null; drawCanvas(); save();
-    });
-    const mk = (t, v) => (t === 'lp' || t === 'rp' ? { t } : { t, v });
-    const palette = h('div', { class: 'fb-palette' }, PALETTE.map(([t, v, label]) =>
-      h('button', { type: 'button', class: 'chip pal ' + (t === 'var' ? 'v' : t === 'op' ? 'o' : t === 'num' ? 'n' : 'p'), draggable: true, title: t === 'num' ? 'Number' : 'Add ' + label,
-        ondragstart: (e) => { e.dataTransfer.setData('text/plain', 'pal:' + t + ':' + v); e.dataTransfer.effectAllowed = 'copy'; },
-        onclick: () => { toks.push(mk(t, v)); drawCanvas(); save(); } }, label)));
-    text.addEventListener('change', () => {
-      const t = C.tokenize(text.value);
-      if (!t) { status.className = 'fb-status bad'; status.textContent = '✕ Only Q, W, A, numbers, + − × ÷ and brackets are allowed'; text.value = C.toExpr(toks); return; }
-      toks = t; drawCanvas(); save();
-    });
     wrap.append(
       h('div', { class: 'fb-head' }, h('b', {}, key), h('span', { class: 'muted' }, DESC[key]),
-        h('button', { type: 'button', class: 'btn tiny ghost', onclick: () => { toks = C.tokenize(C.STD[key]); drawCanvas(); save(); } }, 'Reset to standard')),
-      canvas, palette, pretty, status,
-      h('details', { class: 'adv' }, h('summary', {}, 'Edit as text'), text));
-    drawCanvas();
+        h('button', { type: 'button', class: 'btn tiny ghost', onclick: () => { p.formulas[key] = C.STD[key]; input.value = C.STD[key]; commit(false); refresh(); } }, 'Reset to standard')),
+      input, pretty, status);
+    refresh();
     return wrap;
   }
 
@@ -747,6 +794,15 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     if (!S.cfg.ui) S.cfg.ui = C.clone(C.DEFAULT_CONFIG.ui);
     const u = S.cfg.ui;
     const setStr = (key, max) => (e) => { u[key] = String(e.target.value || '').trim().slice(0, max); commit(false); };
+    const D = C.DEFAULT_CONFIG.ui;
+    const setSize = (key, lo, hi, allowZero) => (e) => {
+      let n = Number(e.target.value);
+      if (e.target.value === '' || !Number.isFinite(n)) n = D[key];
+      else if (!(allowZero && n === 0)) n = Math.round(Math.min(hi, Math.max(lo, n)));
+      u[key] = n; e.target.value = n; commit(false);
+    };
+    const sizeSelect = (key, opts) => h('select', { 'aria-label': key, onchange: (e) => { u[key] = e.target.value; commit(false); } },
+      opts.map(([v, label]) => h('option', { value: v, selected: u[key] === v }, label)));
     const setNum = (key) => (e) => { const n = Number(e.target.value); if (Number.isFinite(n)) { u[key] = n; commit(false); } };
 
     root.append(
@@ -776,8 +832,21 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
         h('div', { class: 'row gap' },
           h('label', { class: 'field' }, h('span', {}, 'Quantity (Q) max'), h('input', { type: 'number', min: 1, max: 99999999, step: 1, value: u.qMax, onchange: setNum('qMax') })),
           h('label', { class: 'field' }, h('span', {}, 'Water % max'), h('input', { type: 'number', min: 0.01, max: 99.99, step: 0.01, value: u.waterMax, onchange: setNum('waterMax') })),
-          h('label', { class: 'field' }, h('span', {}, 'Assay % max'), h('input', { type: 'number', min: 0.01, max: 100, step: 0.01, value: u.assayMax, onchange: setNum('assayMax') }))))
-    );
+          h('label', { class: 'field' }, h('span', {}, 'Assay % max'), h('input', { type: 'number', min: 0.01, max: 100, step: 0.01, value: u.assayMax, onchange: setNum('assayMax') })))),
+
+      h('div', { class: 'card' },
+        h('div', { class: 'cardhead' }, h('b', {}, 'Sizes'), h('span', { class: 'muted' }, 'use Preview to see the result')),
+        h('b', { class: 'small' }, 'Product selection popup'),
+        h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: u.gateSearch !== false, onchange: (e) => { u.gateSearch = e.target.checked; commit(false); } }), h('span', {}, 'Show search and sort in the popup')),
+        h('div', { class: 'row gap wrap' },
+          h('label', { class: 'field' }, h('span', {}, 'Width (px, 260–720)'), h('input', { type: 'number', min: 260, max: 720, step: 10, value: u.gateWidth, onchange: setSize('gateWidth', 260, 720) })),
+          h('label', { class: 'field' }, h('span', {}, 'Max height (% of screen, 40–95)'), h('input', { type: 'number', min: 40, max: 95, step: 5, value: u.gateMaxH, onchange: setSize('gateMaxH', 40, 95) })),
+          h('label', { class: 'field' }, h('span', {}, 'Row size'), sizeSelect('gateRow', [['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']]))),
+        h('b', { class: 'small', style: 'display:block;margin-top:16px' }, 'Calculator & product selector (top bar)'),
+        h('div', { class: 'row gap wrap' },
+          h('label', { class: 'field' }, h('span', {}, 'Width (px, 300–900, 0 = automatic)'), h('input', { type: 'number', min: 0, max: 900, step: 10, value: u.menuWidth, onchange: setSize('menuWidth', 300, 900, true) })),
+          h('label', { class: 'field' }, h('span', {}, 'Control size'), sizeSelect('selSize', [['small', 'Small'], ['normal', 'Normal'], ['large', 'Large']]))),
+        h('p', { class: 'muted small' }, 'Phones always use the full screen width for the top bar; the width setting applies on larger screens.')));
   }
 
   /* ───────── BACKUPS ───────── */
@@ -792,7 +861,8 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
           h('label', { class: 'btn ghost filebtn' }, 'Load backup file', h('input', { type: 'file', accept: 'application/json,.json', hidden: true, onchange: importJson })),
           h('button', { class: 'btn ghost', type: 'button', onclick: () => { if (confirm('Replace everything in the editor with the built-in defaults? Nothing goes live until you publish.')) { S.cfg = C.clone(C.DEFAULT_CONFIG); S.sel = 0; commit(); toast('Defaults loaded — publish to make them live.'); } } }, 'Load factory defaults'))),
       h('div', { class: 'card' },
-        h('div', { class: 'cardhead' }, h('b', {}, 'Previously published versions'), h('span', { class: 'muted' }, 'last 10')),
+        h('div', { class: 'cardhead' }, h('b', {}, 'Change history & restore points'), h('span', { class: 'muted' }, 'a restore point is saved automatically at every Publish')),
+        h('p', { class: 'muted small' }, 'Open an entry to see each change that was published. Revert undoes just that one change in the editor — nothing goes live until you press Publish. Restore this version brings back everything exactly as it was before that publish.'),
         hist));
     loadHistory(hist);
   }
@@ -808,14 +878,35 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   }
   async function loadHistory(box) {
     try {
-      S.history = await NIR8Backend.loadHistory(); box.textContent = '';
-      if (!S.history.length) { box.append(h('span', { class: 'muted' }, 'Nothing yet — versions appear here after you publish.')); return; }
+      if (!S.history) S.history = await NIR8Backend.loadHistory();
+      box.textContent = '';
+      if (!S.history.length) { box.append(h('span', { class: 'muted' }, 'Nothing yet — restore points appear here after you publish.')); return; }
+      const rows = [];   // {ch, btn, chip} so the buttons can be refreshed after a revert
+      const refresh = () => rows.forEach((r) => { const done = C.isReverted(S.cfg, r.ch); r.btn.disabled = done; r.chip.hidden = !done; });
       S.history.forEach((v) => {
-        let n = '?'; try { n = JSON.parse(v.json).products.length; } catch {}
-        box.append(h('div', { class: 'hrow' }, h('span', {}, new Date(v.ts).toLocaleString()), h('span', { class: 'muted' }, n + ' products'),
-          h('button', { class: 'btn tiny ghost', type: 'button', onclick: () => { try { S.cfg = C.sanitizeConfig(JSON.parse(v.json)); S.sel = 0; commit(); toast('Version loaded — publish to make it live.'); } catch { toast('Could not read that version.', 'bad'); } } }, 'Load')));
+        const changes = Array.isArray(v.changes) ? v.changes : [];
+        const restore = h('button', { class: 'btn tiny', type: 'button', onclick: (e) => {
+          e.preventDefault(); e.stopPropagation();
+          try { S.cfg = C.sanitizeConfig(v.json ? JSON.parse(v.json) : null); S.sel = S.cfg.products.length ? 0 : 'manual'; commit(); toast('Version loaded in the editor — Publish to make it live.'); }
+          catch { toast('Could not read that version.', 'bad'); }
+        } }, 'Restore this version');
+        const det = h('details', { class: 'hent' },
+          h('summary', {}, h('b', {}, new Date(v.ts).toLocaleString()),
+            h('span', { class: 'muted' }, changes.length ? changes.length + (changes.length === 1 ? ' change' : ' changes') : 'no change list (older version)'), restore));
+        changes.forEach((ch) => {
+          const chip = h('span', { class: 'chip done', hidden: true }, 'Already reverted');
+          const btn = h('button', { class: 'btn tiny', type: 'button', onclick: () => {
+            const why = C.revertChange(S.cfg, ch);
+            if (why) { toast(why, 'bad'); return; }
+            fixSel(); commit(false); refresh(); toast('Reverted in the editor — Publish to make it live.');
+          } }, 'Revert');
+          rows.push({ ch, btn, chip });
+          det.append(h('div', { class: 'hchg' }, h('span', { class: 'lab' }, ch.label), h('span', { class: 'vals' }, (ch.from || '—') + '  →  ' + (ch.to || '—')), chip, btn));
+        });
+        box.append(det);
       });
-    } catch { box.textContent = 'Could not load versions.'; }
+      refresh();
+    } catch { box.textContent = 'Could not load history.'; }
   }
 
   /* ───────── ACCOUNT ───────── */
@@ -856,7 +947,10 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     S.busy = true; status();
     try {
       const clean = C.sanitizeConfig(S.cfg); const text = JSON.stringify(clean);
-      await NIR8Backend.saveConfig(text);
+      await NIR8Backend.saveConfig(text, (prevText) => {
+        let prev = null; try { prev = prevText ? JSON.parse(prevText) : null; } catch {}
+        return C.diffConfig(C.sanitizeConfig(prev), clean);
+      });
       S.cfg = clean; S.pubText = snap(); S.cur = S.pubText; S.history = null;
       toast('Published ✓  Live for everyone within a few seconds.', 'ok'); renderTab();
     } catch (e) { toast('Could not publish: ' + (e && e.message ? e.message : 'check your connection and sign-in'), 'bad'); }
@@ -1002,17 +1096,24 @@ window.NIR8Backend = {
     const d = await fsGet('app');
     return d && d.json ? d.json : null;
   },
-  async saveConfig(text) {
+  // every publish is a restore point: the state before it + the list of individual changes (each can be reverted on its own)
+  async saveConfig(text, makeChanges) {
     if (!signedIn) throw new Error('Please sign in again.');
     const prev = await fsGet('app');
-    if (prev && prev.json) {
+    const prevJson = prev && prev.json ? prev.json : null;
+    let changes = [];
+    try { changes = makeChanges ? makeChanges(prevJson) : []; } catch {}
+    if (changes.length || (prevJson && !makeChanges)) {
       let items = [];
       try {
         const h = await fsGet('history');
         items = (h && h.items) ? (typeof h.items === 'string' ? JSON.parse(h.items) : h.items) : [];
       } catch {}
-      items.unshift({ ts: Date.now(), json: prev.json });
-      await fsSet('history', { items: items.slice(0, 10) });
+      items.unshift({ ts: Date.now(), json: prevJson, changes });
+      items = items.slice(0, 40);
+      while (items.length > 1 && JSON.stringify(items).length > 500000) items.pop();   // stay well under Firestore's 1 MB document limit
+      // stored as one string: change lists contain nested arrays, which Firestore does not allow
+      try { await fsSet('history', { items: JSON.stringify(items) }); } catch (e) { throw new Error(friendly(e)); }
     }
     try { await fsSet('app', { json: text, updatedAt: Date.now() }); } catch (e) { throw new Error(friendly(e)); }
   },
