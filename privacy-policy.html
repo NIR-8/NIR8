@@ -17,20 +17,22 @@
 
   <h2>What data we access</h2>
   <ul>
-    <li>The extension reads login forms on websites you visit so it can offer to fill credentials.</li>
-    <li>It connects to the same Firebase project used by your OneKey VAULT web app to retrieve your encrypted vault data.</li>
+    <li>The extension reads the username and password fields on the page where you are signing in, only to fill them or to save that login to your personal vault.</li>
+    <li>It connects to the same Firebase project used by your OneKey VAULT web app to retrieve and sync your encrypted vault data.</li>
   </ul>
 
   <h2>How your data is handled</h2>
   <ul>
-    <li><strong>Zero-knowledge encryption</strong> – Your master password never leaves your device. All entries are encrypted with AES-256-GCM. The extension only decrypts credentials in memory when you explicitly request a fill.</li>
-    <li>Decrypted passwords exist only temporarily in the extension’s memory and are never written to disk in plain text.</li>
-    <li>We do not collect, sell, or share your passwords, usernames, or browsing history with any third party.</li>
+    <li><strong>Encryption on your device</strong> – Login data is encrypted on your device using AES-256-GCM, with a key derived from your master password, before it is sent to your vault in Google Firestore. Your master password and encryption key never leave your device.</li>
+    <li><strong>Local storage</strong> – The extension stores your settings, vault username, a list of one-way hashes of site names (to offer “Unlock” on known sites while the vault is locked), and sites you excluded.</li>
+    <li><strong>Temporary in-memory data</strong> – The unlocked encryption key and any login waiting to be saved are kept in memory only. They are cleared when the browser closes or after 5 minutes of inactivity.</li>
+    <li>Decrypted credentials exist only temporarily in the extension’s memory and are never written to disk in plain text.</li>
+    <li>No analytics or advertising are used. We do not collect, sell, or share your passwords, usernames, or browsing history.</li>
   </ul>
 
   <h2>Permissions explained</h2>
   <ul>
-    <li><code>storage</code> – Remember your last username for convenience.</li>
+    <li><code>storage</code> – Remember your settings, vault username, site hashes, and excluded sites locally.</li>
     <li><code>activeTab</code> / <code>tabs</code> / <code>scripting</code> – Detect login forms and fill them when you choose to.</li>
     <li><code>alarms</code> – Auto-lock the vault after inactivity.</li>
     <li>Host permissions for Firebase – Required to sync your encrypted vault data.</li>
