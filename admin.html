@@ -115,17 +115,6 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     <input id="loginPw" type="password" autocomplete="current-password">
     <div class="err" id="loginErr" role="alert"></div>
     <button class="btn primary block" id="loginBtn" type="button">Sign in</button>
-    <details>
-      <summary>First-time setup (once)</summary>
-      <ol>
-        <li>Firebase console → <b>Firestore Database</b> → <b>Rules</b>.</li>
-        <li>Add this block inside <code>match /databases/{database}/documents</code>, then <b>Publish</b>:
-          <div class="code" style="display:block;white-space:pre-wrap;margin-top:6px">match /config/{doc} {
-  allow read, write: if true;
-}</div></li>
-        <li>Sign in here (User ID <b>Admin</b>) and change the password in the <b>Account</b> tab.</li>
-      </ol>
-    </details>
   </div>
 </div>
 
@@ -787,7 +776,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
         h('div', { class: 'row gap' },
           h('label', { class: 'field' }, h('span', {}, 'Quantity (Q) max'), h('input', { type: 'number', min: 1, max: 99999999, step: 1, value: u.qMax, onchange: setNum('qMax') })),
           h('label', { class: 'field' }, h('span', {}, 'Water % max'), h('input', { type: 'number', min: 0.01, max: 99.99, step: 0.01, value: u.waterMax, onchange: setNum('waterMax') })),
-          h('label', { class: 'field' }, h('span', {}, 'Assay % max'), h('input', { type: 'number', min: 0.01, max: 100, step: 0.01, value: u.assayMax, onchange: setNum('assayMax') })))
+          h('label', { class: 'field' }, h('span', {}, 'Assay % max'), h('input', { type: 'number', min: 0.01, max: 100, step: 0.01, value: u.assayMax, onchange: setNum('assayMax') }))))
     );
   }
 
@@ -928,17 +917,32 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
 </script>
 <script type="module">
 /* NIR8 admin — Firebase backend (same project + SDK as VAULT) */
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+// Firebase is loaded safely: if the SDK is blocked/offline the page still works and shows a clear message
+let db = null, doc, getDoc, setDoc, loadError = null;
+try {
+  const appMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+  const fsMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+  ({ doc, getDoc, setDoc } = fsMod);
+  const app = appMod.initializeApp({
+    apiKey:            'AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE',
+    authDomain:        'onekey-5067d.firebaseapp.com',
+    projectId:         'onekey-5067d',
+    storageBucket:     'onekey-5067d.firebasestorage.app',
+    messagingSenderId: '1098836590874',
+    appId:             '1:1098836590874:web:9c62490ce2670a4418aca3'
+  });
+  // long-polling auto-detect avoids hangs on networks/proxies that break WebChannel streaming
+  db = fsMod.initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+} catch (e) { loadError = e; }
 
-const db = getFirestore(initializeApp({
-  apiKey:            'AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE',
-  authDomain:        'onekey-5067d.firebaseapp.com',
-  projectId:         'onekey-5067d',
-  storageBucket:     'onekey-5067d.firebasestorage.app',
-  messagingSenderId: '1098836590874',
-  appId:             '1:1098836590874:web:9c62490ce2670a4418aca3'
-}));
+function friendly(e) {
+  const code = e && e.code, msg = (e && e.message) || '';
+  if (code === 'permission-denied' || /insufficient permissions/i.test(msg))
+    return 'Firestore is refusing access. Add the config read/write rule in Firebase → Firestore → Rules and publish it, then try again.';
+  if (code === 'unavailable' || /timeout|offline/i.test(msg))
+    return 'Cannot reach the server. Check your internet connection and try again.';
+  return msg || 'Something went wrong.';
+}
 
 const ADMIN_ID = 'admin';
 const DEFAULT_SALT = 'nir8-default';
@@ -948,6 +952,7 @@ const enc = new TextEncoder();
 const hex = (buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 
 async function hashPw(pw, salt) {
+  if (!window.crypto || !crypto.subtle) throw new Error('This page must be opened over https:// (or localhost) for sign-in to work.');
   const base = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
   return hex(await crypto.subtle.deriveBits(
     { name: 'PBKDF2', salt: enc.encode(salt), iterations: ITER, hash: 'SHA-256' },
@@ -963,10 +968,12 @@ function withTimeout(promise, ms, label) {
 }
 
 async function fsGet(name) {
+  if (!db) throw new Error('Could not load Firebase (' + ((loadError && loadError.message) || 'blocked or offline') + '). Check your connection / ad-blocker and reload.');
   const s = await withTimeout(getDoc(doc(db, 'config', name)), 12000, name);
   return s.exists() ? s.data() : null;
 }
 async function fsSet(name, data) {
+  if (!db) throw new Error('Could not load Firebase. Check your connection and reload.');
   await withTimeout(setDoc(doc(db, 'config', name), data), 12000, name);
 }
 
@@ -974,7 +981,8 @@ let authCb = null, signedIn = false, fails = 0;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function credentials() {
-  const d = await fsGet('admin');
+  let d;
+  try { d = await fsGet('admin'); } catch (e) { throw new Error(friendly(e)); }
   if (d && d.salt && d.hash) return { salt: d.salt, hash: d.hash };
   return { salt: DEFAULT_SALT, hash: DEFAULT_HASH };
 }
@@ -984,7 +992,7 @@ window.NIR8Backend = {
   userId: () => 'Admin',
   async signIn(id, pw) {
     if (fails >= 3) await wait(Math.min(8000, 1000 * (fails - 2)));
-    const cred = await credentials();
+    const cred = await credentials();      // throws a readable message if the server can't be reached
     const ok = String(id).trim().toLowerCase() === ADMIN_ID && (await hashPw(pw, cred.salt)) === cred.hash;
     if (!ok) { fails++; throw new Error('Wrong User ID or password.'); }
     fails = 0; signedIn = true; if (authCb) authCb({ id: 'Admin' });
@@ -1006,7 +1014,7 @@ window.NIR8Backend = {
       items.unshift({ ts: Date.now(), json: prev.json });
       await fsSet('history', { items: items.slice(0, 10) });
     }
-    await fsSet('app', { json: text, updatedAt: Date.now() });
+    try { await fsSet('app', { json: text, updatedAt: Date.now() }); } catch (e) { throw new Error(friendly(e)); }
   },
   async loadHistory() {
     try {
