@@ -376,7 +376,9 @@
             .calculation-entry .calc-result { margin-top: 30px; padding-top: 16px; }
         }
 
-        /* Floating bars fade while the page is scrolling, and come back when you hover / touch / focus them */
+        /* Floating bars dim to 30% after the user scrolls. They stay dimmed
+           until hovered / focused / opened (so they don't flash back to 100%
+           the moment scrolling stops). */
         .menu-card, footer, .wu-dock { transition: opacity .15s ease; }
         .is-scrolling .menu-card:not(:hover):not(:focus-within),
         .is-scrolling footer:not(:hover):not(:focus-within),
@@ -554,7 +556,7 @@
         .gate-btn .std-pill { margin-top: 6px; background: linear-gradient(135deg, rgba(255,190,90,.8), rgba(255,160,40,.6)); color: #4d2900; }
         .spec-error { margin: 2px 0 0; font-size: 11px; color: #c0392b; }
         .spec-error:empty { display: none; }
-        .product-gate-card { background: #fff; border-radius: 16px; padding: 26px 22px; width: 92%; max-width: 380px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+        .product-gate-card { background: #fff; border-radius: 16px; padding: 26px 22px; width: 92%; max-width: 380px; min-height: 180px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
         .product-gate-card h2 { margin: 0 0 4px; font-size: 20px; }
         .gate-btn { display: block; width: 100%; margin-bottom: 10px; text-align: left; padding: 14px 16px; }
         .gate-btn.manual { border-radius: 8px; }
@@ -877,7 +879,7 @@
         </div>
     </div>
 
-    <div id="productGate" class="info-modal" role="dialog" aria-modal="true" aria-labelledby="gateTitle" style="z-index:20000">
+    <div id="productGate" class="info-modal" role="dialog" aria-modal="true" aria-labelledby="gateTitle" style="display:none;z-index:20000">
         <div class="product-gate-card">
             <h2 id="gateTitle">Select product</h2>
         </div>
@@ -1420,7 +1422,14 @@
             document.getElementById('formulaSpecCard').classList.toggle('show', !!currentProduct && domCache.formulaCalculator.classList.contains('active'));
         }
 
-        function openProductGate() { document.getElementById('productGate').style.display = 'flex'; document.querySelector('#productGate .gate-btn')?.focus(); }
+        function openProductGate() {
+            const gate = document.getElementById('productGate');
+            // Ensure product buttons exist before showing the modal (avoids CLS)
+            if (!gate.querySelector('.gate-btn')) rebuildProductUi();
+            gate.style.display = 'flex';
+            // Focus after paint so the browser does not measure an empty card
+            requestAnimationFrame(() => gate.querySelector('.gate-btn')?.focus());
+        }
         function clearAllCalculations() {
             dismissUndo(); calculations = []; calculationCount = 0; batchAssigned = false; domCache.stepsContainer.innerHTML = '';
             refreshStepsPanelVisibility(); updatePageNumbers(); updateQuantityTracker();
@@ -2098,12 +2107,13 @@
         const wpSuccess    = document.getElementById('wpSuccess');
         const writeusForm  = document.getElementById('writeusForm');
 
-        // Mark the page as "scrolling" so floating bars can fade (CSS above)
+        // After the user scrolls, keep floating bars at 30% opacity until they
+        // hover / focus / open them (see .is-scrolling CSS). Do not auto-restore
+        // to 100% just because scrolling stopped.
         (function () {
-            let t = null; const root = document.documentElement;
+            const root = document.documentElement;
             addEventListener('scroll', () => {
-                root.classList.add('is-scrolling'); clearTimeout(t);
-                t = setTimeout(() => root.classList.remove('is-scrolling'), 450);
+                root.classList.add('is-scrolling');
             }, { passive: true, capture: true });
         })();
 

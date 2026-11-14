@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="vault-app" content="1">
 <title>VAULT — OneKey</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('vaultTheme')||'dark';}catch(e){}</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -111,8 +110,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);-webkit-font
   box-shadow:0 32px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07);
   animation:pop .28s ease;
 }
-.screen{display:none;animation:fadeUp .22s ease}
-.screen.active{display:block}
+.screen{display:none}
+.screen.active{display:block;animation:fadeUp .22s ease}
 
 .logo{
   font-family:var(--sans);font-weight:800;font-size:11px;
@@ -205,7 +204,6 @@ select.sel option{background:#0e0e1c}
   transition:background .12s,color .12s;flex-shrink:0;
 }
 .ib:hover{background:rgba(255,255,255,.08);color:var(--text)}
-.ib-ext{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 /* Larger icon buttons inside entry rows — bigger tap targets */
 .eacts .ib{width:36px;height:36px;font-size:16px;border-radius:8px}
 .eacts .ib.star{font-size:18px}
@@ -530,10 +528,6 @@ select.sel option{background:#0e0e1c}
       </div>
       <button class="btn btn-p" id="regBtn" onclick="register()">Create Vault</button>
       <button class="btn btn-g" onclick="go('loginScreen')">Already have a vault → Login</button>
-      <a class="ext-link" href="https://microsoftedge.microsoft.com/addons/detail/lmmbnoekeehdekbjhkgebaohalghhbfe" target="_blank" rel="noopener noreferrer">
-        <span class="ei" aria-hidden="true">🧩</span>
-        <span><b>Get the autofill extension</b>For Microsoft Edge — fill your logins in one click</span>
-      </a>
     </div>
 
     <!-- LOGIN -->
@@ -578,7 +572,6 @@ select.sel option{background:#0e0e1c}
           <button class="danger" onclick="closeUMenu();openDelAcct()">🗑 Delete Account</button>
         </div>
       </div>
-      <a class="ib ib-ext" href="https://microsoftedge.microsoft.com/addons/detail/lmmbnoekeehdekbjhkgebaohalghhbfe" target="_blank" rel="noopener noreferrer" title="Get the Microsoft Edge autofill extension">🧩</a>
       <button class="ib" onclick="logout()" title="Lock vault">🔒</button>
     </div>
   </div>
@@ -833,8 +826,13 @@ window.toggleTheme=()=>{
 };
 applyTheme((()=>{ try{ return localStorage.getItem('vaultTheme')||'dark'; }catch{ return 'dark'; } })());
 window.go = name => {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  $(name).classList.add('active');
+  // Keep the click response immediate (helps INP). Defer the class toggle
+  // to the next frame so the browser can acknowledge the pointer first.
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = $(name);
+    if (el) el.classList.add('active');
+  });
 };
 window.$  = $; // expose for inline onclick
 
@@ -937,34 +935,8 @@ function friendlyErr(e){
 const DEFAULT_SEED_ENTRIES=['ASRS','DARWIN BOX','DMS','ELMS','EMS','EPIQ','SAP','UMS','DOMAIN','EHS'];
 const DEFAULT_SEED_URLS={
   'DARWIN BOX':'https://hetero.darwinbox.in/user/login',
-  'DMS':'http://192.168.16.200:1020/',
-  'ELMS':'http://10.125.132.2/elmsprod',
-  'EMS':'http://10.224.82.205/login',
-  'EPIQ':'http://hcrdpapepiq/EX352_PROD_EPIQ/',
-  'UMS':'http://192.168.60.41/AudreeSpectrum/Production/',
-  'EHS':'https://ehs-uat-hetero.azurewebsites.net/'
+  'ELMS':'http://10.125.132.2/elmsprod'
 };
-
-// Existing vaults: add the site link to the standard systems (DMS, ELMS, EMS, EPIQ, UMS, EHS, Darwin Box)
-// wherever the URL field is still empty. Never overwrites a link you typed yourself.
-async function addMissingSeedUrls(){
-  try{
-    const fresh=await fsGet(U);
-    if(!fresh?.entries?.length)return;
-    let changed=0;
-    const entries=await Promise.all(fresh.entries.map(async e=>{
-      if(e.url)return e;
-      let name; try{ name=(await dec(e.name,KEY)).trim().toUpperCase(); }catch{ return e; }
-      const link=DEFAULT_SEED_URLS[name];
-      if(!link)return e;
-      changed++;
-      return{...e,url:await enc(link,KEY)};
-    }));
-    if(!changed)return;
-    await fsSet(U,{...fresh,entries,updatedAt:Date.now()});
-    toast(`Site links added to ${changed} entr${changed===1?'y':'ies'} ✓`);
-  }catch(e){ console.error('seed url migration',e); }
-}
 
 window.register=async()=>{
   const u=$('rUser').value.trim().toLowerCase();
@@ -1037,7 +1009,6 @@ window.login=async()=>{
       snap=>{ if(snap.exists()){cached=snap.data().entries||[];render();} sync('synced'); },
       err=>{ console.error(err); sync('error'); }
     );
-    addMissingSeedUrls();
   }catch(e){ toast(friendlyErr(e)); }
   finally{ busy('loginBtn',false,'Unlock Vault'); }
 };
@@ -1209,7 +1180,7 @@ window.saveEntry=async()=>{
   const name=$('e-name').value.trim();
   const user=$('e-user').value.trim();
   const pass=$('e-pass').value;
-  const url =$('e-url').value.trim()||DEFAULT_SEED_URLS[name.trim().toUpperCase()]||'';
+  const url =$('e-url').value.trim();
   const notes=$('e-notes').value.trim();
   const cat=$('e-cat').value;
   if(!name||!user||!pass)return toast('Name, username and password are required');
