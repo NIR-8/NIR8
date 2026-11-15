@@ -151,8 +151,8 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     v: 1,
     manual: { enabled: true, lots: 4 },
     products: [
-      { id: 'valacyclovir',  name: 'Valacyclovir',  formulas: { ...STD }, a: [417, 417, 417, 417],             c: [84.375, 84.375, 84.375, 84.375] },
-      { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD }, a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
+      { id: 'valacyclovir',  name: 'Valacyclovir',  formulas: { ...STD }, moisture: 'water', a: [417, 417, 417, 417],             c: [84.375, 84.375, 84.375, 84.375] },
+      { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD }, moisture: 'water', a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
     ],
     layout: null,
     fixed: { footer: true, tag: true, tagSide: 'right' },
@@ -328,7 +328,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
         const arr = (src) => Array.from({ length: lots }, (_, i) => num((src || [])[i], num((src || [])[0], 0)));
         const formulas = {};
         ['F1', 'F2', 'F3'].forEach((k) => { const f = p.formulas && String(p.formulas[k] || '').trim(); formulas[k] = f && checkFormula(f).ok ? f : STD[k]; });
-        prods.push({ id, name, formulas, a: arr(p.a), c: arr(p.c) });
+        prods.push({ id, name, formulas, moisture: p.moisture === 'lod' ? 'lod' : 'water', a: arr(p.a), c: arr(p.c) });
       });
       out.products = prods;
     }
@@ -381,7 +381,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     return errs;
   }
   function newProduct(name) {
-    return { id: slug(name), name, formulas: { ...STD }, a: [0, 0, 0, 0], c: [0, 0, 0, 0] };
+    return { id: slug(name), name, formulas: { ...STD }, moisture: 'water', a: [0, 0, 0, 0], c: [0, 0, 0, 0] };
   }
   function resizeLots(p, n) {
     n = clampInt(n, 1, MAXLOTS, p.a.length);
@@ -428,6 +428,8 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       const pa = A.find((x) => x.id === pb.id); if (!pa) return;
       const nm = pa.name, add = (field, idx, label, before, after, extra) => out.push(Object.assign({ t: 'prod', id: pb.id, field, idx, label, before: clone(before), after: clone(after), from: show(before), to: show(after) }, extra || {}));
       if (pa.name !== pb.name) add('name', undefined, 'Product name', pa.name, pb.name, { label: 'Product "' + nm + '" · name' });
+      const ma = pa.moisture === 'lod' ? 'lod' : 'water', mb = pb.moisture === 'lod' ? 'lod' : 'water';
+      if (ma !== mb) add('moisture', undefined, nm + ' · water / LOD', ma, mb, { from: ma === 'lod' ? 'LOD %' : 'Water %', to: mb === 'lod' ? 'LOD %' : 'Water %' });
       ['F1', 'F2', 'F3'].forEach((k) => { if (pa.formulas[k] !== pb.formulas[k]) add(k, undefined, nm + ' · ' + k + ' formula', pa.formulas[k], pb.formulas[k]); });
       if (pa.a.length !== pb.a.length) add('lots', undefined, nm + ' · number of lots', { a: pa.a, c: pa.c }, { a: pb.a, c: pb.c }, { from: pa.a.length + ' lots', to: pb.a.length + ' lots' });
       else ['a', 'c'].forEach((f) => pa[f].forEach((v, i) => { if (!same(v, pb[f][i])) add(f, i, nm + ' · Lot-' + ROMAN[i] + ' ' + f.toUpperCase() + (f === 'a' ? ' (Std API)' : ' (Std Excipient)'), v, pb[f][i]); }));
@@ -436,7 +438,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     if (!same(ca, cb)) out.push({ t: 'order', before: ca, after: cb, label: 'Product order', from: 'previous order', to: 'reordered' });
     return out;
   }
-  const readProd = (p, ch) => ch.field === 'name' ? p.name : /^F\d$/.test(ch.field) ? p.formulas[ch.field] : ch.field === 'lots' ? { a: p.a, c: p.c } : p[ch.field][ch.idx];
+  const readProd = (p, ch) => ch.field === 'name' ? p.name : ch.field === 'moisture' ? (p.moisture === 'lod' ? 'lod' : 'water') : /^F\d$/.test(ch.field) ? p.formulas[ch.field] : ch.field === 'lots' ? { a: p.a, c: p.c } : p[ch.field][ch.idx];
   // true when the editor already holds the "before" value of this change
   function isReverted(cfg, ch) {
     switch (ch.t) {
@@ -455,6 +457,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       case 'prod': {
         const p = findProd(cfg, ch.id); if (!p) return 'That product no longer exists.';
         if (ch.field === 'name') p.name = ch.before;
+        else if (ch.field === 'moisture') p.moisture = ch.before;
         else if (/^F\d$/.test(ch.field)) p.formulas[ch.field] = ch.before;
         else if (ch.field === 'lots') { p.a = clone(ch.before.a); p.c = clone(ch.before.c); }
         else { if (ch.idx >= p[ch.field].length) return 'That lot no longer exists.'; p[ch.field][ch.idx] = ch.before; }
@@ -655,6 +658,11 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       h('div', { class: 'card' },
         h('div', { class: 'cardhead' }, h('b', {}, 'Product')),
         h('label', { class: 'field' }, h('span', {}, 'Name shown on the website'), nameIn),
+        h('label', { class: 'field' }, h('span', {}, 'Moisture value entered for this product'),
+          h('select', { 'aria-label': 'Water % or LOD %', onchange: (e) => { p.moisture = e.target.value; commit(false); document.querySelectorAll('.fb').forEach((f) => f._refresh && f._refresh()); document.querySelectorAll('.testbar label').forEach((l) => { const i = l.querySelector('input'); if (i && /Test W/.test(i.getAttribute('aria-label'))) l.firstChild.textContent = (p.moisture === 'lod' ? 'LOD' : 'W') + ' '; }); } },
+            h('option', { value: 'water', selected: p.moisture !== 'lod' }, 'Water %'),
+            h('option', { value: 'lod', selected: p.moisture === 'lod' }, 'LOD % (loss on drying)')),
+          h('span', { class: 'muted' }, 'Only changes the wording on the website (input box, formulas, verify pop-up). The formulas still use W.')),
         h('div', { class: 'row gap mt' }, h('span', {}, 'Number of lots in the (A+C)-B table'),
           stepper(p.a.length, 1, C.MAXLOTS, (v) => { C.resizeLots(p, v); commit(); }, 'Lots'))),
       h('div', { class: 'card' },
@@ -669,9 +677,9 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   const normalize = (t) => String(t).replace(/×/g, '*').replace(/÷/g, '/').replace(/[−–—]/g, '-').replace(/[qwa]/g, (c) => c.toUpperCase());
   function formulasCard(p) {
     const card = h('div', { class: 'card' },
-      h('div', { class: 'cardhead' }, h('b', {}, 'Formulas'), h('span', { class: 'muted' }, 'type using Q, W, A, numbers, + − × ÷ and ( )')),
+      h('div', { class: 'cardhead' }, h('b', {}, 'Formulas'), h('span', { class: 'muted' }, 'type using Q, W, A, numbers, + − × ÷ and ( ) — W is the Water % (or LOD % if this product uses LOD)')),
       h('div', { class: 'testbar' }, h('b', {}, 'Test values'),
-        ['Q', 'W', 'A'].map((k) => h('label', {}, k + ' ', h('input', { type: 'number', step: 'any', value: S.test[k], 'aria-label': 'Test ' + k,
+        ['Q', 'W', 'A'].map((k) => h('label', {}, (k === 'W' && p.moisture === 'lod' ? 'LOD' : k) + ' ', h('input', { type: 'number', step: 'any', value: S.test[k], 'aria-label': 'Test ' + k,
           oninput: (e) => { S.test[k] = Number(e.target.value) || 0; document.querySelectorAll('.fb').forEach((f) => f._refresh && f._refresh()); } })))));
     ['F1', 'F2', 'F3'].forEach((k) => card.append(formulaEditor(p, k)));
     return card;
@@ -682,7 +690,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     const pretty = h('div', { class: 'fb-pretty' }), status = h('div', { class: 'fb-status' });
     function refresh() {
       const expr = normalize(input.value), toks = C.tokenize(expr), r = C.checkFormula(expr, S.test);
-      pretty.textContent = toks && toks.length ? key + ' = ' + C.toPretty(toks) : key + ' = …';
+      pretty.textContent = toks && toks.length ? key + ' = ' + (p.moisture === 'lod' ? C.toPretty(toks).replace(/\bW\b/g, 'LOD') : C.toPretty(toks)) : key + ' = …';
       status.className = 'fb-status ' + (r.ok ? 'ok' : 'bad');
       status.textContent = r.ok ? '✓ With the test values: ' + (Math.round(r.value * 1e6) / 1e6) : '✕ ' + r.error + ' — fix this before publishing';
     }

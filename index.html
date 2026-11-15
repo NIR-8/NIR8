@@ -1154,7 +1154,7 @@
                             let ok = false; try { ok = !!f && !!validateFormulaText(f); } catch { ok = false; }
                             formulas[k] = ok ? f : STD_FORMULAS[k];
                         });
-                        prods.push({ id, name, formulas, a: arr(p.a), c: arr(p.c) });
+                        prods.push({ id, name, formulas, moisture: p.moisture === 'lod' ? 'lod' : 'water', a: arr(p.a), c: arr(p.c) });
                     });
                     out.products = prods;
                 }
@@ -1194,7 +1194,7 @@
 
         function buildProducts() {
             PRODUCTS = {};
-            CFG.products.forEach(p => { PRODUCTS[p.id] = { name: p.name, formulas: p.formulas, a: p.a, c: p.c }; });
+            CFG.products.forEach(p => { PRODUCTS[p.id] = { name: p.name, formulas: p.formulas, moisture: p.moisture, a: p.a, c: p.c }; });
             if (CFG.manual.enabled) PRODUCTS.manual = { name: 'Manual', formulas: STD_FORMULAS, manual: true };
         }
 
@@ -1445,12 +1445,20 @@
         }
         // Words shown in formulas instead of the single letters (display only — the formulas still use W and A).
         const VAR_LABELS = { W: 'Water content', A: 'Assay' };
+        // Some products are controlled by LOD (loss on drying) instead of water %. The maths is the same
+        // (variable W) — only the wording changes. Set per product in Admin → Product.
+        const isLod = () => !!(currentProduct && PRODUCTS[currentProduct] && PRODUCTS[currentProduct].moisture === 'lod');
+        const moistName = () => isLod() ? 'LOD' : VAR_LABELS.W;
+        function updateMoistureLabels() {
+            const lab = document.querySelector('label[for="water"]');
+            if (lab) lab.textContent = isLod() ? 'LOD %' : 'Water % (W)';
+        }
         const OPSYM = { '+': ' + ', '-': ' − ', '*': ' × ', '/': ' ÷ ' };
         // `ql` (optional) is the wording to show for Q — e.g. "Std API Qty" for F1.
         function renderAst(n, ql) {
             switch (n.t) {
                 case 'num': return n.raw;
-                case 'var': return (n.name === 'Q' && ql) ? ql : (VAR_LABELS[n.name] || n.name);
+                case 'var': return (n.name === 'Q' && ql) ? ql : (n.name === 'W' ? moistName() : (VAR_LABELS[n.name] || n.name));
                 case 'neg': return '−' + renderAst(n.e, ql);
                 case 'grp': return '(' + renderAst(n.e, ql) + ')';
                 default: return renderAst(n.l, ql) + OPSYM[n.op] + renderAst(n.r, ql);
@@ -1542,7 +1550,7 @@
                 return {
                     html, formulaType, Q: Q.toString(), W: W.toString(), A: A.toString(), result: rounded,
                     isFinal: formulaType !== "F2", product: PRODUCTS[currentProduct].name, formulaHtml: showAst(ast, qLabelFor(formulaType)), qLabel: qLabelFor(formulaType) || 'Quantity',
-                    usesW: usedVars.has('W'), usesA: usedVars.has('A')
+                    usesW: usedVars.has('W'), usesA: usedVars.has('A'), moistLabel: isLod() ? 'Loss on Drying (LOD)' : 'Water Content (W)'
                 };
             } catch (err) { console.error("Calculation error:", err); throw err; }
         }
@@ -1976,7 +1984,7 @@
                 <div class="verify-details-wrap">
                 <div class="verify-rows">
                 <div class="verify-row"><span class="verify-label">${calculation.qLabel} (Q):</span> <span class="verify-value">${Q}</span></div>
-                ${calculation.usesW ? `<div class="verify-row"><span class="verify-label">Water Content (W):</span> <span class="verify-value">${W}%</span></div>` : ''}
+                ${calculation.usesW ? `<div class="verify-row"><span class="verify-label">${calculation.moistLabel || 'Water Content (W)'}:</span> <span class="verify-value">${W}%</span></div>` : ''}
                 ${calculation.usesA ? `<div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>` : ''}
                 <div class="verify-row"><span class="verify-label">Product:</span> <span class="verify-value">${calculation.product}</span></div>
                 <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value verify-formula">${calculation.formulaType} = ${calculation.formulaHtml}</span></div>
@@ -2008,7 +2016,7 @@
             const Q = num(domCache.QInput), W = num(domCache.waterInput), A = num(domCache.assayInput);
             if (Q.lte(0)) return showCalcMsg(domCache.QInput.value.trim() ? 'Quantity (Q) must be greater than 0.' : 'Enter the quantity (Q).', domCache.QInput);
             if (Q.gt(CONSTANTS.Q_MAX)) return showCalcMsg(`Quantity (Q) must be ≤ ${CONSTANTS.Q_MAX}.`, domCache.QInput);
-            if (usedVars.has('W') && (W.lte(0) || W.gt(CONSTANTS.W_MAX))) return showCalcMsg(domCache.waterInput.value.trim() ? 'Water content must be above 0 and up to 99.99.' : 'Enter the water content.', domCache.waterInput);
+            if (usedVars.has('W') && (W.lte(0) || W.gt(CONSTANTS.W_MAX))) return showCalcMsg(domCache.waterInput.value.trim() ? `${isLod() ? 'LOD' : 'Water content'} must be above 0 and up to 99.99.` : `Enter the ${isLod() ? 'LOD' : 'water content'}.`, domCache.waterInput);
             if (usedVars.has('A') && (A.lte(0) || A.gt(CONSTANTS.A_MAX))) return showCalcMsg(domCache.assayInput.value.trim() ? 'Assay must be above 0 and up to 100.' : 'Enter the assay.', domCache.assayInput);
             clearCalcMsg();
 
@@ -2079,6 +2087,7 @@
         }
 
         function applyDrugPreset(preset) {
+            updateMoistureLabels();
             if (!PRODUCTS[preset]) preset = CFG.products[0] ? CFG.products[0].id : 'manual';
             const prod = PRODUCTS[preset], isManual = !!prod.manual;
             const n = isManual ? CFG.manual.lots : prod.a.length;
