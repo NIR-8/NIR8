@@ -2046,7 +2046,7 @@
                 <div class="entry-meta-row">
                     <div class="lot-label"><input type="text" class="lot-input" maxlength="20" aria-label="Lot number"></div>
                     <div class="product-label">${calculationResult.product}</div>
-                    <div class="reference-values">W="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
+                    <div class="reference-values">${isLod() ? 'LOD' : 'W'}="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 </div>
                 <div class="calculation-content">${calculationResult.html}</div>
                 <div class="page-number">${calculationCount+1}/${calculationCount+1}</div>
