@@ -1391,7 +1391,7 @@
             let on = false, el = null, key = '', drag = null, hov = null;
             const $e = id => document.getElementById(id);
             const css = document.createElement('style');
-            css.textContent = '.ed-hover{outline:1px dashed #e53935!important}.ed-sel{outline:2px solid #e53935!important;outline-offset:1px}body.ed-active{touch-action:none}#edPen{position:fixed;z-index:30001;width:24px;height:24px;border-radius:50%;background:#e53935;color:#fff;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:none;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff;cursor:pointer}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize}';
+            css.textContent = '.ed-hover{outline:2px dashed #e53935!important;outline-offset:1px;cursor:crosshair}.ed-sel{outline:2px solid #e53935!important;outline-offset:2px;box-shadow:0 0 0 1px #fff}body.ed-active{touch-action:none}#edPen{position:fixed;z-index:30001;width:24px;height:24px;border-radius:50%;background:#e53935;color:#fff;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:none;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff;cursor:pointer}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize}';
             const pen = document.createElement('div'); pen.id = 'edPen'; pen.textContent = '✏️'; pen.title = 'Edit this element';
             const bar = document.createElement('div'); bar.id = 'edBar';
             bar.innerHTML = '<span id="edName"></span><label>Text <input type="color" id="edC"></label><label>Fill <input type="color" id="edBg"></label><label>Size <input type="number" id="edFs" min="6" max="120" placeholder="px"></label><button id="edTx">Edit text</button><button id="edGate">Popup</button><button id="edDel">Delete</button><button id="edRst">Reset</button><button id="edDone">Done</button>';
@@ -1428,11 +1428,18 @@
             }
             const hover = e => { if (on && !el && !skip(e.target)) showPen(e.target); };
             document.addEventListener('mouseover', hover); document.addEventListener('touchstart', hover, { passive: true });
-            pen.onclick = () => { if (on && hov) begin(hov); };
+            // Element picker (browser DevTools style): hover highlights, click the element (or the ✏️) to select it
+            pen.onclick = (e) => { e.preventDefault(); e.stopPropagation(); if (on && hov) begin(hov); };
+            document.addEventListener('click', e => {
+                if (!on || skip(e.target) || e.target.isContentEditable) return;
+                e.preventDefault(); e.stopPropagation();
+                if (el) return;                       // already editing something — use the bar / drag instead
+                begin(e.target);
+            }, true);
             document.addEventListener('pointerdown', e => {
                 if (!el || e.target.isContentEditable) return;
                 if (e.target === H) { const r = el.getBoundingClientRect(); drag = { m: 'r', x: e.clientX, y: e.clientY, w: r.width, h: r.height }; e.preventDefault(); e.stopPropagation(); return; }
-                if (skip(e.target) || !el.contains(e.target)) return;       // everything else on the page stays untouched
+                if (skip(e.target) || !el.contains(e.target)) return;
                 e.preventDefault(); e.stopPropagation();
                 const s = st[key] || {}; drag = { m: 'm', x: e.clientX, y: e.clientY, ox: s.x || 0, oy: s.y || 0 };
             }, true);
@@ -1443,7 +1450,6 @@
                 upd();
             }, true);
             document.addEventListener('pointerup', () => { if (drag) { drag = null; save(); } }, true);
-            document.addEventListener('click', e => { if (on && !skip(e.target) && !e.target.isContentEditable) { e.preventDefault(); e.stopPropagation(); } }, true);
             // PAUSE: while the visual editor is on, the page itself does nothing (no clicks, keys, typing, focus, form changes)
             const paused = e => on && e.target && e.target.closest && !e.target.closest('#edBar,#edPen,#edH') && !e.target.isContentEditable;
             ['keydown', 'keyup', 'keypress', 'input', 'change', 'submit', 'beforeinput'].forEach(n => window.addEventListener(n, e => { if (paused(e)) { e.preventDefault(); e.stopImmediatePropagation(); } }, true));
@@ -2321,7 +2327,7 @@
             Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
             // Products, formulas, lots and layout: cached admin config first (instant), then refresh from Firestore.
             // admin.html "Preview" opens this page with ?preview=1: use the unpublished draft and never touch the live cache
-            const isPreview = /[?&]preview=1(&|$)/.test(location.search);
+            const isPreview = /[?&]preview=1(&|$)/.test(location.search) || !!document.querySelector('meta[name="nir8-preview"]');
             let cachedText = null; try { cachedText = localStorage.getItem(isPreview ? 'nir8_cfg_preview' : CFG_KEY); } catch {}
             let cachedRaw = null; try { cachedRaw = cachedText ? JSON.parse(cachedText) : null; } catch {}
             const cfgNow = sanitizeConfig(cachedRaw);

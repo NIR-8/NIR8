@@ -74,11 +74,12 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
 .fb-pretty { margin-top:10px; font-size:15px; font-weight:600; } .fb-status { margin-top:4px; font-size:12px; } .fb-status.ok { color:#137333; } .fb-status.bad { color:var(--bad); }
 .fb-text { width:100%; margin-top:6px; font-family:ui-monospace, Menlo, Consolas, monospace; font-size:16px; }
 
-.htmlsplit { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; margin-top:8px; align-items:start; }
-.htmlsplit textarea, .htmlsplit iframe { width:100%; height:78vh; box-sizing:border-box; }
+.htmlsplit { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; margin-top:8px; align-items:stretch; }
+.htmlsplit > div { display:flex; flex-direction:column; min-width:0; min-height:0; }
+.htmlsplit textarea, .htmlsplit iframe { width:100%; flex:1; min-height:70vh; box-sizing:border-box; }
 .htmlsplit iframe { border:1px solid #ccc; border-radius:8px; background:#fff; }
 .htmlsplit textarea { font:12px/1.4 monospace; white-space:pre; tab-size:2; }
-@media (max-width:900px) { .htmlsplit { grid-template-columns:minmax(0,1fr); } .htmlsplit textarea, .htmlsplit iframe { height:46vh; } }
+@media (max-width:900px) { .htmlsplit { grid-template-columns:minmax(0,1fr); } .htmlsplit textarea, .htmlsplit iframe { min-height:42vh; } }
 /* layout editor */
 .lay-canvas { padding:10px; border-radius:10px; background:repeating-linear-gradient(90deg,#f3f6f4 0,#f3f6f4 calc(100%/12 - 1px),#e4ebe6 calc(100%/12 - 1px),#e4ebe6 calc(100%/12)); }
 .lay-row { display:flex; gap:12px; align-items:flex-start; justify-content:center; }
@@ -745,7 +746,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     const ta = h('textarea', { spellcheck: 'false' });
     const note = h('p', { class: 'muted' });
     const pv = h('iframe', { title: 'Live preview' });
-    const liveNote = h('span', { class: 'muted small' }, 'Live preview — updates as you type');
+    const liveNote = h('span', { class: 'muted small' }, 'Live preview updates as you type');
     const loadSrc = async () => {
       if (O === null) { try { O = await (await fetch('index.html', { cache: 'no-store' })).text(); } catch { toast('Could not read index.html.', 'bad'); return; } }
       const p = S.cfg.src;
@@ -761,46 +762,70 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       while (q < m - p && O[O.length - 1 - q] === E[E.length - 1 - q]) q++;
       return { build: buildOf(O), p, q, mid: E.slice(p, E.length - q) };
     };
-    // side-by-side live preview: the unsaved editor text is written to the preview slot and the right-hand frame reloads
+    // Live preview of the exact HTML you are editing (left pane).
+    // Uses srcdoc so every keystroke is reflected accurately, like a browser DevTools + Elements view.
     let liveTimer = null;
     const live = () => {
       if (O === null) return;
-      try { localStorage.setItem('nir8_cfg_preview', JSON.stringify(C.sanitizeConfig(Object.assign({}, S.cfg, { src: makeSrc() })))); }
-      catch { toast('Live preview needs browser storage.', 'bad'); return; }
-      pv.src = 'index.html?preview=1&_=' + Date.now();
+      let html = ta.value;
+      // Force preview mode so the page uses the draft config from localStorage
+      if (!/<meta\s+name=["']nir8-preview["']/i.test(html)) {
+        html = html.replace(/<head[^>]*>/i, (m) => m + '<meta name="nir8-preview" content="1">');
+      }
+      try {
+        // Full source is already in the iframe — do not also apply a src patch
+        localStorage.setItem('nir8_cfg_preview', JSON.stringify(C.sanitizeConfig(Object.assign({}, S.cfg, { src: null }))));
+      } catch { toast('Live preview needs browser storage.', 'bad'); return; }
+      pv.srcdoc = html;
     };
-    ta.addEventListener('input', () => { clearTimeout(liveTimer); liveTimer = setTimeout(live, 500); });
+    ta.addEventListener('input', () => { clearTimeout(liveTimer); liveTimer = setTimeout(live, 400); });
     const apply = () => {
       if (O === null) return;
       S.cfg.src = makeSrc();
       commit(false); live(); toast(S.cfg.src ? 'Source edit added to the draft — Publish to make it live.' : 'Back to the original source.');
     };
+    // Toolbar above the source editor (right pane)
     const panel = h('div', {},
       h('div', { class: 'row gap wrap' },
         h('button', { class: 'btn primary', type: 'button', onclick: apply }, 'Apply to draft'),
         h('button', { class: 'btn', type: 'button', onclick: live }, 'Refresh preview'),
         h('button', { class: 'btn', type: 'button', onclick: () => { ta.value = O; apply(); } }, 'Revert to original source'), liveNote),
       ta);
-    const split = h('div', { class: 'htmlsplit', style: 'display:none' }, panel, pv);
+    // PREVIEW LEFT · HTML SOURCE RIGHT  (mimics browser DevTools: page | source)
+    const split = h('div', { class: 'htmlsplit', style: 'display:none' },
+      h('div', { style: 'display:flex;flex-direction:column;min-width:0' },
+        h('div', { class: 'muted small', style: 'margin-bottom:4px;font-weight:600' }, 'Live preview'),
+        pv),
+      h('div', { style: 'display:flex;flex-direction:column;min-width:0' },
+        h('div', { class: 'muted small', style: 'margin-bottom:4px;font-weight:600' }, 'HTML source'),
+        panel));
     const HELP = {
       off: 'Editing is OFF — the page below works normally. Choose a mode to edit.',
-      visual: 'Visual editor: hover (or tap) any element and press its ✏️ pen. Only that element becomes editable — drag to move, red corner to resize, colours, size, double-click text to edit, Delete/Restore. Press Done when finished. Everything else stays untouched.',
-      html: 'HTML editor: full page source. Edits apply on top of the current index.html build, so they switch off automatically if index.html is replaced with a new build. The preview on the right updates as you type. A broken edit can break the live page — check the preview first; add ?safe=1 to the page address to bypass it.'
+      visual: 'Element picker (like browser DevTools): hover any element to highlight it, then click it to select. Drag to move, red corner to resize, change colour / size, double-click text to edit, Delete / Restore. Press Done when finished. Only the selected element is changed — the rest of the page stays live and interactive.',
+      html: 'HTML editor (DevTools style): live preview on the left, full page source on the right. Edits appear instantly in the preview. They are stored as a patch on the current index.html build, so they turn off automatically if the file is replaced. A broken edit can break the live page — check the preview first; add ?safe=1 to the address to bypass it.'
     };
     const btns = {};
     const setMode = (m) => {
       Object.keys(btns).forEach((k) => btns[k].classList.toggle('primary', k === m));
-      fr.style.display = m === 'html' ? 'none' : 'block'; split.style.display = m === 'html' ? 'grid' : 'none';
+      fr.style.display = m === 'html' ? 'none' : 'block';
+      split.style.display = m === 'html' ? 'grid' : 'none';
       note.textContent = HELP[m];
       try { fr.contentWindow.postMessage({ nir8mode: m === 'visual' ? 'visual' : 'off' }, '*'); } catch {}
       if (m === 'html') loadSrc();
     };
-    [['off', 'Off'], ['visual', 'Visual editor'], ['html', 'HTML editor']].forEach(([k, label]) => { btns[k] = h('button', { class: 'btn', type: 'button', onclick: () => setMode(k) }, label); });
+    [['off', 'Off'], ['visual', 'Visual editor'], ['html', 'HTML editor']].forEach(([k, label]) => {
+      btns[k] = h('button', { class: 'btn', type: 'button', onclick: () => setMode(k) }, label);
+    });
     fr.addEventListener('load', () => setMode(Object.keys(btns).find((k) => btns[k].classList.contains('primary')) || 'off'));
-    root.append(h('div', { class: 'card' }, h('b', {}, 'Edit the page'), h('div', { class: 'row gap wrap', style: 'margin-top:8px' }, btns.off, btns.visual, btns.html,
-      h('button', { class: 'btn', type: 'button', onclick: () => { S.cfg.styles = {}; commit(); } }, 'Reset all visual edits')), note), fr, split);
+    root.append(h('div', { class: 'card' },
+      h('b', {}, 'Edit the page'),
+      h('div', { class: 'row gap wrap', style: 'margin-top:8px' },
+        btns.off, btns.visual, btns.html,
+        h('button', { class: 'btn', type: 'button', onclick: () => { S.cfg.styles = {}; commit(); } }, 'Reset all visual edits')),
+      note), fr, split);
     setMode('off');
   }
+
   function renderLayout(root) {
     if (!S.cfg.layout) {
       root.append(h('div', { class: 'card empty' },
