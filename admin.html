@@ -155,6 +155,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
       { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD }, moisture: 'water', a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
     ],
     layout: null,
+    styles: {},
     fixed: { footer: true, tag: true, tagSide: 'right' },
     ui: {
       pageTitle: 'NIR8 Calculators',
@@ -297,6 +298,20 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     }
     return tidy(rows);
   }
+  function sanitizeStyles(raw) {
+    const out = {};
+    if (!raw || typeof raw !== 'object') return out;
+    const n = (x, lo, hi) => { x = Number(x); return isFinite(x) ? Math.round(Math.min(hi, Math.max(lo, x))) : 0; };
+    const col = (x) => (/^#[0-9a-f]{6}$/i.test(x) ? x : '');
+    Object.keys(raw).slice(0, 400).forEach((k) => {
+      const v = raw[k];
+      if (k.length > 300 || !/^[\w#\-.\s>:()+\[\]="',*~\\]+$/.test(k) || !v || typeof v !== 'object') return;
+      const s = { x: n(v.x, -3000, 3000), y: n(v.y, -3000, 3000), w: n(v.w, 0, 3000), h: n(v.h, 0, 3000), fs: n(v.fs, 0, 120), c: col(v.c), bg: col(v.bg), hide: v.hide ? 1 : 0 };
+      if (typeof v.t === 'string') s.t = v.t.slice(0, 300);
+      if (s.x || s.y || s.w || s.h || s.fs || s.c || s.bg || s.hide || s.t !== undefined) out[k] = s;
+    });
+    return out;
+  }
   function sanitizeLayout(l) {
     const seen = new Set(), rows = [];
     (l && Array.isArray(l.rows) ? l.rows : []).forEach((r) => {
@@ -335,6 +350,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     if (raw.manual) { out.manual.enabled = raw.manual.enabled !== false; out.manual.lots = clampInt(raw.manual.lots, 1, MAXLOTS, 4); }
     if (!out.products.length) out.manual.enabled = true;
     if (raw.layout && typeof raw.layout === 'object') out.layout = sanitizeLayout(raw.layout);
+    out.styles = sanitizeStyles(raw.styles);
     if (raw.fixed && typeof raw.fixed === 'object') {
       out.fixed.footer = raw.fixed.footer !== false; out.fixed.tag = raw.fixed.tag !== false;
       out.fixed.tagSide = raw.fixed.tagSide === 'left' ? 'left' : 'right';
@@ -419,6 +435,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     cfgChange(['manual', 'lots'], 'Manual · number of lots', a.manual.lots, b.manual.lots);
     new Set([...Object.keys(a.fixed || {}), ...Object.keys(b.fixed || {})]).forEach((k) => cfgChange(['fixed', k], FIXED_LABELS[k] || k, (a.fixed || {})[k], (b.fixed || {})[k]));
     new Set([...Object.keys(a.ui || {}), ...Object.keys(b.ui || {})]).forEach((k) => cfgChange(['ui', k], UI_LABELS[k] || k, (a.ui || {})[k], (b.ui || {})[k]));
+    cfgChange(['styles'], 'Visual edits', a.styles || {}, b.styles || {}, (v) => Object.keys(v || {}).length + ' edited element(s)');
     cfgChange(['layout'], 'Page layout', a.layout, b.layout, (v) => (v ? 'custom layout' : 'standard layout'));
 
     const A = a.products || [], B = b.products || [], idsA = A.map((p) => p.id), idsB = B.map((p) => p.id);
@@ -480,7 +497,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   }
 
   const api = { diffConfig, isReverted, revertChange, COLS, MINW, MAXLOTS, BLOCKS, BLOCK_IDS, STD, DEFAULT_CONFIG, ROMAN, clone, clampInt, slug,
-    tokenize, toExpr, toPretty, evaluate, checkFormula,
+    tokenize, toExpr, toPretty, evaluate, checkFormula, sanitizeStyles,
     rowSum, locate, defaultRows, fitRow, resizeBlock, setBlockHeight, moveBlock, sanitizeLayout,
     sanitizeConfig, validateForPublish, newProduct, resizeLots };
   root.NIR8Core = api;
@@ -548,14 +565,14 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   }
 
   /* ───────── tabs ───────── */
-  const TABS = [['products', 'Products & formulas'], ['layout', 'Page layout'], ['options', 'Page options'], ['backups', 'Backups'], ['account', 'Account']];
+  const TABS = [['products', 'Products & formulas'], ['visual', 'Visual editor'], ['layout', 'Page layout'], ['options', 'Page options'], ['backups', 'Backups'], ['account', 'Account']];
   function renderTabs() {
     const nav = $('tabs'); nav.textContent = '';
     TABS.forEach(([id, label]) => nav.append(h('button', { class: 'tab' + (S.tab === id ? ' on' : ''), type: 'button', onclick: () => { S.tab = id; renderTabs(); renderTab(); } }, label)));
   }
   function renderTab() {
     const root = $('tabBody'); root.textContent = '';
-    ({ products: renderProducts, layout: renderLayout, options: renderOptions, backups: renderBackups, account: renderAccount })[S.tab](root);
+    ({ products: renderProducts, visual: renderVisual, layout: renderLayout, options: renderOptions, backups: renderBackups, account: renderAccount })[S.tab](root);
     $('banner').hidden = !S.defaultPw;
   }
 
@@ -711,6 +728,14 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   /* ───────── LAYOUT (reflowing grid editor) ───────── */
   const GAP = 12;
   const wCalc = (w) => 'calc((100% - ' + 11 * GAP + 'px) / 12 * ' + w + ' + ' + GAP * (w - 1) + 'px)';
+  function renderVisual(root) {
+    try { localStorage.setItem('nir8_cfg_preview', JSON.stringify(C.sanitizeConfig(S.cfg))); } catch { toast('Visual editor needs browser storage.', 'bad'); return; }
+    root.append(h('div', { class: 'card' },
+      h('b', {}, 'Visual editor'),
+      h('p', { class: 'muted' }, 'This is your real page. Click any element: drag to move, drag the red corner to resize, change text colour, fill colour and size, double-click text to edit it, Delete to hide (Restore to bring back). Turn “Editing” OFF to use the page normally (e.g. pick a product), then ON again. Changes go into your draft — press Publish to make them live.'),
+      h('button', { class: 'btn', type: 'button', onclick: () => { S.cfg.styles = {}; commit(); } }, 'Reset all visual edits')),
+      h('iframe', { src: 'index.html?preview=1&edit=1', title: 'Visual editor', style: 'width:100%;height:78vh;border:1px solid #ccc;border-radius:8px;margin-top:8px;background:#fff' }));
+  }
   function renderLayout(root) {
     if (!S.cfg.layout) {
       root.append(h('div', { class: 'card empty' },
@@ -1002,6 +1027,11 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
     $('loginBtn').addEventListener('click', doLogin);
     ['loginId', 'loginPw'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); }));
     $('undoBtn').addEventListener('click', undo); $('redoBtn').addEventListener('click', redo);
+    window.addEventListener('message', (e) => {
+      const fr = document.querySelector('iframe[title="Visual editor"]');
+      if (!fr || e.source !== fr.contentWindow || !e.data || !e.data.nir8styles) return;
+      S.cfg.styles = C.sanitizeStyles(e.data.nir8styles); commit(false);
+    });
     $('publishBtn').addEventListener('click', publish); $('previewBtn').addEventListener('click', preview);
     $('signOutBtn').addEventListener('click', () => NIR8Backend.signOut());
     document.addEventListener('keydown', (e) => {

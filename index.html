@@ -1086,6 +1086,7 @@
                 { id: 'levetiracetam', name: 'Levetiracetam', formulas: { ...STD_FORMULAS }, a: [268.75, 268.75, 268.75, 268.75], c: [14.674, 14.674, 14.674, 14.673] }
             ],
             layout: null,
+            styles: {},
             fixed: { footer: true, tag: true, tagSide: 'right' },
             // All of these are editable from Admin → Page options (no code needed)
             ui: {
@@ -1120,7 +1121,21 @@
         const clampInt = (v, lo, hi, d) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
         const cloneCfg = o => JSON.parse(JSON.stringify(o));
 
-        function sanitizeLayout(l) {
+        function sanitizeStyles(raw) {
+                const out = {};
+                if (!raw || typeof raw !== 'object') return out;
+                const n = (x, lo, hi) => { x = Number(x); return isFinite(x) ? Math.round(Math.min(hi, Math.max(lo, x))) : 0; };
+                const col = (x) => (/^#[0-9a-f]{6}$/i.test(x) ? x : '');
+                Object.keys(raw).slice(0, 400).forEach((k) => {
+                  const v = raw[k];
+                  if (k.length > 300 || !/^[\w#\-.\s>:()+\[\]="',*~\\]+$/.test(k) || !v || typeof v !== 'object') return;
+                  const s = { x: n(v.x, -3000, 3000), y: n(v.y, -3000, 3000), w: n(v.w, 0, 3000), h: n(v.h, 0, 3000), fs: n(v.fs, 0, 120), c: col(v.c), bg: col(v.bg), hide: v.hide ? 1 : 0 };
+                  if (typeof v.t === 'string') s.t = v.t.slice(0, 300);
+                  if (s.x || s.y || s.w || s.h || s.fs || s.c || s.bg || s.hide || s.t !== undefined) out[k] = s;
+                });
+                return out;
+            }
+            function sanitizeLayout(l) {
             const seen = new Set(), rows = [];
             (Array.isArray(l.rows) ? l.rows : []).forEach(r => {
                 if (!Array.isArray(r)) return;
@@ -1167,6 +1182,7 @@
                 if (raw.manual) { out.manual.enabled = raw.manual.enabled !== false; out.manual.lots = clampInt(raw.manual.lots, 1, 12, 4); }
                 if (!out.products.length) out.manual.enabled = true;       // always keep at least one way in
                 if (raw.layout && typeof raw.layout === 'object') out.layout = sanitizeLayout(raw.layout);
+                out.styles = sanitizeStyles(raw.styles);
                 if (raw.fixed && typeof raw.fixed === 'object') {
                     out.fixed.footer = raw.fixed.footer !== false;
                     out.fixed.tag = raw.fixed.tag !== false;
@@ -1339,7 +1355,93 @@
             }
         }
 
+
+        // ── VISUAL STYLES: per-element move / resize / colour / text / hide, set from Admin → Visual editor ──
+        const _orig = new Map();
+        function applyOne(sel, s, editing) {
+            let el; try { el = document.querySelector(sel); } catch { return; }
+            if (!el || !s) return;
+            if (!_orig.has(el)) _orig.set(el, el.getAttribute('style'));
+            if (s.x || s.y) el.style.transform = `translate(${s.x || 0}px,${s.y || 0}px)`;
+            if (s.w) el.style.width = s.w + 'px';
+            if (s.h) el.style.height = s.h + 'px';
+            if (s.c) el.style.color = s.c;
+            if (s.bg) el.style.background = s.bg;
+            if (s.fs) el.style.fontSize = s.fs + 'px';
+            if (s.hide) { if (editing) el.style.opacity = '.25'; else el.style.display = 'none'; }
+            if (s.t !== undefined && !el.children.length && !el.isContentEditable) el.textContent = s.t;
+        }
+        function applyStyles(editing) { const st = window.__ST || {}; Object.keys(st).forEach(k => applyOne(k, st[k], editing)); }
+        function pathOf(el) {
+            const p = [];
+            while (el && el !== document.body) {
+                if (el.id && !/^ed[A-Z]/.test(el.id)) { p.unshift('#' + CSS.escape(el.id)); return p.join('>'); }
+                p.unshift(el.tagName.toLowerCase() + ':nth-child(' + ([...el.parentNode.children].indexOf(el) + 1) + ')');
+                el = el.parentNode;
+            }
+            return 'body>' + p.join('>');
+        }
+        function initEditor() {
+            const st = window.__ST = window.__ST || {};
+            let on = true, el = null, key = '', drag = null;
+            const $e = id => document.getElementById(id);
+            const css = document.createElement('style');
+            css.textContent = 'body.ed-on{touch-action:none}body.ed-on *{cursor:move!important}.ed-sel{outline:2px solid #e53935!important;outline-offset:1px}#edBar,#edBar *{cursor:auto!important}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize!important}';
+            const bar = document.createElement('div'); bar.id = 'edBar';
+            bar.innerHTML = '<button id="edTog">✏️ Editing: ON</button><label>Text <input type="color" id="edC" value="#000000"></label><label>Fill <input type="color" id="edBg" value="#ffffff"></label><label>Size <input type="number" id="edFs" min="6" max="120" placeholder="px"></label><button id="edTx">Edit text</button><button id="edDel">Delete</button><button id="edRst">Reset</button>';
+            const H = document.createElement('div'); H.id = 'edH';
+            document.head.append(css); document.body.append(bar, H); document.body.classList.add('ed-on');
+            const hex = c => { const m = c.match(/\d+/g); return (!m || (m.length > 3 && m[3] === '0')) ? '#ffffff' : '#' + m.slice(0, 3).map(n => (+n).toString(16).padStart(2, '0')).join(''); };
+            const sOf = () => st[key] || (st[key] = {});
+            const save = () => { if (parent !== window) parent.postMessage({ nir8styles: st }, '*'); };
+            const place = () => { if (!el || !on) { H.style.display = 'none'; return; } const r = el.getBoundingClientRect(); H.style.display = 'block'; H.style.left = (r.right - 8) + 'px'; H.style.top = (r.bottom - 8) + 'px'; };
+            const upd = () => { applyOne(key, st[key], true); place(); };
+            const inBar = t => !!(t.closest && t.closest('#edBar'));
+            function pick(t) {
+                if (el) el.classList.remove('ed-sel');
+                el = t; key = pathOf(t); t.classList.add('ed-sel');
+                const cs = getComputedStyle(t);
+                $e('edC').value = hex(cs.color); $e('edBg').value = hex(cs.backgroundColor); $e('edFs').value = parseInt(cs.fontSize);
+                $e('edDel').textContent = (st[key] && st[key].hide) ? 'Restore' : 'Delete'; place();
+            }
+            function startText() {
+                const t = el; if (!t) return;
+                if (t.children.length) { alert('Select the text itself (it has other elements inside).'); return; }
+                t.contentEditable = 'true'; t.focus();
+                t.addEventListener('blur', () => { t.removeAttribute('contenteditable'); key = pathOf(t); sOf().t = t.textContent; save(); }, { once: true });
+            }
+            document.addEventListener('pointerdown', e => {
+                if (!on || (inBar(e.target) && true) || e.target.isContentEditable) return;
+                e.preventDefault(); e.stopPropagation();
+                if (e.target === H) { const r = el.getBoundingClientRect(); drag = { m: 'r', x: e.clientX, y: e.clientY, w: r.width, h: r.height }; return; }
+                if (e.target === document.documentElement || e.target === document.body) return;
+                pick(e.target); const s = st[key] || {};
+                drag = { m: 'm', x: e.clientX, y: e.clientY, ox: s.x || 0, oy: s.y || 0 };
+            }, true);
+            document.addEventListener('pointermove', e => {
+                if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y, s = sOf();
+                if (drag.m === 'm') { s.x = Math.round(drag.ox + dx); s.y = Math.round(drag.oy + dy); }
+                else { s.w = Math.max(10, Math.round(drag.w + dx)); s.h = Math.max(10, Math.round(drag.h + dy)); }
+                upd();
+            }, true);
+            document.addEventListener('pointerup', () => { if (drag) { drag = null; save(); } }, true);
+            document.addEventListener('click', e => { if (on && !inBar(e.target) && !e.target.isContentEditable) { e.preventDefault(); e.stopPropagation(); } }, true);
+            document.addEventListener('dblclick', e => { if (on && !inBar(e.target)) { pick(e.target); startText(); } }, true);
+            window.addEventListener('scroll', place, true); window.addEventListener('resize', place);
+            $e('edTog').onclick = () => { on = !on; document.body.classList.toggle('ed-on', on); $e('edTog').textContent = '✏️ Editing: ' + (on ? 'ON' : 'OFF'); if (el) el.classList.toggle('ed-sel', on); place(); };
+            const prop = (id, k, f) => $e(id).addEventListener('input', () => { if (!el) return; sOf()[k] = f($e(id).value); upd(); save(); });
+            prop('edC', 'c', v => v); prop('edBg', 'bg', v => v); prop('edFs', 'fs', v => Math.max(0, Math.min(120, parseInt(v) || 0)));
+            $e('edTx').onclick = startText;
+            $e('edDel').onclick = () => { if (!el) return; const s = sOf(); s.hide = s.hide ? 0 : 1; $e('edDel').textContent = s.hide ? 'Restore' : 'Delete'; upd(); save(); };
+            $e('edRst').onclick = () => {
+                if (!el) return; delete st[key]; const o = _orig.get(el);
+                if (o !== undefined) { if (o === null) el.removeAttribute('style'); else el.setAttribute('style', o); }
+                place(); save();
+            };
+        }
+
         function applyConfig(cfg) {
+            window.__ST = cfg.styles || {}; requestAnimationFrame(() => applyStyles(false));
             CFG = cfg; buildProducts(); rebuildProductUi(); applyLayout(); applyFixed();
         }
 
@@ -2195,6 +2297,7 @@
             let cachedText = null; try { cachedText = localStorage.getItem(isPreview ? 'nir8_cfg_preview' : CFG_KEY); } catch {}
             let cachedRaw = null; try { cachedRaw = cachedText ? JSON.parse(cachedText) : null; } catch {}
             applyConfig(sanitizeConfig(cachedRaw));
+            if (/[?&]edit=1(&|$)/.test(location.search)) initEditor();
             if (isPreview) {
                 const b = document.createElement('div');
                 b.textContent = 'Preview — not published yet';
