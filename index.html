@@ -121,6 +121,8 @@
         .menu-card .lot-assign-panel { margin-top: 6px; padding: 6px; }
         .menu-card .lot-assign-panel select { margin: 0; width: 100%; padding: 8px; }
         .menu-card #manualStdRow { margin-top: 6px; gap: 8px; }
+        .lot-std-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 11px; color: #555; flex-wrap: wrap; }
+        .lot-std-row select { flex: 1; min-width: 130px; padding: 5px 6px; font-size: 13px; margin: 0; }
         .menu-card #manualStdRow .input-group { margin-top: 0; min-width: 0; }
         .menu-card #manualStdRow label { font-size: 11px; }
         .menu-card #manualStdRow input { width: 100%; margin: 2px 0 0; padding: 7px 4px; font-size: 14px; }
@@ -761,6 +763,10 @@
         </div>
             </div>
         <div id="quantityWarning" class="quantity-warning-banner">Qty mismatch!</div>
+        <div class="lot-std-row" id="lotStdRow" style="display:none">
+            <label for="lotStdSelect">Std API Qty differs by lot — dispensing for</label>
+            <select id="lotStdSelect" aria-label="Lot being dispensed"></select>
+        </div>
         <div class="input-row" id="manualStdRow" style="display:none">
             <div class="input-group" id="stdQtyGroup">
                 <label for="stdQty">Std API qty (A)</label>
@@ -1578,6 +1584,39 @@
             if (endEl) endEl.textContent = fmtDDMMYYYY(end);
         }
 
+        // Std API Qty can differ lot to lot (e.g. 433.333 for lots 1-3, 433.334 for lots 4-5).
+        // The batch being dispensed always belongs to the first lot whose Issued Qty (B) is still empty.
+        let lotCursor = 0;   // lot the current batch is dispensed for (0-based); set by the Lot selector, advances after each assignment
+        function currentLotIndex() {
+            const prod = PRODUCTS[currentProduct];
+            if (!prod || prod.manual || !prod.a || !prod.a.length) return 0;
+            return Math.min(Math.max(lotCursor, 0), prod.a.length - 1);
+        }
+        // Small selector in the menu card — only for products whose Std API Qty differs between lots.
+        // Needed e.g. when a second shift opens a fresh page after lots 1-3 were already dispensed.
+        function renderLotStdRow() {
+            const row = document.getElementById('lotStdRow'), sel = document.getElementById('lotStdSelect');
+            const prod = PRODUCTS[currentProduct];
+            const differs = !!prod && !prod.manual && !!prod.a && prod.a.some(v => Number(v) !== Number(prod.a[0]));
+            row.style.display = differs ? 'flex' : 'none';
+            if (!differs) return;
+            if (sel.options.length !== prod.a.length || sel.dataset.product !== currentProduct) {
+                sel.innerHTML = '';
+                prod.a.forEach((v, i) => sel.add(new Option(`Lot-${ROMAN[i] || i + 1} · ${Number(v).toFixed(3)} kg`, String(i))));
+                sel.dataset.product = currentProduct;
+            }
+            sel.value = String(currentLotIndex());
+        }
+        function syncStdToLot() {
+            const prod = PRODUCTS[currentProduct];
+            if (!prod || prod.manual || !prod.a) return;
+            const v = Number(prod.a[currentLotIndex()]).toFixed(3);
+            if (domCache.stdQtyInput.value !== v) domCache.stdQtyInput.value = v;
+            renderLotStdRow();
+            renderFormulaCard();
+            updateQuantityTracker();
+        }
+
         function renderFormulaCard() {
             const card = document.getElementById('formulaSpecCard');
             const rows = document.getElementById('specRows');
@@ -1588,8 +1627,10 @@
             card.classList.toggle('is-manual', manual);
             document.getElementById('specProduct').textContent = PRODUCTS[currentProduct].name;
             const stdPill = document.getElementById('specStd');
-            const stdVal = PRODUCTS[currentProduct].a ? PRODUCTS[currentProduct].a[0] : null;
-            stdPill.textContent = stdVal !== null ? `Std API Qty ${formatNumber(new Decimal(stdVal))} kg` : 'Std API Qty: enter below';
+            const pa = PRODUCTS[currentProduct].a, li = currentLotIndex();
+            const stdVal = pa ? pa[li] : null;
+            const lotsDiffer = !!pa && pa.some(v => Number(v) !== Number(pa[0]));
+            stdPill.textContent = stdVal !== null ? `Std API Qty ${formatNumber(new Decimal(stdVal))} kg${lotsDiffer ? ` · Lot ${li + 1}` : ''}` : 'Std API Qty: enter below';
             rows.innerHTML = '';
             ['F1', 'F2', 'F3'].forEach(type => {
                 const ql = qLabelFor(type);
@@ -1717,7 +1758,8 @@
             // values and runs F1/F2/F3) — see calculate().
             domCache.formulaCalculator.classList.remove('input-locked');
             batchAssigned = true;
-            updateQuantityTracker();   // tracker back to defaults: 0 dispensed, full Std Qty remaining
+            lotCursor = lotIndex + 1;   // next batch belongs to the next lot
+            syncStdToLot();            // next lot's Std API Qty; tracker back to defaults (0 dispensed)
         }
 
         // Per-lot A/C values can legitimately differ between lots (e.g. Levetiracetam
@@ -2125,7 +2167,7 @@
                 const sum = arr => arr.reduce((t, v) => t.plus(v), new Decimal(0));
                 domCache.acbInputs.totals.a.textContent = sum(prod.a).toFixed(3);
                 domCache.acbInputs.totals.c.textContent = sum(prod.c).toFixed(3);
-                domCache.stdQtyInput.value = Number(prod.a[0]).toFixed(3);
+                domCache.stdQtyInput.value = Number(prod.a[0]).toFixed(3);   // B row is cleared below → lot 1
                 updateQuantityTracker();
             }
 
@@ -2133,6 +2175,7 @@
             domCache.acbInputs.b.forEach(input => { input.value = ''; input.classList.remove('acb-manual-input'); });
             domCache.acbInputs.totals.b.textContent = '0.000';
             domCache.acbInputs.b.forEach((input, i) => { updateACB(input, i, 'b'); });
+            lotCursor = 0; renderLotStdRow();
         }
 
         // Prevent mouse-wheel scroll from incrementing/decrementing focused number inputs.
@@ -2291,9 +2334,16 @@
             domCache.stdQtyInput.addEventListener('input', () => { validateInput(domCache.stdQtyInput); updateQuantityTracker(); });
             domCache.remainingQty.addEventListener('click', copyRemainingToQ);
             document.getElementById('undoBtn').addEventListener('click', undoDelete);
+            document.getElementById('lotStdSelect').addEventListener('change', function () {
+                lotCursor = parseInt(this.value, 10) || 0;
+                syncStdToLot();
+            });
             document.getElementById('lotAssignSelect').addEventListener('change', function () {
                 if (!this.value) return;
-                updateLotDispensedQty(parseInt(this.value, 10));
+                const lot = parseInt(this.value, 10), prod = PRODUCTS[currentProduct];
+                if (prod && !prod.manual && prod.a && prod.a[lot - 1] !== undefined && Number(prod.a[lot - 1]).toFixed(3) !== domCache.stdQtyInput.value &&
+                    !confirm(`Lot ${lot} Std API Qty is ${Number(prod.a[lot - 1]).toFixed(3)} kg, but this batch used ${domCache.stdQtyInput.value} kg. Assign to Lot ${lot} anyway?`)) { this.value = ''; return; }
+                updateLotDispensedQty(lot);
             });
             window.addEventListener('beforeunload', e => { if (calculationCount > 0) { e.preventDefault(); e.returnValue = 'You have unsaved calculations. Are you sure you want to leave?'; } });
 
