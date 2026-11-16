@@ -580,6 +580,7 @@
             background: transparent; color: #1a1a1a; border: none; border-bottom: 1px solid #f1f3f5; border-radius: 0;
             font-size: 15px; font-weight: 500; text-align: left; flex: none;
         }
+        .product-gate-card:focus { outline: none; }
         .gate-btn:hover, .gate-btn:focus-visible { background: #f0f7f3; color: #157347; }
         .gate-btn:focus-visible { outline: 2px solid #157347; outline-offset: -2px; border-radius: 8px; }
         .gate-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1384,7 +1385,7 @@
             }
             return 'body>' + p.join('>');
         }
-        const BUILD = '2026-11-16';   // bump whenever this file changes: admin "HTML editor" overrides only apply to the build they were made on
+        const BUILD = '2026-11-16b';   // bump whenever this file changes: admin "HTML editor" overrides only apply to the build they were made on
         function initEditor() {
             const st = window.__ST = window.__ST || {};
             let on = false, el = null, key = '', drag = null, hov = null;
@@ -1393,7 +1394,7 @@
             css.textContent = '.ed-hover{outline:1px dashed #e53935!important}.ed-sel{outline:2px solid #e53935!important;outline-offset:1px}body.ed-active{touch-action:none}#edPen{position:fixed;z-index:30001;width:24px;height:24px;border-radius:50%;background:#e53935;color:#fff;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:none;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff;cursor:pointer}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize}';
             const pen = document.createElement('div'); pen.id = 'edPen'; pen.textContent = '✏️'; pen.title = 'Edit this element';
             const bar = document.createElement('div'); bar.id = 'edBar';
-            bar.innerHTML = '<span id="edName"></span><label>Text <input type="color" id="edC"></label><label>Fill <input type="color" id="edBg"></label><label>Size <input type="number" id="edFs" min="6" max="120" placeholder="px"></label><button id="edTx">Edit text</button><button id="edDel">Delete</button><button id="edRst">Reset</button><button id="edDone">Done</button>';
+            bar.innerHTML = '<span id="edName"></span><label>Text <input type="color" id="edC"></label><label>Fill <input type="color" id="edBg"></label><label>Size <input type="number" id="edFs" min="6" max="120" placeholder="px"></label><button id="edTx">Edit text</button><button id="edGate">Popup</button><button id="edDel">Delete</button><button id="edRst">Reset</button><button id="edDone">Done</button>';
             const H = document.createElement('div'); H.id = 'edH';
             document.head.append(css); document.body.append(pen, bar, H);
             const hex = c => { const m = c.match(/\d+/g); return (!m || (m.length > 3 && m[3] === '0')) ? '#ffffff' : '#' + m.slice(0, 3).map(n => (+n).toString(16).padStart(2, '0')).join(''); };
@@ -1442,12 +1443,18 @@
                 upd();
             }, true);
             document.addEventListener('pointerup', () => { if (drag) { drag = null; save(); } }, true);
-            document.addEventListener('click', e => { if (el && !skip(e.target) && el.contains(e.target) && !e.target.isContentEditable) { e.preventDefault(); e.stopPropagation(); } }, true);
+            document.addEventListener('click', e => { if (on && !skip(e.target) && !e.target.isContentEditable) { e.preventDefault(); e.stopPropagation(); } }, true);
+            // PAUSE: while the visual editor is on, the page itself does nothing (no clicks, keys, typing, focus, form changes)
+            const paused = e => on && e.target && e.target.closest && !e.target.closest('#edBar,#edPen,#edH') && !e.target.isContentEditable;
+            ['keydown', 'keyup', 'keypress', 'input', 'change', 'submit', 'beforeinput'].forEach(n => window.addEventListener(n, e => { if (paused(e)) { e.preventDefault(); e.stopImmediatePropagation(); } }, true));
+            window.addEventListener('mousedown', e => { if (paused(e)) e.preventDefault(); }, true);
+            window.addEventListener('focusin', e => { if (paused(e) && e.target.blur) e.target.blur(); }, true);
             document.addEventListener('dblclick', e => { if (el && !skip(e.target) && el.contains(e.target)) startText(); }, true);
             window.addEventListener('scroll', () => { place(); if (hov && !el) showPen(hov); }, true); window.addEventListener('resize', place);
             const prop = (id, k, f) => $e(id).addEventListener('input', () => { sOf()[k] = f($e(id).value); upd(); save(); });
             prop('edC', 'c', v => v); prop('edBg', 'bg', v => v); prop('edFs', 'fs', v => Math.max(0, Math.min(120, parseInt(v) || 0)));
             $e('edTx').onclick = startText; $e('edDone').onclick = end;
+            $e('edGate').onclick = () => { const g = $e('productGate'); if (g) g.style.display = g.style.display === 'none' ? 'flex' : 'none'; };   // show/hide the product popup so what is under it can be edited
             $e('edDel').onclick = () => { const s = sOf(); s.hide = s.hide ? 0 : 1; $e('edDel').textContent = s.hide ? 'Restore' : 'Delete'; upd(); save(); };
             $e('edRst').onclick = () => {
                 delete st[key]; const o = _orig.get(el);
@@ -1779,7 +1786,7 @@
             requestAnimationFrame(() => {
                 const search = document.getElementById('gateSearch');
                 if (!search.closest('.gate-tools').hidden && matchMedia('(pointer: fine)').matches) search.focus();
-                else gate.querySelector('.gate-btn')?.focus();
+                else { const card = gate.querySelector('.product-gate-card'); if (card) { card.tabIndex = -1; card.focus({ preventScroll: true }); } }   // focus the popup itself, never a product
             });
         }
         function clearAllCalculations() {
@@ -2250,6 +2257,9 @@
 
         function applyDrugPreset(preset) {
             updateMoistureLabels();
+            if (!currentProduct && !PRODUCTS[preset]) {      // nothing chosen on the popup yet: show a blank tracker, not the first product's quantity
+                domCache.stdQtyInput.value = ''; updateQuantityTracker(); return;
+            }
             if (!PRODUCTS[preset]) preset = CFG.products[0] ? CFG.products[0].id : 'manual';
             const prod = PRODUCTS[preset], isManual = !!prod.manual;
             const n = isManual ? CFG.manual.lots : prod.a.length;
@@ -2424,8 +2434,10 @@
                     if (e.key === 'ArrowDown') (btns[i + 1] || btns[i]).focus();
                     else if (i <= 0) gateSearch.focus(); else btns[i - 1].focus();
                 } else if (e.key === 'Enter' && document.activeElement === gateSearch) {
-                    const first = document.querySelector('#gateList .gate-btn');
-                    if (first) { e.preventDefault(); selectProduct(first.dataset.product); }
+                    // Enter never picks silently: one match = pick it; several = move to the first so it is visible; nothing typed = do nothing
+                    const found = document.querySelectorAll('#gateList .gate-btn');
+                    if (gateSearch.value.trim() && found.length) { e.preventDefault(); if (found.length === 1) selectProduct(found[0].dataset.product); else found[0].focus(); }
+                    else e.preventDefault();
                 } else if (e.key === 'Escape' && gateSearch.value) {
                     e.preventDefault(); gateSearch.value = ''; renderGateList();
                 }
