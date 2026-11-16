@@ -1087,6 +1087,7 @@
             ],
             layout: null,
             styles: {},
+            src: null,
             fixed: { footer: true, tag: true, tagSide: 'right' },
             // All of these are editable from Admin → Page options (no code needed)
             ui: {
@@ -1183,6 +1184,8 @@
                 if (!out.products.length) out.manual.enabled = true;       // always keep at least one way in
                 if (raw.layout && typeof raw.layout === 'object') out.layout = sanitizeLayout(raw.layout);
                 out.styles = sanitizeStyles(raw.styles);
+                out.src = null;
+                if (raw.src && typeof raw.src === 'object' && typeof raw.src.mid === 'string' && raw.src.mid.length < 600000) { const k = (x) => Math.max(0, Math.min(2e6, parseInt(x) || 0)); out.src = { build: String(raw.src.build || '').slice(0, 40), p: k(raw.src.p), q: k(raw.src.q), mid: raw.src.mid }; }
                 if (raw.fixed && typeof raw.fixed === 'object') {
                     out.fixed.footer = raw.fixed.footer !== false;
                     out.fixed.tag = raw.fixed.tag !== false;
@@ -1381,42 +1384,56 @@
             }
             return 'body>' + p.join('>');
         }
+        const BUILD = '2026-11-16';   // bump whenever this file changes: admin "HTML editor" overrides only apply to the build they were made on
         function initEditor() {
             const st = window.__ST = window.__ST || {};
-            let on = true, el = null, key = '', drag = null;
+            let on = false, el = null, key = '', drag = null, hov = null;
             const $e = id => document.getElementById(id);
             const css = document.createElement('style');
-            css.textContent = 'body.ed-on{touch-action:none}body.ed-on *{cursor:move!important}.ed-sel{outline:2px solid #e53935!important;outline-offset:1px}#edBar,#edBar *{cursor:auto!important}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize!important}';
+            css.textContent = '.ed-hover{outline:1px dashed #e53935!important}.ed-sel{outline:2px solid #e53935!important;outline-offset:1px}body.ed-active{touch-action:none}#edPen{position:fixed;z-index:30001;width:24px;height:24px;border-radius:50%;background:#e53935;color:#fff;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:none;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff;cursor:pointer}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize}';
+            const pen = document.createElement('div'); pen.id = 'edPen'; pen.textContent = '✏️'; pen.title = 'Edit this element';
             const bar = document.createElement('div'); bar.id = 'edBar';
-            bar.innerHTML = '<button id="edTog">✏️ Editing: ON</button><label>Text <input type="color" id="edC" value="#000000"></label><label>Fill <input type="color" id="edBg" value="#ffffff"></label><label>Size <input type="number" id="edFs" min="6" max="120" placeholder="px"></label><button id="edTx">Edit text</button><button id="edDel">Delete</button><button id="edRst">Reset</button>';
+            bar.innerHTML = '<span id="edName"></span><label>Text <input type="color" id="edC"></label><label>Fill <input type="color" id="edBg"></label><label>Size <input type="number" id="edFs" min="6" max="120" placeholder="px"></label><button id="edTx">Edit text</button><button id="edDel">Delete</button><button id="edRst">Reset</button><button id="edDone">Done</button>';
             const H = document.createElement('div'); H.id = 'edH';
-            document.head.append(css); document.body.append(bar, H); document.body.classList.add('ed-on');
+            document.head.append(css); document.body.append(pen, bar, H);
             const hex = c => { const m = c.match(/\d+/g); return (!m || (m.length > 3 && m[3] === '0')) ? '#ffffff' : '#' + m.slice(0, 3).map(n => (+n).toString(16).padStart(2, '0')).join(''); };
             const sOf = () => st[key] || (st[key] = {});
             const save = () => { if (parent !== window) parent.postMessage({ nir8styles: st }, '*'); };
-            const place = () => { if (!el || !on) { H.style.display = 'none'; return; } const r = el.getBoundingClientRect(); H.style.display = 'block'; H.style.left = (r.right - 8) + 'px'; H.style.top = (r.bottom - 8) + 'px'; };
+            const skip = t => !t || !t.closest || t === document.documentElement || t === document.body || !!t.closest('#edBar,#edPen,#edH');
+            const place = () => { if (!el) { H.style.display = 'none'; return; } const r = el.getBoundingClientRect(); H.style.display = 'block'; H.style.left = (r.right - 8) + 'px'; H.style.top = (r.bottom - 8) + 'px'; };
             const upd = () => { applyOne(key, st[key], true); place(); };
-            const inBar = t => !!(t.closest && t.closest('#edBar'));
-            function pick(t) {
-                if (el) el.classList.remove('ed-sel');
-                el = t; key = pathOf(t); t.classList.add('ed-sel');
-                const cs = getComputedStyle(t);
-                $e('edC').value = hex(cs.color); $e('edBg').value = hex(cs.backgroundColor); $e('edFs').value = parseInt(cs.fontSize);
-                $e('edDel').textContent = (st[key] && st[key].hide) ? 'Restore' : 'Delete'; place();
+            function showPen(t) {
+                if (hov) hov.classList.remove('ed-hover');
+                hov = t;
+                if (!t) { pen.style.display = 'none'; return; }
+                t.classList.add('ed-hover');
+                const r = t.getBoundingClientRect();
+                pen.style.display = 'flex'; pen.style.left = Math.min(innerWidth - 28, Math.max(2, r.right - 12)) + 'px'; pen.style.top = Math.max(2, r.top - 12) + 'px';
             }
+            function begin(t) {
+                showPen(null); el = t; key = pathOf(t); t.classList.add('ed-sel'); document.body.classList.add('ed-active');
+                const cs = getComputedStyle(t);
+                $e('edName').textContent = t.id ? '#' + t.id : t.tagName.toLowerCase();
+                $e('edC').value = hex(cs.color); $e('edBg').value = hex(cs.backgroundColor); $e('edFs').value = parseInt(cs.fontSize);
+                $e('edDel').textContent = (st[key] && st[key].hide) ? 'Restore' : 'Delete';
+                bar.style.display = 'flex'; place();
+            }
+            function end() { if (el) el.classList.remove('ed-sel'); el = null; bar.style.display = 'none'; H.style.display = 'none'; document.body.classList.remove('ed-active'); save(); }
             function startText() {
                 const t = el; if (!t) return;
                 if (t.children.length) { alert('Select the text itself (it has other elements inside).'); return; }
                 t.contentEditable = 'true'; t.focus();
-                t.addEventListener('blur', () => { t.removeAttribute('contenteditable'); key = pathOf(t); sOf().t = t.textContent; save(); }, { once: true });
+                t.addEventListener('blur', () => { t.removeAttribute('contenteditable'); sOf().t = t.textContent; save(); }, { once: true });
             }
+            const hover = e => { if (on && !el && !skip(e.target)) showPen(e.target); };
+            document.addEventListener('mouseover', hover); document.addEventListener('touchstart', hover, { passive: true });
+            pen.onclick = () => { if (on && hov) begin(hov); };
             document.addEventListener('pointerdown', e => {
-                if (!on || (inBar(e.target) && true) || e.target.isContentEditable) return;
+                if (!el || e.target.isContentEditable) return;
+                if (e.target === H) { const r = el.getBoundingClientRect(); drag = { m: 'r', x: e.clientX, y: e.clientY, w: r.width, h: r.height }; e.preventDefault(); e.stopPropagation(); return; }
+                if (skip(e.target) || !el.contains(e.target)) return;       // everything else on the page stays untouched
                 e.preventDefault(); e.stopPropagation();
-                if (e.target === H) { const r = el.getBoundingClientRect(); drag = { m: 'r', x: e.clientX, y: e.clientY, w: r.width, h: r.height }; return; }
-                if (e.target === document.documentElement || e.target === document.body) return;
-                pick(e.target); const s = st[key] || {};
-                drag = { m: 'm', x: e.clientX, y: e.clientY, ox: s.x || 0, oy: s.y || 0 };
+                const s = st[key] || {}; drag = { m: 'm', x: e.clientX, y: e.clientY, ox: s.x || 0, oy: s.y || 0 };
             }, true);
             document.addEventListener('pointermove', e => {
                 if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y, s = sOf();
@@ -1425,19 +1442,20 @@
                 upd();
             }, true);
             document.addEventListener('pointerup', () => { if (drag) { drag = null; save(); } }, true);
-            document.addEventListener('click', e => { if (on && !inBar(e.target) && !e.target.isContentEditable) { e.preventDefault(); e.stopPropagation(); } }, true);
-            document.addEventListener('dblclick', e => { if (on && !inBar(e.target)) { pick(e.target); startText(); } }, true);
-            window.addEventListener('scroll', place, true); window.addEventListener('resize', place);
-            $e('edTog').onclick = () => { on = !on; document.body.classList.toggle('ed-on', on); $e('edTog').textContent = '✏️ Editing: ' + (on ? 'ON' : 'OFF'); if (el) el.classList.toggle('ed-sel', on); place(); };
-            const prop = (id, k, f) => $e(id).addEventListener('input', () => { if (!el) return; sOf()[k] = f($e(id).value); upd(); save(); });
+            document.addEventListener('click', e => { if (el && !skip(e.target) && el.contains(e.target) && !e.target.isContentEditable) { e.preventDefault(); e.stopPropagation(); } }, true);
+            document.addEventListener('dblclick', e => { if (el && !skip(e.target) && el.contains(e.target)) startText(); }, true);
+            window.addEventListener('scroll', () => { place(); if (hov && !el) showPen(hov); }, true); window.addEventListener('resize', place);
+            const prop = (id, k, f) => $e(id).addEventListener('input', () => { sOf()[k] = f($e(id).value); upd(); save(); });
             prop('edC', 'c', v => v); prop('edBg', 'bg', v => v); prop('edFs', 'fs', v => Math.max(0, Math.min(120, parseInt(v) || 0)));
-            $e('edTx').onclick = startText;
-            $e('edDel').onclick = () => { if (!el) return; const s = sOf(); s.hide = s.hide ? 0 : 1; $e('edDel').textContent = s.hide ? 'Restore' : 'Delete'; upd(); save(); };
+            $e('edTx').onclick = startText; $e('edDone').onclick = end;
+            $e('edDel').onclick = () => { const s = sOf(); s.hide = s.hide ? 0 : 1; $e('edDel').textContent = s.hide ? 'Restore' : 'Delete'; upd(); save(); };
             $e('edRst').onclick = () => {
-                if (!el) return; delete st[key]; const o = _orig.get(el);
+                delete st[key]; const o = _orig.get(el);
                 if (o !== undefined) { if (o === null) el.removeAttribute('style'); else el.setAttribute('style', o); }
                 place(); save();
             };
+            // Admin switches the editor on/off; it starts OFF so the page is not touched.
+            window.addEventListener('message', e => { const m = e.data && e.data.nir8mode; if (!m) return; on = m === 'visual'; if (!on) { if (el) end(); showPen(null); } });
         }
 
         function applyConfig(cfg) {
@@ -2296,8 +2314,16 @@
             const isPreview = /[?&]preview=1(&|$)/.test(location.search);
             let cachedText = null; try { cachedText = localStorage.getItem(isPreview ? 'nir8_cfg_preview' : CFG_KEY); } catch {}
             let cachedRaw = null; try { cachedRaw = cachedText ? JSON.parse(cachedText) : null; } catch {}
-            applyConfig(sanitizeConfig(cachedRaw));
+            const cfgNow = sanitizeConfig(cachedRaw);
+            applyConfig(cfgNow);
             if (/[?&]edit=1(&|$)/.test(location.search)) initEditor();
+            // Admin → HTML editor: a source patch made on this exact build replaces the page (once; the meta tag stops a loop)
+            else if (cfgNow.src && cfgNow.src.build === BUILD && !/[?&]safe=1(&|$)/.test(location.search) && !document.querySelector('meta[name="nir8-src"]')) {
+                fetch(location.pathname, { cache: 'no-store' }).then(r => r.text()).then(O => {
+                    const p = cfgNow.src, html = (O.slice(0, p.p) + p.mid + O.slice(O.length - p.q)).replace(/<head[^>]*>/i, m => m + '<meta name="nir8-src" content="1">');
+                    document.open(); document.write(html); document.close();
+                }).catch(() => {});
+            }
             if (isPreview) {
                 const b = document.createElement('div');
                 b.textContent = 'Preview — not published yet';
