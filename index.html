@@ -72,7 +72,7 @@
             background: #f6f7f8;
             display: flex; justify-content: flex-start; align-items: center;
             min-height: 100vh; flex-direction: column;
-            padding: calc(120px + var(--menu-extra, 0px)) 10px 56px; text-align: center; margin: 0;
+            padding: max(calc(120px + var(--menu-extra, 0px)), var(--menu-pad, 0px)) 10px 56px; text-align: center; margin: 0;
         }
 
         /* ── CALCULATOR ── */
@@ -625,7 +625,7 @@
             /* ── FOOTER — drop out of the fixed layer on phones so it can never
                overlap content; it flows at the end of the page instead (pinned
                to the viewport bottom on short pages via margin-top:auto) ── */
-            body { padding-top: calc(110px + var(--menu-extra, 0px)); padding-bottom: 24px; }
+            body { padding-top: max(calc(110px + var(--menu-extra, 0px)), var(--menu-pad, 0px)); padding-bottom: 24px; }
             footer {
                 position: static; margin-top: auto; z-index: auto;
                 font-size: 11px; line-height: 1.4; padding: 7px 6px;
@@ -661,7 +661,7 @@
            stays a centered column (better for reading/printing) rather than
            stretching full-width. ── */
         @media (min-width: 900px) {
-            body { padding-top: calc(130px + var(--menu-extra, 0px)); }
+            body { padding-top: max(calc(130px + var(--menu-extra, 0px)), var(--menu-pad, 0px)); }
             .calculator-container:not(#acbCalculator) { max-width: 460px; padding: 14px 16px; }
             .formula-spec-card { max-width: 760px; padding: 8px 14px; }
             #formulaCalculator { max-width: 460px; }
@@ -1362,20 +1362,42 @@
 
         // ── VISUAL STYLES: per-element move / resize / colour / text / hide, set from Admin → Visual editor ──
         const _orig = new Map();
+        // Edits are per device: keys starting "phone~" apply only on narrow screens (≤820px); plain keys keep their
+        // colour / text / size / hide everywhere, but their move + resize (pixels) apply on wide screens only.
+        const isNarrow = () => matchMedia('(max-width:820px)').matches;
         function applyOne(sel, s, editing) {
+            const phone = sel.startsWith('phone~'); if (phone) sel = sel.slice(6);
+            if (phone && !isNarrow()) return;
             let el; try { el = document.querySelector(sel); } catch { return; }
             if (!el || !s) return;
             if (!_orig.has(el)) _orig.set(el, el.getAttribute('style'));
-            if (s.x || s.y) el.style.transform = `translate(${s.x || 0}px,${s.y || 0}px)`;
-            if (s.w) el.style.width = s.w + 'px';
-            if (s.h) el.style.height = s.h + 'px';
+            const px = phone || !isNarrow();
+            if (px && (s.x || s.y)) el.style.transform = `translate(${s.x || 0}px,${s.y || 0}px)`;
+            if (px && s.w) el.style.width = s.w + 'px';
+            if (px && s.h) el.style.height = s.h + 'px';
             if (s.c) el.style.color = s.c;
             if (s.bg) el.style.background = s.bg;
             if (s.fs) el.style.fontSize = s.fs + 'px';
             if (s.hide) { if (editing) el.style.opacity = '.25'; else el.style.display = 'none'; }
             if (s.t !== undefined && !el.children.length && !el.isContentEditable) el.textContent = s.t;
         }
-        function applyStyles(editing) { const st = window.__ST || {}; Object.keys(st).forEach(k => applyOne(k, st[k], editing)); }
+        function applyStyles(editing) {
+            const st = window.__ST || {};
+            // plain edits first, phone edits last so they win on narrow screens
+            Object.keys(st).sort((a, b) => a.startsWith('phone~') - b.startsWith('phone~')).forEach(k => applyOne(k, st[k], editing));
+        }
+        // crossing the phone/desktop breakpoint (rotate, resize, admin device switch): put every element back, then re-apply
+        matchMedia('(max-width:820px)').addEventListener('change', () => {
+            _orig.forEach((o, el) => { if (o === null) el.removeAttribute('style'); else el.setAttribute('style', o); });
+            _orig.clear(); applyStyles(!!document.getElementById('edBar'));
+        });
+        // The menu card is fixed to the top and grows when a notice appears (lot-differs row, qty mismatch, manual fields…):
+        // keep the page content below its real height so nothing overlaps.
+        function trackMenuHeight() {
+            const mc = document.getElementById('menuCard'); if (!mc) return;
+            const set = () => document.documentElement.style.setProperty('--menu-pad', Math.ceil(mc.getBoundingClientRect().bottom + 10) + 'px');
+            set(); if (window.ResizeObserver) new ResizeObserver(set).observe(mc); window.addEventListener('resize', set);
+        }
         function pathOf(el) {
             const p = [];
             while (el && el !== document.body) {
@@ -1385,13 +1407,13 @@
             }
             return 'body>' + p.join('>');
         }
-        const BUILD = '2026-11-16b';   // bump whenever this file changes: admin "HTML editor" overrides only apply to the build they were made on
+        const BUILD = '2026-11-16c';   // bump whenever this file changes: admin "HTML editor" overrides only apply to the build they were made on
         function initEditor() {
             const st = window.__ST = window.__ST || {};
             let on = false, el = null, key = '', drag = null, hov = null;
             const $e = id => document.getElementById(id);
             const css = document.createElement('style');
-            css.textContent = '.ed-hover{outline:2px dashed #e53935!important;outline-offset:1px;cursor:crosshair}.ed-sel{outline:2px solid #e53935!important;outline-offset:2px;box-shadow:0 0 0 1px #fff}body.ed-active{touch-action:none}#edPen{position:fixed;z-index:30001;width:24px;height:24px;border-radius:50%;background:#e53935;color:#fff;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:none;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff;cursor:pointer}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize}';
+            css.textContent = '.ed-hover{outline:1px dashed #e53935!important}.ed-sel{outline:2px solid #e53935!important;outline-offset:1px}body.ed-active{touch-action:none}#edPen{position:fixed;z-index:30001;width:24px;height:24px;border-radius:50%;background:#e53935;color:#fff;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}#edBar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:30000;background:#222;color:#fff;font:600 12px Inter,sans-serif;padding:8px;border-radius:10px;display:none;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:96vw;box-shadow:0 4px 16px rgba(0,0,0,.4)}#edBar button{font:inherit;padding:5px 8px;border-radius:6px;border:0;background:#555;color:#fff;cursor:pointer}#edBar input[type=number]{width:54px}#edH{position:fixed;width:16px;height:16px;background:#e53935;border:2px solid #fff;border-radius:3px;z-index:29999;display:none;cursor:nwse-resize}';
             const pen = document.createElement('div'); pen.id = 'edPen'; pen.textContent = '✏️'; pen.title = 'Edit this element';
             const bar = document.createElement('div'); bar.id = 'edBar';
             bar.innerHTML = '<span id="edName"></span><label>Text <input type="color" id="edC"></label><label>Fill <input type="color" id="edBg"></label><label>Size <input type="number" id="edFs" min="6" max="120" placeholder="px"></label><button id="edTx">Edit text</button><button id="edGate">Popup</button><button id="edDel">Delete</button><button id="edRst">Reset</button><button id="edDone">Done</button>';
@@ -1412,9 +1434,9 @@
                 pen.style.display = 'flex'; pen.style.left = Math.min(innerWidth - 28, Math.max(2, r.right - 12)) + 'px'; pen.style.top = Math.max(2, r.top - 12) + 'px';
             }
             function begin(t) {
-                showPen(null); el = t; key = pathOf(t); t.classList.add('ed-sel'); document.body.classList.add('ed-active');
+                showPen(null); el = t; key = (isNarrow() ? 'phone~' : '') + pathOf(t); t.classList.add('ed-sel'); document.body.classList.add('ed-active');
                 const cs = getComputedStyle(t);
-                $e('edName').textContent = t.id ? '#' + t.id : t.tagName.toLowerCase();
+                $e('edName').textContent = (isNarrow() ? '📱 ' : '🖥 ') + (t.id ? '#' + t.id : t.tagName.toLowerCase());
                 $e('edC').value = hex(cs.color); $e('edBg').value = hex(cs.backgroundColor); $e('edFs').value = parseInt(cs.fontSize);
                 $e('edDel').textContent = (st[key] && st[key].hide) ? 'Restore' : 'Delete';
                 bar.style.display = 'flex'; place();
@@ -1428,18 +1450,11 @@
             }
             const hover = e => { if (on && !el && !skip(e.target)) showPen(e.target); };
             document.addEventListener('mouseover', hover); document.addEventListener('touchstart', hover, { passive: true });
-            // Element picker (browser DevTools style): hover highlights, click the element (or the ✏️) to select it
-            pen.onclick = (e) => { e.preventDefault(); e.stopPropagation(); if (on && hov) begin(hov); };
-            document.addEventListener('click', e => {
-                if (!on || skip(e.target) || e.target.isContentEditable) return;
-                e.preventDefault(); e.stopPropagation();
-                if (el) return;                       // already editing something — use the bar / drag instead
-                begin(e.target);
-            }, true);
+            pen.onclick = () => { if (on && hov) begin(hov); };
             document.addEventListener('pointerdown', e => {
                 if (!el || e.target.isContentEditable) return;
                 if (e.target === H) { const r = el.getBoundingClientRect(); drag = { m: 'r', x: e.clientX, y: e.clientY, w: r.width, h: r.height }; e.preventDefault(); e.stopPropagation(); return; }
-                if (skip(e.target) || !el.contains(e.target)) return;
+                if (skip(e.target) || !el.contains(e.target)) return;       // everything else on the page stays untouched
                 e.preventDefault(); e.stopPropagation();
                 const s = st[key] || {}; drag = { m: 'm', x: e.clientX, y: e.clientY, ox: s.x || 0, oy: s.y || 0 };
             }, true);
@@ -1450,6 +1465,7 @@
                 upd();
             }, true);
             document.addEventListener('pointerup', () => { if (drag) { drag = null; save(); } }, true);
+            document.addEventListener('click', e => { if (on && !skip(e.target) && !e.target.isContentEditable) { e.preventDefault(); e.stopPropagation(); } }, true);
             // PAUSE: while the visual editor is on, the page itself does nothing (no clicks, keys, typing, focus, form changes)
             const paused = e => on && e.target && e.target.closest && !e.target.closest('#edBar,#edPen,#edH') && !e.target.isContentEditable;
             ['keydown', 'keyup', 'keypress', 'input', 'change', 'submit', 'beforeinput'].forEach(n => window.addEventListener(n, e => { if (paused(e)) { e.preventDefault(); e.stopImmediatePropagation(); } }, true));
@@ -2325,9 +2341,10 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             Decimal.set({ precision: 20, toExpNeg: -9, toExpPos: 20 });
+            trackMenuHeight();
             // Products, formulas, lots and layout: cached admin config first (instant), then refresh from Firestore.
             // admin.html "Preview" opens this page with ?preview=1: use the unpublished draft and never touch the live cache
-            const isPreview = /[?&]preview=1(&|$)/.test(location.search) || !!document.querySelector('meta[name="nir8-preview"]');
+            const isPreview = /[?&]preview=1(&|$)/.test(location.search);
             let cachedText = null; try { cachedText = localStorage.getItem(isPreview ? 'nir8_cfg_preview' : CFG_KEY); } catch {}
             let cachedRaw = null; try { cachedRaw = cachedText ? JSON.parse(cachedText) : null; } catch {}
             const cfgNow = sanitizeConfig(cachedRaw);
