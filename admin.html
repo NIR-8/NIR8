@@ -113,8 +113,8 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   <div class="login">
     <h1>NIR8 Admin</h1>
     <p>Sign in to change products, formulas, lots and the page layout.</p>
-    <label for="loginId">User ID</label>
-    <input id="loginId" type="text" value="Admin" autocomplete="username" spellcheck="false">
+    <label for="loginId">Email</label>
+    <input id="loginId" type="text" inputmode="email" autocomplete="username" spellcheck="false">
     <label for="loginPw">Password</label>
     <input id="loginPw" type="password" autocomplete="current-password">
     <div class="err" id="loginErr" role="alert"></div>
@@ -522,7 +522,7 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
   'use strict';
   const C = window.NIR8Core;
   const $ = (id) => document.getElementById(id);
-  const DEFAULT_PW = 'Caps@1234';
+  const DEFAULT_PW = null; // no default password: sign-in uses Firebase Authentication
   const IDLE_MS = 15 * 60 * 1000;
 
   // tiny DOM helper
@@ -1193,11 +1193,12 @@ main { padding:0 16px 40px; max-width:1180px; margin:0 auto; }
 <script type="module">
 /* NIR8 admin — Firebase backend (same project + SDK as VAULT) */
 // Firebase is loaded safely: if the SDK is blocked/offline the page still works and shows a clear message
-let db = null, doc, getDoc, setDoc, loadError = null;
+let db = null, doc, getDoc, setDoc, loadError = null, auth = null, authMod = null;
 try {
   const appMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
   const fsMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
   ({ doc, getDoc, setDoc } = fsMod);
+  authMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
   const app = appMod.initializeApp({
     apiKey:            'AIzaSyAF1nxXeZhz7LvWpQFTnFYNifuZII_R-mE',
     authDomain:        'onekey-5067d.firebaseapp.com',
@@ -1206,6 +1207,8 @@ try {
     messagingSenderId: '1098836590874',
     appId:             '1:1098836590874:web:9c62490ce2670a4418aca3'
   });
+  auth = authMod.getAuth(app);
+  authMod.setPersistence(auth, authMod.browserSessionPersistence).catch(() => {});
   // long-polling auto-detect avoids hangs on networks/proxies that break WebChannel streaming
   db = fsMod.initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
 } catch (e) { loadError = e; }
@@ -1213,26 +1216,10 @@ try {
 function friendly(e) {
   const code = e && e.code, msg = (e && e.message) || '';
   if (code === 'permission-denied' || /insufficient permissions/i.test(msg))
-    return 'Firestore is refusing access. Add the config read/write rule in Firebase → Firestore → Rules and publish it, then try again.';
+    return 'Firestore is refusing access. Make sure you are signed in and the rules from firestore.rules are published (see SECURITY-SETUP.md).';
   if (code === 'unavailable' || /timeout|offline/i.test(msg))
     return 'Cannot reach the server. Check your internet connection and try again.';
   return msg || 'Something went wrong.';
-}
-
-const ADMIN_ID = 'admin';
-const DEFAULT_SALT = 'nir8-default';
-const DEFAULT_HASH = 'a8b7d3103753fff46c64388997864c55e015ca6f44a159ab60a880ce31d3b786'; // PBKDF2 of Caps@1234
-const ITER = 150000;
-const enc = new TextEncoder();
-const hex = (buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
-
-async function hashPw(pw, salt) {
-  if (!window.crypto || !crypto.subtle) throw new Error('This page must be opened over https:// (or localhost) for sign-in to work.');
-  const base = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
-  return hex(await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt: enc.encode(salt), iterations: ITER, hash: 'SHA-256' },
-    base, 256
-  ));
 }
 
 function withTimeout(promise, ms, label) {
@@ -1252,27 +1239,22 @@ async function fsSet(name, data) {
   await withTimeout(setDoc(doc(db, 'config', name), data), 12000, name);
 }
 
-let authCb = null, signedIn = false, fails = 0;
+let authCb = null, signedIn = false;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function credentials() {
-  let d;
-  try { d = await fsGet('admin'); } catch (e) { throw new Error(friendly(e)); }
-  if (d && d.salt && d.hash) return { salt: d.salt, hash: d.hash };
-  return { salt: DEFAULT_SALT, hash: DEFAULT_HASH };
-}
 
 window.NIR8Backend = {
   onAuth(cb) { authCb = cb; },
-  userId: () => 'Admin',
+  userId: () => (auth && auth.currentUser && auth.currentUser.email) || 'Admin',
   async signIn(id, pw) {
-    if (fails >= 3) await wait(Math.min(8000, 1000 * (fails - 2)));
-    const cred = await credentials();      // throws a readable message if the server can't be reached
-    const ok = String(id).trim().toLowerCase() === ADMIN_ID && (await hashPw(pw, cred.salt)) === cred.hash;
-    if (!ok) { fails++; throw new Error('Wrong User ID or password.'); }
-    fails = 0; signedIn = true; if (authCb) authCb({ id: 'Admin' });
+    if (!auth) throw new Error('Could not load sign-in. Check your connection / ad-blocker and reload.');
+    try { await authMod.signInWithEmailAndPassword(auth, String(id).trim(), pw); }
+    catch (e) {
+      const c = (e && e.code) || '';
+      throw new Error(/network/.test(c) ? 'Cannot reach the server. Check your internet connection.' : /too-many/.test(c) ? 'Too many attempts. Wait a few minutes and try again.' : 'Wrong email or password.');
+    }
+    signedIn = true; if (authCb) authCb({ id: auth.currentUser.email });
   },
-  signOut() { signedIn = false; if (authCb) authCb(null); },
+  signOut() { signedIn = false; try { authMod.signOut(auth); } catch {} if (authCb) authCb(null); },
   async loadConfig() {
     const d = await fsGet('app');
     return d && d.json ? d.json : null;
@@ -1306,10 +1288,10 @@ window.NIR8Backend = {
     } catch { return []; }
   },
   async changePassword(cur, next) {
-    const c = await credentials();
-    if ((await hashPw(cur, c.salt)) !== c.hash) throw new Error('The current password is wrong.');
-    const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
-    await fsSet('admin', { salt, hash: await hashPw(next, salt) });
+    const u = auth && auth.currentUser; if (!u) throw new Error('Please sign in again.');
+    try { await authMod.reauthenticateWithCredential(u, authMod.EmailAuthProvider.credential(u.email, cur)); }
+    catch { throw new Error('The current password is wrong.'); }
+    try { await authMod.updatePassword(u, next); } catch (e) { throw new Error((e && e.message) || 'Could not change the password.'); }
   }
 };
 

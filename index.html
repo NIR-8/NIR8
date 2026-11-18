@@ -1121,6 +1121,7 @@
         let CFG = null, PRODUCTS = {};
 
         const clampInt = (v, lo, hi, d) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+        const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const cloneCfg = o => JSON.parse(JSON.stringify(o));
 
         function sanitizeStyles(raw) {
@@ -2174,10 +2175,10 @@
                 <h3 id="verifyTitle" style="text-align:center;">Please verify the following:</h3>
                 <div class="verify-details-wrap">
                 <div class="verify-rows">
-                <div class="verify-row"><span class="verify-label">${calculation.qLabel} (Q):</span> <span class="verify-value">${Q}</span></div>
-                ${calculation.usesW ? `<div class="verify-row"><span class="verify-label">${calculation.moistLabel || 'Water Content (W)'}:</span> <span class="verify-value">${W}%</span></div>` : ''}
+                <div class="verify-row"><span class="verify-label">${esc(calculation.qLabel)} (Q):</span> <span class="verify-value">${Q}</span></div>
+                ${calculation.usesW ? `<div class="verify-row"><span class="verify-label">${esc(calculation.moistLabel || 'Water Content (W)')}:</span> <span class="verify-value">${W}%</span></div>` : ''}
                 ${calculation.usesA ? `<div class="verify-row"><span class="verify-label">Assay Content (A):</span> <span class="verify-value">${A}%</span></div>` : ''}
-                <div class="verify-row"><span class="verify-label">Product:</span> <span class="verify-value">${calculation.product}</span></div>
+                <div class="verify-row"><span class="verify-label">Product:</span> <span class="verify-value">${esc(calculation.product)}</span></div>
                 <div class="verify-row"><span class="verify-label">Formula:</span> <span class="verify-value verify-formula">${calculation.formulaType} = ${calculation.formulaHtml}</span></div>
                 </div>
                 </div>
@@ -2236,7 +2237,7 @@
                 <button type="button" class="delete-button" title="Delete" aria-label="Delete calculation">❌</button>
                 <div class="entry-meta-row">
                     <div class="lot-label"><input type="text" class="lot-input" maxlength="20" aria-label="Lot number"></div>
-                    <div class="product-label">${calculationResult.product}</div>
+                    <div class="product-label">${esc(calculationResult.product)}</div>
                     <div class="reference-values">${isLod() ? 'LOD' : 'W'}="${formatNumber(W,true)}" A="${formatNumber(A,true)}"</div>
                 </div>
                 <div class="calculation-content">${calculationResult.html}</div>

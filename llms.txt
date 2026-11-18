@@ -2,7 +2,7 @@
 
 > Free online pharmaceutical assay and formula calculator for dispensing calculations. Supports F1, F2, F3 assay-based formulas and (A+C)-B lot quantity tracking across up to four lots, with water content and assay correction.
 
-NIR8 Calculators is a single-page browser tool used by pharmaceutical dispensing staff to compute standard-to-issued quantity conversions during batch manufacturing. It runs entirely client-side; no data is sent to a server. Results are computed instantly as values are entered, and calculations can be printed for batch manufacturing records (BMR).
+NIR8 Calculators is a single-page browser tool used by pharmaceutical dispensing staff to compute standard-to-issued quantity conversions during batch manufacturing. It runs client-side; calculations never leave the browser (only the product/formula configuration is fetched). Results are computed instantly as values are entered, and calculations can be printed for batch manufacturing records (BMR).
 
 ## Tools
 

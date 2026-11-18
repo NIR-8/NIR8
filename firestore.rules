@@ -1,0 +1,16 @@
+// MERGE these into your existing rules (the vault uses the 'vaults' collection: keep its rules).
+// Replace the email with the admin account you create in Firebase Authentication.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // everyone can read the live config; only the admin can change it
+    match /config/app {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'tvk.manojkumar@gmail.com';
+    }
+    // history + any other config docs (old password doc included): admin only
+    match /config/{other} {
+      allow read, write: if request.auth != null && request.auth.token.email == 'tvk.manojkumar@gmail.com';
+    }
+  }
+}
